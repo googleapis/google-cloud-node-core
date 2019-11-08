@@ -1,6 +1,10 @@
 # Region Tag JSDoc Plugin
 
-Reads a samples directory, extracting examples between `[START]`/`[STOP]` tags,
+[![Build Status](https://travis-ci.org/bcoe/jsdoc-region-tag.svg?branch=master)](https://travis-ci.org/bcoe/jsdoc-region-tag)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+
+
+Reads a samples directory, extracting samples between `[START]`/`[STOP]` tags,
 allowing these samples to be placed in JSDoc comments, like so:
 
 ```js
