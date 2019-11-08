@@ -1,6 +1,6 @@
 {
   "name": "jsdoc-region-tag",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "replace region tags with code samples",
   "main": "index.js",
   "scripts": {
@@ -34,7 +34,9 @@
     "yargs": "^14.2.0"
   },
   "standard": {
-    "ignore": ["fixtures"]
+    "ignore": [
+      "fixtures"
+    ]
   },
   "files": [
     "index.js"
