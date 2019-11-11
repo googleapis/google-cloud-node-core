@@ -34,4 +34,4 @@ directory other than `./samples`.
 
 ## License
 
-ISC
+Apache-2.0
