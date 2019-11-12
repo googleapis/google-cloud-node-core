@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.2](https://www.github.com/bcoe/jsdoc-region-tag/compare/v1.0.1...v1.0.2) (2019-11-12)
+
+
+### Bug Fixes
+
+* **deps:** remove unused yargs dep ([#5](https://www.github.com/bcoe/jsdoc-region-tag/issues/5)) ([1f87fbb](https://www.github.com/bcoe/jsdoc-region-tag/commit/1f87fbb70103a9589c8740db7bbd12f2989169bf))
+
 ### [1.0.1](https://www.github.com/bcoe/jsdoc-region-tag/compare/v1.0.0...v1.0.1) (2019-11-11)
 
 
