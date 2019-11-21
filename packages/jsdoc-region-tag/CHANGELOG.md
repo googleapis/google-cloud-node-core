@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.3](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.2...v1.0.3) (2019-11-21)
+
+
+### Bug Fixes
+
+* node_modules can have folders with .js extension ([#3](https://www.github.com/googleapis/jsdoc-region-tag/issues/3)) ([dccba19](https://www.github.com/googleapis/jsdoc-region-tag/commit/dccba19cf52290f84a559b19f4691e109fb7f031))
+
 ### [1.0.2](https://www.github.com/bcoe/jsdoc-region-tag/compare/v1.0.1...v1.0.2) (2019-11-12)
 
 
