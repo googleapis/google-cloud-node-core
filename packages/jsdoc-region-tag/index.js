@@ -15,7 +15,7 @@
  */
 
 const glob = require('glob')
-const { readFileSync } = require('fs')
+const { readFileSync, statSync } = require('fs')
 const { resolve } = require('path')
 
 const SAMPLES_DIRECTORY = process.env.SAMPLES_DIRECTORY || resolve(process.cwd(), './samples')
@@ -26,6 +26,8 @@ const sampleCache = new Map()
 exports.loadSampleCache = function () {
   const sampleCandidates = glob.sync(`${SAMPLES_DIRECTORY}/**/*.{js,ts}`, { ignore: ['node_modules'] })
   for (const candidate of sampleCandidates) {
+    const stat = statSync(candidate)
+    if (!stat.isFile()) continue
     const content = readFileSync(candidate, 'utf8')
     if (REGION_START_REGEX.test(content)) {
       parseSamples(content)
