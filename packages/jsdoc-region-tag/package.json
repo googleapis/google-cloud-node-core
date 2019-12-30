@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/googleapis/jsdoc-region-tag#readme",
   "devDependencies": {
-    "c8": "^6.0.1",
+    "c8": "^7.0.0",
     "chai": "^4.2.0",
     "mocha": "^6.2.2",
     "standard": "^14.3.1"
