@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.4](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.3...v1.0.4) (2020-01-09)
+
+
+### Bug Fixes
+
+* tag issue of undefined ([#11](https://www.github.com/googleapis/jsdoc-region-tag/issues/11)) ([adf52c5](https://www.github.com/googleapis/jsdoc-region-tag/commit/adf52c5dc7f8531fc951f9cf80283d17c3dead37))
+
 ### [1.0.3](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.2...v1.0.3) (2019-11-21)
 
 
