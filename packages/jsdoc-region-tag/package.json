@@ -4,9 +4,18 @@
   "description": "replace region tags with code samples",
   "main": "index.js",
   "scripts": {
-    "test": "c8 mocha test.js",
-    "posttest": "standard"
+    "test": "c8 mocha test/test.js",
+    "lint": "gts check",
+    "fix": "gts fix",
+    "docs": "echo 🙈",
+    "docs-test": "echo 🙈",
+    "samples-test": "echo 🙈",
+    "prelint": "echo 🙈"
+
   },
+  "files": [
+    "src/index.js"
+  ],
   "repository": "googleapis/jsdoc-region-tag",
   "keywords": [
     "region",
@@ -20,21 +29,13 @@
     "url": "https://github.com/googleapis/jsdoc-region-tag/issues"
   },
   "homepage": "https://github.com/googleapis/jsdoc-region-tag#readme",
-  "devDependencies": {
-    "c8": "^7.0.0",
-    "chai": "^4.2.0",
-    "mocha": "^8.0.0",
-    "standard": "^14.3.1"
-  },
   "dependencies": {
     "glob": "^7.1.6"
   },
-  "standard": {
-    "ignore": [
-      "fixtures"
-    ]
-  },
-  "files": [
-    "index.js"
-  ]
+  "devDependencies": {
+    "c8": "^7.0.0",
+    "gts": "^2.0.2",
+    "mocha": "^8.0.0",
+    "typescript": "^3.9.7"
+  }
 }

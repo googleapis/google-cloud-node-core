@@ -1,5 +1,3 @@
-/* global describe, it */
-
 /*!
  * Copyright 2019 Google LLC.
  *
@@ -16,17 +14,18 @@
  * limitations under the License.
  */
 
-process.env.SAMPLES_DIRECTORY = './fixtures'
+process.env.SAMPLES_DIRECTORY = './test/fixtures';
 
-const { loadSampleCache } = require('./')
-const { expect } = require('chai')
+const {loadSampleCache} = require('../src');
+const {describe, it} = require('mocha');
+const assert = require('assert');
 
 describe('jsdoc-region-tag', () => {
   describe('loadSampleCache', () => {
     it('populates a cache with samples found between region tags', () => {
-      const cache = loadSampleCache()
-      const sample = cache.get('bigquery_quickstart')
-      expect(sample).to.include('async function createDataset () {')
-    })
-  })
-})
+      const cache = loadSampleCache();
+      const sample = cache.get('bigquery_quickstart');
+      assert(sample.includes('async function createDataset () {'));
+    });
+  });
+});

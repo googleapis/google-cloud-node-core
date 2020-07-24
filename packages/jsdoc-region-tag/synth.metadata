@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "git": {
+        "name": ".",
+        "remote": "git@github.com:googleapis/jsdoc-region-tag.git",
+        "sha": "415600863ffb8a9f69a76f19953daf1cd3d9f4eb"
+      }
+    },
+    {
+      "git": {
+        "name": "synthtool",
+        "remote": "https://github.com/googleapis/synthtool.git",
+        "sha": "b8ff6a41e195cda91bbfb20d9f11d5e58b7cc218"
+      }
+    }
+  ]
+}
