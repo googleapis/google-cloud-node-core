@@ -10,6 +10,7 @@
     "docs": "echo 🙈",
     "docs-test": "echo 🙈",
     "samples-test": "echo 🙈",
+    "system-test": "echo 🙈",
     "prelint": "echo 🙈",
     "api-extractor": "api-extractor run --local",
     "api-documenter": "api-documenter yaml --input-folder=temp"
