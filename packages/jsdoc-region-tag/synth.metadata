@@ -4,7 +4,7 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/jsdoc-region-tag.git",
-        "sha": "9170ad43bedb0903b167b2f5b4bfedbbb501bb50"
+        "sha": "aac15b0c9fa0ac2098dd27b2da81030823496b43"
       }
     },
     {
