@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.5](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.4...v1.0.5) (2020-08-29)
+
+
+### Bug Fixes
+
+* move system and samples test from Node 10 to Node 12 ([#30](https://www.github.com/googleapis/jsdoc-region-tag/issues/30)) ([0cfc38b](https://www.github.com/googleapis/jsdoc-region-tag/commit/0cfc38b339c130389a0eb6927e4a8dd4db5c39e2))
+
 ### [1.0.4](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.3...v1.0.4) (2020-01-09)
 
 
