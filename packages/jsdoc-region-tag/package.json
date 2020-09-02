@@ -2,7 +2,7 @@
   "name": "jsdoc-region-tag",
   "version": "1.0.5",
   "description": "replace region tags with code samples",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "c8 mocha test/test.js",
     "lint": "gts check",
