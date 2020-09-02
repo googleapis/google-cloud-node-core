@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.6](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.5...v1.0.6) (2020-09-02)
+
+
+### Bug Fixes
+
+* main was pointing to old location ([#33](https://www.github.com/googleapis/jsdoc-region-tag/issues/33)) ([46be7f8](https://www.github.com/googleapis/jsdoc-region-tag/commit/46be7f83d75506529e46fef4e1bfd5d585b2bc5c))
+
 ### [1.0.5](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.4...v1.0.5) (2020-08-29)
 
 
