@@ -4,14 +4,14 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/jsdoc-region-tag.git",
-        "sha": "3de790f4d631c56789a735367010393583c4e886"
+        "sha": "30e45c5c4d57b153695b2eb617c1094aaf498657"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "079dcce498117f9570cebe6e6cff254b38ba3860"
+        "sha": "0c868d49b8e05bc1f299bc773df9eb4ef9ed96e9"
       }
     }
   ],
@@ -54,10 +54,12 @@
     ".kokoro/test.bat",
     ".kokoro/test.sh",
     ".kokoro/trampoline.sh",
+    ".kokoro/trampoline_v2.sh",
     ".mocharc.js",
     ".nycrc",
     ".prettierignore",
     ".prettierrc.js",
+    ".trampolinerc",
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "LICENSE",
