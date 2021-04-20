@@ -4,14 +4,14 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/jsdoc-region-tag.git",
-        "sha": "715e9227fd47657807b8c6225da2b0e850cd3625"
+        "sha": "7ba335de50c04bd504d9b89db56c4e4db728bcd1"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "57c23fa5705499a4181095ced81f0ee0933b64f6"
+        "sha": "c6706ee5d693e9ae5967614170732646590d8374"
       }
     }
   ]
