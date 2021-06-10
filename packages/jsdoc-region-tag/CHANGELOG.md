@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.6...v1.1.0) (2021-06-10)
+
+
+### Features
+
+* add `gcf-owl-bot[bot]` to `ignoreAuthors` ([#56](https://www.github.com/googleapis/jsdoc-region-tag/issues/56)) ([9e3649a](https://www.github.com/googleapis/jsdoc-region-tag/commit/9e3649a3c1778f65115993048d8eca80e5958df8))
+
 ### [1.0.6](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.5...v1.0.6) (2020-09-02)
 
 
