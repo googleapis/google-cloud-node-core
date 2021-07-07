@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.1.0...v1.2.0) (2021-07-07)
+
+
+### Features
+
+* replace relative URL with cloud.google.com ([#72](https://www.github.com/googleapis/jsdoc-region-tag/issues/72)) ([212febc](https://www.github.com/googleapis/jsdoc-region-tag/commit/212febc933c246a5e31675e128ad65c45d300cac))
+
 ## [1.1.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.0.6...v1.1.0) (2021-06-10)
 
 
