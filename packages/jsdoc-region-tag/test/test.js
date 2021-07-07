@@ -16,7 +16,7 @@
 
 process.env.SAMPLES_DIRECTORY = './test/fixtures';
 
-const {loadSampleCache} = require('../src');
+const {loadSampleCache, handlers} = require('../src');
 const {describe, it} = require('mocha');
 const assert = require('assert');
 
@@ -26,6 +26,46 @@ describe('jsdoc-region-tag', () => {
       const cache = loadSampleCache();
       const sample = cache.get('bigquery_quickstart');
       assert(sample.includes('async function createDataset () {'));
+    });
+  });
+  describe('handlers', () => {
+    it('does not replace absolute link', () => {
+      const doc = {
+        doclet: {
+          description:
+            'My description <a href="https://github.com/foo">foo link</a>',
+        },
+      };
+      handlers.newDoclet(doc);
+      assert.strictEqual(
+        doc.doclet.description,
+        'My description <a href="https://github.com/foo">foo link</a>'
+      );
+    });
+    it('replaces single link in description', () => {
+      const doc = {
+        doclet: {
+          description: 'My description <a href="/foo">foo link</a>',
+        },
+      };
+      handlers.newDoclet(doc);
+      assert.strictEqual(
+        doc.doclet.description,
+        'My description <a href="https://cloud.google.com/foo">foo link</a>'
+      );
+    });
+    it('replaces multiple links in description', () => {
+      const doc = {
+        doclet: {
+          description:
+            'My description <a href="/foo">foo link</a> hello <a href="/bar">bar link</a>',
+        },
+      };
+      handlers.newDoclet(doc);
+      assert.strictEqual(
+        doc.doclet.description,
+        'My description <a href="https://cloud.google.com/foo">foo link</a> hello <a href="https://cloud.google.com/bar">bar link</a>'
+      );
     });
   });
 });

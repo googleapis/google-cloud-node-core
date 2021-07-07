@@ -60,10 +60,21 @@ function parseSamples(content) {
   }
 }
 
+const BASE_URL = 'https://cloud.google.com/';
+function replaceRelativeLinks(description) {
+  return description.replace(/href="\//g, `href="${BASE_URL}`);
+}
+
 exports.handlers = {
   newDoclet: e => {
     if (sampleCache.size === 0) {
       exports.loadSampleCache();
+    }
+
+    // Any relative links we observe, e.g., /iam, should be assumed to be
+    // relative to cloud.google.com:
+    if (e.doclet.description) {
+      e.doclet.description = replaceRelativeLinks(e.doclet.description);
     }
 
     const examples = e.doclet.examples;
