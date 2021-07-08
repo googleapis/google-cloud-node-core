@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.2.0...v1.3.0) (2021-07-08)
+
+
+### Features
+
+* classdesc can also contain link ([#74](https://www.github.com/googleapis/jsdoc-region-tag/issues/74)) ([e57b3ad](https://www.github.com/googleapis/jsdoc-region-tag/commit/e57b3add05abf0c427c4044d507ca600ef58c102))
+
 ## [1.2.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.1.0...v1.2.0) (2021-07-07)
 
 
