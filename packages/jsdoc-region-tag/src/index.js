@@ -76,6 +76,9 @@ exports.handlers = {
     if (e.doclet.description) {
       e.doclet.description = replaceRelativeLinks(e.doclet.description);
     }
+    if (e.doclet.classdesc) {
+      e.doclet.classdesc = replaceRelativeLinks(e.doclet.classdesc);
+    }
 
     const examples = e.doclet.examples;
 

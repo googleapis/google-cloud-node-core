@@ -54,6 +54,18 @@ describe('jsdoc-region-tag', () => {
         'My description <a href="https://cloud.google.com/foo">foo link</a>'
       );
     });
+    it('replaces single link in classdesc', () => {
+      const doc = {
+        doclet: {
+          classdesc: 'My description <a href="/foo">foo link</a>',
+        },
+      };
+      handlers.newDoclet(doc);
+      assert.strictEqual(
+        doc.doclet.classdesc,
+        'My description <a href="https://cloud.google.com/foo">foo link</a>'
+      );
+    });
     it('replaces multiple links in description', () => {
       const doc = {
         doclet: {
