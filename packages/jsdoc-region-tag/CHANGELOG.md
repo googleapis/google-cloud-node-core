@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.3.1](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.3.0...v1.3.1) (2021-08-11)
+
+
+### Bug Fixes
+
+* **build:** migrate to using main branch ([#79](https://www.github.com/googleapis/jsdoc-region-tag/issues/79)) ([5050615](https://www.github.com/googleapis/jsdoc-region-tag/commit/50506150b7758592df5e389c6a5c3d82b3b20881))
+
 ## [1.3.0](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.2.0...v1.3.0) (2021-07-08)
 
 
