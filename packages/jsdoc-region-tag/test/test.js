@@ -24,7 +24,7 @@ describe('jsdoc-region-tag', () => {
   describe('loadSampleCache', () => {
     it('populates a cache with samples found between region tags', () => {
       const cache = loadSampleCache();
-      const sample = cache.get('bigquery_quickstart');
+      const sample = cache.get('fake_bigquery_quickstart');
       assert(sample.includes('async function createDataset () {'));
     });
   });

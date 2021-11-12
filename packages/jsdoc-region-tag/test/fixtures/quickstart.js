@@ -16,7 +16,7 @@
 'use strict'
 
 function main (datasetName = 'my_new_dataset') {
-  // [START bigquery_quickstart]
+  // [START fake_bigquery_quickstart]
   // Imports the Google Cloud client library
   const { BigQuery } = require('@google-cloud/bigquery')
 
@@ -29,7 +29,7 @@ function main (datasetName = 'my_new_dataset') {
     console.log(`Dataset ${dataset.id} created.`)
   }
   createDataset()
-  // [END bigquery_quickstart]
+  // [END fake_bigquery_quickstart]
 }
 
 const args = process.argv.slice(2)
