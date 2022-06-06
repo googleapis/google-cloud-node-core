@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/googleapis/jsdoc-region-tag/compare/v1.3.1...v2.0.0) (2022-05-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* update library to use Node 12 (#107)
+
+### Build System
+
+* update library to use Node 12 ([#107](https://github.com/googleapis/jsdoc-region-tag/issues/107)) ([5b51796](https://github.com/googleapis/jsdoc-region-tag/commit/5b51796771984cf8b978990025f14faa03c19923))
+
 ### [1.3.1](https://www.github.com/googleapis/jsdoc-region-tag/compare/v1.3.0...v1.3.1) (2021-08-11)
 
 
