@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/googleapis/jsdoc-region-tag/compare/v2.0.0...v2.0.1) (2022-08-23)
+
+
+### Bug Fixes
+
+* remove pip install statements ([#1546](https://github.com/googleapis/jsdoc-region-tag/issues/1546)) ([#111](https://github.com/googleapis/jsdoc-region-tag/issues/111)) ([ea755f0](https://github.com/googleapis/jsdoc-region-tag/commit/ea755f06395ff3d85845afaa9d1e9b6a8ff86a91))
+
 ## [2.0.0](https://github.com/googleapis/jsdoc-region-tag/compare/v1.3.1...v2.0.0) (2022-05-20)
 
 
