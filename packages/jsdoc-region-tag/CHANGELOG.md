@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/googleapis/jsdoc-region-tag/compare/v2.0.1...v3.0.0) (2023-08-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade to Node 14 ([#126](https://github.com/googleapis/jsdoc-region-tag/issues/126))
+
+### Miscellaneous Chores
+
+* Upgrade to Node 14 ([#126](https://github.com/googleapis/jsdoc-region-tag/issues/126)) ([76629d1](https://github.com/googleapis/jsdoc-region-tag/commit/76629d1cb4bd93ee3177edb6e54ce7f3e935787d))
+
 ## [2.0.1](https://github.com/googleapis/jsdoc-region-tag/compare/v2.0.0...v2.0.1) (2022-08-23)
 
 
