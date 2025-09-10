@@ -1,9 +1,9 @@
 ### Please make sure you have searched for information in the following guides.
 
-- [X] Search the issues already opened: https://github.com/GoogleCloudPlatform/google-cloud-node/issues
+- [X] Search the issues already opened: https://github.com/googleapis/google-cloud-node-core/issues
 - [X] Search StackOverflow: http://stackoverflow.com/questions/tagged/google-cloud-platform+node.js
-- [X] Check our Troubleshooting guide: https://googlecloudplatform.github.io/google-cloud-node/#/docs/guides/troubleshooting
-- [X] Check our FAQ: https://googlecloudplatform.github.io/google-cloud-node/#/docs/guides/faq
+- [X] Check our Troubleshooting guide: https://github.com/googleapis/google-cloud-node-core/blob/main/docs/faq.md
+- [X] Check our FAQ: https://github.com/googleapis/google-cloud-node-core/blob/main/docs/troubleshooting.md
 - [X] Check our libraries HOW-TO: https://github.com/googleapis/gax-nodejs/blob/main/client-libraries.md
 - [X] Check out our authentication guide: https://github.com/googleapis/google-auth-library-nodejs
 - [X] Check out handwritten samples for many of our APIs: https://github.com/GoogleCloudPlatform/nodejs-docs-samples

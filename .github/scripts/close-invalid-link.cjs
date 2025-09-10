@@ -22,7 +22,7 @@ async function closeIssue(github, owner, repo, number) {
           owner: owner,
           repo: repo,
           issue_number: number,
-          body: "Issue was opened with an invalid reproduction link. Please make sure the repository is a valid, publicly-accessible github repository, and make sure the url is complete (example: https://github.com/googleapis/google-cloud-node)"
+          body: "Issue was opened with an invalid reproduction link. Please make sure the repository is a valid, publicly-accessible github repository, and make sure the url is complete (example: https://github.com/googleapis/google-cloud-node-core)"
         });
     await github.rest.issues.update({
         owner: owner,

@@ -22,7 +22,7 @@ jobs:
           command: pr
           force: true
           upstream_owner: googleapis
-          upstream_repo: google-cloud-node
+          upstream_repo: google-cloud-node-core
           description: 'Update the list of available APIs in the README.'
           title: 'docs: update the list of available APIs'
           message: 'docs: update the list of available APIs'

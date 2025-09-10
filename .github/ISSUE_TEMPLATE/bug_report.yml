@@ -17,18 +17,18 @@ body:
         guides.
       options:
         - label: "Search the issues already opened:
-            https://github.com/GoogleCloudPlatform/google-cloud-node/issues"
+            https://github.com/googleapis/google-cloud-node-core/issues"
           required: true
         - label: "Search StackOverflow:
             http://stackoverflow.com/questions/tagged/google-cloud-platform+nod\
             e.js"
           required: true
         - label: "Check our Troubleshooting guide:
-            https://github.com/googleapis/google-cloud-node/blob/main/docs/trou\
+            https://github.com/googleapis/google-cloud-node-core/blob/main/docs/trou\
             bleshooting.md"
           required: true
         - label: "Check our FAQ:
-            https://github.com/googleapis/google-cloud-node/blob/main/docs/faq.\
+            https://github.com/googleapis/google-cloud-node-core/blob/main/docs/faq.\
             md"
           required: true
         - label: "Check our libraries HOW-TO:
