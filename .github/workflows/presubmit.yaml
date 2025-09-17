@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 300
       - uses: pnpm/action-setup@v4
         with:
-          version: ^7.0.0
+          version: ^10.0.0
       - run: node --version
       - run: npm i && ci/run_conditional_tests.sh
         name: Run unit tests
