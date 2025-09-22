@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.2](https://github.com/googleapis/google-cloud-node-core/compare/pack-n-play-v3.0.1...pack-n-play-v3.0.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* Lint command in pack-n-play to support when running from ws ([f751b10](https://github.com/googleapis/google-cloud-node-core/commit/f751b10f2883db59e7531e728446c090f568f43a))
+* Samples and system tests ([f909e9d](https://github.com/googleapis/google-cloud-node-core/commit/f909e9d532e2a1c24752e11943c0d8422adc77ad))
+
 ## [3.0.1](https://github.com/googleapis/pack-n-play/compare/v3.0.0...v3.0.1) (2025-04-02)
 
 
