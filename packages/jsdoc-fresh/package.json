@@ -7,17 +7,21 @@
     "test": "echo no tests",
     "fix": "gts fix",
     "docs": "mkdir docs && touch docs/noop.html",
-    "system-test": "echo no system tests",
-    "samples-test": "echo no sample tests",
+    "system-test": "npm run compile && c8 mocha build/system-test",
+    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
     "docs-test": "echo no docs tests"
   },
-  "repository": "googleapis/jsdoc-fresh",
+  "repository": {
+    "type": "git",
+    "directory": "packages/jsdoc-fresh",
+    "url": "https://github.com/googleapis/google-cloud-node-core.git"
+  },
   "author": "Google LLC",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/googleapis/jsdoc-fresh"
   },
-  "homepage": "https://github.com/googleapis/jsdoc-fresh",
+  "homepage": "https://github.com/googleapis/google-cloud-node-core/tree/main/packages/jsdoc-fresh",
   "devDependencies": {
     "gts": "^5.0.0",
     "typescript": "^5.1.6"
