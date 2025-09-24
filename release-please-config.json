@@ -3,7 +3,7 @@
   "initial-version": "0.1.0",
   "packages": {
     "dev-packages/pack-n-play": {},
-    "packages/jsdoc-fresh": {}
+    "dev-packages/jsdoc-fresh": {}
   },
   "plugins": [
     {
