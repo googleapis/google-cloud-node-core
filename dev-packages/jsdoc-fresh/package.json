@@ -9,7 +9,8 @@
     "docs": "mkdir docs && touch docs/noop.html",
     "system-test": "npm run compile && c8 mocha build/system-test",
     "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
-    "docs-test": "echo no docs tests"
+    "docs-test": "echo no docs tests",
+    "compile": "echo no compile script needed",
   },
   "repository": {
     "type": "git",
