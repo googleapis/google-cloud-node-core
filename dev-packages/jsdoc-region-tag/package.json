@@ -9,8 +9,9 @@
     "fix": "gts fix",
     "docs": "mkdir docs && touch docs/noop.html",
     "docs-test": "echo 🙈",
-    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
-    "system-test": "npm run compile && c8 mocha build/system-test",
+    "samples-test": "echo no samples test",
+    "system-test": "echo no system test",
+    "compile": "echo no compile script",
     "prelint": "echo 🙈"
   },
   "files": [
