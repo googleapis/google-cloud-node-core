@@ -4,7 +4,7 @@
   "packages": {
     "dev-packages/jsdoc-fresh": {},
     "dev-packages/pack-n-play": {},
-    "packages/jsdoc-region-tag": {}
+    "dev-packages/jsdoc-region-tag": {}
   },
   "plugins": [
     {
