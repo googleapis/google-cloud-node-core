@@ -9,14 +9,18 @@
     "fix": "gts fix",
     "docs": "mkdir docs && touch docs/noop.html",
     "docs-test": "echo 🙈",
-    "samples-test": "echo 🙈",
-    "system-test": "echo 🙈",
+    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
+    "system-test": "npm run compile && c8 mocha build/system-test",
     "prelint": "echo 🙈"
   },
   "files": [
     "src/index.js"
   ],
-  "repository": "googleapis/jsdoc-region-tag",
+  "repository": {
+    "type": "git",
+    "directory": "packages/jsdoc-region-tag",
+    "url": "https://github.com/googleapis/google-cloud-node-core.git"
+  },
   "keywords": [
     "region",
     "tag",
@@ -28,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/googleapis/jsdoc-region-tag/issues"
   },
-  "homepage": "https://github.com/googleapis/jsdoc-region-tag#readme",
+  "homepage": "https://github.com/googleapis/google-cloud-node-core/tree/main/packages/jsdoc-region-tag",
   "dependencies": {
     "glob": "^7.1.6"
   },
