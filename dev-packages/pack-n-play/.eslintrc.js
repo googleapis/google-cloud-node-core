@@ -1,4 +1,4 @@
-// Config file for esilnt used by gts.
+// Config file for eslint used by gts.
 
 const path = require('path');
 
