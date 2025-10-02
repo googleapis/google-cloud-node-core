@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0 (2025-10-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* monorepo migration
+
+### Bug Fixes
+
+* Monorepo migration ([86a7376](https://github.com/googleapis/google-cloud-node-core/commit/86a7376da60852dae8eacf9ca97a6d302b6b7eb4))
+
 ## [3.0.0](https://github.com/googleapis/jsdoc-region-tag/compare/v2.0.1...v3.0.0) (2023-08-10)
 
 
