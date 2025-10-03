@@ -4,6 +4,18 @@
 
 [1]: https://www.npmjs.com/package/gcp-metadata?activeTab=versions
 
+## [8.1.0](https://github.com/googleapis/google-cloud-node-core/compare/gcp-metadata-v8.0.0...gcp-metadata-v8.1.0) (2025-10-03)
+
+
+### Features
+
+* Remove gts extension from tsconfig in gcp-metadata ([#66](https://github.com/googleapis/google-cloud-node-core/issues/66)) ([25cbd89](https://github.com/googleapis/google-cloud-node-core/commit/25cbd891347c78aab387903f7fc419d1af78dbe3))
+
+
+### Bug Fixes
+
+* Tsconfig in gcp-metadata ([#68](https://github.com/googleapis/google-cloud-node-core/issues/68)) ([80a338c](https://github.com/googleapis/google-cloud-node-core/commit/80a338c41b8a6bc2d139621b426e6097df0f3606))
+
 ## [8.0.0](https://github.com/googleapis/google-cloud-node-core/compare/gcp-metadata-v7.0.1...gcp-metadata-v8.0.0) (2025-10-02)
 
 
