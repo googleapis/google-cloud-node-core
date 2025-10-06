@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+    pull_request:
 name: continuous
 jobs:
   units:
@@ -21,3 +22,35 @@ jobs:
           BUILD_TYPE: continuous
           TEST_TYPE: units
       - run: npm i && npm test
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm install --engine-strict
+      - run: npm test
+        env:
+          MOCHA_THROW_DEPRECATION: false
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm install
+      - run: npm run lint
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm install
+      - run: npm run docs
+      - uses: JustinBeckwith/linkinator-action@v1
+        with:
+          paths: docs/
