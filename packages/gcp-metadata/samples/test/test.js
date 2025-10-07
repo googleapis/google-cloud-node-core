@@ -52,7 +52,10 @@ describe('gcp-metadata samples', () => {
   });
 
   it('should run the quickstart', async () => {
-    const {stdout} = await exec('node quickstart', {env: {GCE_METADATA_HOST: `localhost:${port}`}});
+    // Use process.execPath to ensure the same node executable is used to run the sample.
+    // This is more robust for CI/CD environments.
+    const command = `${process.execPath} quickstart.js`;
+    const {stdout} = await exec(command, {env: {GCE_METADATA_HOST: `localhost:${port}`}});
     assert.match(stdout, /Is available: true/);
   });
 });
