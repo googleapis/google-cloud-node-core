@@ -15,14 +15,44 @@
  */
 
 const {assert} = require('chai');
-const {describe, it} = require('mocha');
+const {describe, it, before, after} = require('mocha');
 const cp = require('child_process');
+const http = require('http');
+const {promisify} = require('util');
 
-const execSync = cmd => cp.execSync(cmd, {encoding: 'utf-8'});
+const exec = promisify(cp.exec);
+
+function handleRequest(req, res) {
+  res.setHeader('Connection', 'close'); // Important to prevent hanging.
+  res.setHeader('Metadata-Flavor', 'Google');
+
+  if (req.url.includes('/instance')) {
+    res.end(JSON.stringify({id: 'mock-instance-id'}));
+  } else if (req.url.includes('/project')) {
+    res.end(JSON.stringify({projectId: 'mock-project-id'}));
+  } else {
+    // Handles the isAvailable() check which hits the root URL.
+    res.end('true');
+  }
+}
 
 describe('gcp-metadata samples', () => {
+  let server;
+  let port;
+
+  before(async () => {
+    // Start a local server to mock the metadata service.
+    server = http.createServer(handleRequest);
+    await promisify(server.listen.bind(server))(0);
+    port = server.address().port;
+  });
+
+  after(async () => {
+    await promisify(server.close.bind(server))();
+  });
+
   it('should run the quickstart', async () => {
-    const stdout = execSync('node quickstart');
-    assert.match(stdout, /Is available/);
+    const {stdout} = await exec('node quickstart', {env: {GCE_METADATA_HOST: `localhost:${port}`}});
+    assert.match(stdout, /Is available: true/);
   });
 });
