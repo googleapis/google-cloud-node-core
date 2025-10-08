@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "typescript",
-    "outDir": "build",
-    "lib": ["dom"],
-     "allowUnreachableCode": false,
+    "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "composite": true,
     "forceConsistentCasingInFileNames": true,
@@ -16,10 +13,15 @@
     "stripInternal": true,
     "strict": true,
     "skipLibCheck": true,
-    "target": "ES2022"
-  },
+    "target": "ES2022",
+    "lib": ["dom", "ES2023"],
+    "rootDir": "typescript",
+    "outDir": "build"
+  },  
   "include": [
     "typescript/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
