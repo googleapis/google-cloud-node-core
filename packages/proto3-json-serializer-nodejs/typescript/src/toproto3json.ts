@@ -52,34 +52,6 @@ function convertSingleValue(value: JSONValue | object): JSONValue {
   return value;
 }
 
-// Convert a value within a repeated or map field
-function convertRepeatedOrMapValue(
-  type: protobuf.Type | protobuf.Enum | null,
-  value: protobuf.Message | JSONValue | null,
-  options?: ToProto3JSONOptions,
-): JSONValue {
-  if (type && 'values' in type) {
-    return convertEnum(type, value as JSONValue, options);
-  }
-  if (type) {
-    return toProto3JSON(value as protobuf.Message, options);
-  }
-  return convertSingleValue(value);
-}
-
-// Convert an enum type to its value
-function convertEnum(
-  type: protobuf.Enum,
-  value: JSONValue,
-  options?: ToProto3JSONOptions,
-): JSONValue {
-  if (options?.numericEnums) {
-    return resolveEnumValueToNumber(type, value as JSONValue);
-  } else {
-    return resolveEnumValueToString(type, value as JSONValue);
-  }
-}
-
 export function toProto3JSON(
   obj: protobuf.Message,
   options?: ToProto3JSONOptions,
@@ -158,19 +130,23 @@ export function toProto3JSON(
         // ignore repeated fields with no values
         continue;
       }
-      result[key] = value.map(element => {
-        return convertRepeatedOrMapValue(fieldResolvedType, element, options);
-      });
+      // if the repeated value has a complex type, convert it to proto3 JSON, otherwise use as is
+      result[key] = value.map(
+        fieldResolvedType
+          ? element => {
+              return toProto3JSON(element, options);
+            }
+          : convertSingleValue,
+      );
       continue;
     }
     if (field.map) {
       const map: JSONObject = {};
       for (const [mapKey, mapValue] of Object.entries(value)) {
-        map[mapKey] = convertRepeatedOrMapValue(
-          fieldResolvedType,
-          mapValue as JSONValue,
-          options,
-        );
+        // if the map value has a complex type, convert it to proto3 JSON, otherwise use as is
+        map[mapKey] = fieldResolvedType
+          ? toProto3JSON(mapValue as protobuf.Message, options)
+          : convertSingleValue(mapValue as JSONValue);
       }
       result[key] = map;
       continue;
@@ -180,7 +156,11 @@ export function toProto3JSON(
       continue;
     }
     if (fieldResolvedType && 'values' in fieldResolvedType && value !== null) {
-      result[key] = convertEnum(fieldResolvedType, value, options);
+      if (options?.numericEnums) {
+        result[key] = resolveEnumValueToNumber(fieldResolvedType, value);
+      } else {
+        result[key] = resolveEnumValueToString(fieldResolvedType, value);
+      }
       continue;
     }
     if (fieldResolvedType) {
