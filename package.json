@@ -25,7 +25,7 @@
     "docs": "npm run docs --ws"
   },
   "workspaces": [
-    "packages/*",
-    "dev-packages/*"
+    "dev-packages/*",
+    "packages/*"
   ]
 }

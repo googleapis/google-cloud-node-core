@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @ts-ignore
-const {packNTest} = require('pack-n-play');
+import {packNTest} from 'pack-n-play';
 import {describe, it} from 'mocha';
 
 describe('Packing test', () => {
@@ -51,7 +50,7 @@ assert.deepStrictEqual(serialized, json);
         dependencies: ['protobufjs@^7.4.0'],
       },
     };
-    await packNTest(options).catch((err: any) => {
+    await packNTest(options).catch(err => {
       console.error(err);
       throw err;
     });
