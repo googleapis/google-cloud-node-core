@@ -16,7 +16,7 @@ import * as protobuf from 'protobufjs';
 import {JSONObject, JSONValue, LongStub} from './types';
 import {Any, googleProtobufAnyToProto3JSON} from './any';
 import {bytesToProto3JSON} from './bytes';
-import {getFullyQualifiedTypeName, wrapperTypes} from './util';
+import {assert, getFullyQualifiedTypeName, wrapperTypes} from './util';
 import {resolveEnumValueToNumber, resolveEnumValueToString} from './enum';
 import {
   googleProtobufListValueToProto3JSON,
@@ -41,16 +41,9 @@ export interface ToProto3JSONOptions {
   numericEnums: boolean;
 }
 
-// Convert a single value, which might happen to be an instance of Long, to JSONValue
-function convertSingleValue(value: JSONValue | object): JSONValue {
-  if (typeof value === 'object') {
-    if (value?.constructor?.name === 'Long') {
-      return (value as LongStub).toString();
-    }
-    throw new Error(`toProto3JSON: don't know how to convert value ${value}`);
-  }
-  return value;
-}
+const id = (x: JSONValue) => {
+  return x;
+};
 
 export function toProto3JSON(
   obj: protobuf.Message,
@@ -136,7 +129,7 @@ export function toProto3JSON(
           ? element => {
               return toProto3JSON(element, options);
             }
-          : convertSingleValue
+          : id
       );
       continue;
     }
@@ -146,7 +139,7 @@ export function toProto3JSON(
         // if the map value has a complex type, convert it to proto3 JSON, otherwise use as is
         map[mapKey] = fieldResolvedType
           ? toProto3JSON(mapValue as protobuf.Message, options)
-          : convertSingleValue(mapValue as JSONValue);
+          : (mapValue as JSONValue);
       }
       result[key] = map;
       continue;
@@ -184,7 +177,12 @@ export function toProto3JSON(
       result[key] = bytesToProto3JSON(value);
       continue;
     }
-    result[key] = convertSingleValue(value);
+    // The remaining case is Long, everything else is an internal error
+    assert(
+      value.constructor.name === 'Long',
+      `toProto3JSON: don't know how to convert field ${key} with value ${value}`
+    );
+    result[key] = (value as LongStub).toString();
     continue;
   }
   return result;

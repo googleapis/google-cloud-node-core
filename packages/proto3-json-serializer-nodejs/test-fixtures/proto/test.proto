@@ -54,7 +54,6 @@ message MessageWithBytesField {
 message MessageWithMap {
     map<string, MapValue> map_field = 3;
     map<string, string> string_map_field = 4;
-    map<string, int64> long_map_field = 5;
 }
 
 message MapValue {
@@ -65,7 +64,6 @@ message MessageWithRepeated {
     repeated string repeated_string = 3;
     repeated RepeatedValue repeated_message = 4;
     repeated string one_more_repeated_string = 5;
-    repeated int64 repeated_long = 6;
 }
 
 message RepeatedValue {

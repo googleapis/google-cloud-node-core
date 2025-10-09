@@ -34,12 +34,6 @@ function testMap(root: protobuf.Root) {
       key1: 'string value 1',
       key2: 'string value 2',
     },
-    longMapField: {
-      '2^63-1': '9223372036854775807',
-      one: '1',
-      'minus one': '-1',
-      zero: '0',
-    },
   });
   const json = {
     mapField: {
@@ -53,12 +47,6 @@ function testMap(root: protobuf.Root) {
     stringMapField: {
       key1: 'string value 1',
       key2: 'string value 2',
-    },
-    longMapField: {
-      '2^63-1': '9223372036854775807',
-      one: '1',
-      'minus one': '-1',
-      zero: '0',
     },
   };
 
