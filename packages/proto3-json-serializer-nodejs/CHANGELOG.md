@@ -1,5 +1,55 @@
 # Changelog
 
+## [4.0.0](https://github.com/googleapis/google-cloud-node-core/compare/proto3-json-serializer-v3.0.2...proto3-json-serializer-v4.0.0) (2025-10-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade to node 18 ([#113](https://github.com/googleapis/google-cloud-node-core/issues/113))
+* require Node 14 ([#72](https://github.com/googleapis/google-cloud-node-core/issues/72))
+* make Node 12 minimum language version ([#38](https://github.com/googleapis/google-cloud-node-core/issues/38))
+* proto3 JSON serializer and deserializer ([#2](https://github.com/googleapis/google-cloud-node-core/issues/2))
+* monorepo migration
+
+### Features
+
+* Make Node 12 minimum language version ([#38](https://github.com/googleapis/google-cloud-node-core/issues/38)) ([96cf642](https://github.com/googleapis/google-cloud-node-core/commit/96cf6422db2aca4d96052917063eb1c2b999e41f))
+* Option to serialize enum values as numbers ([#60](https://github.com/googleapis/google-cloud-node-core/issues/60)) ([1df32ef](https://github.com/googleapis/google-cloud-node-core/commit/1df32ef0018bc255721f0c2ab2f0072a624bc360))
+* Proto3 JSON serializer and deserializer ([#2](https://github.com/googleapis/google-cloud-node-core/issues/2)) ([431ba6e](https://github.com/googleapis/google-cloud-node-core/commit/431ba6ef2d3563e7b0258e234f05bf9769dfcccd))
+* Remove extends from gts in proto3jsonserializer and define attributes in config ([77df54d](https://github.com/googleapis/google-cloud-node-core/commit/77df54d6d72d839cda0e95939d39109231cb822e))
+
+
+### Bug Fixes
+
+* Accept and return strings for int64 and uint64 ([#7](https://github.com/googleapis/google-cloud-node-core/issues/7)) ([3fe4fa9](https://github.com/googleapis/google-cloud-node-core/commit/3fe4fa94b23b2d9996f07b2d335bf458910d0f62))
+* Change eslintrc.json to .js ([cd3e129](https://github.com/googleapis/google-cloud-node-core/commit/cd3e129045f389bb9dd34e0f76b9647a1e597cd2))
+* **deps:** Bump protobuf.js to ^6.11.3 ([#46](https://github.com/googleapis/google-cloud-node-core/issues/46)) ([fb3905a](https://github.com/googleapis/google-cloud-node-core/commit/fb3905ae033302ba69eaf304037997a044e289ed))
+* **deps:** Protobufjs is a dependency for the types ([#23](https://github.com/googleapis/google-cloud-node-core/issues/23)) ([a12cee2](https://github.com/googleapis/google-cloud-node-core/commit/a12cee2f00a992cbc142a35c8fa724daa9500555))
+* **deps:** Update dependency google-proto-files to v3 ([#53](https://github.com/googleapis/google-cloud-node-core/issues/53)) ([407f111](https://github.com/googleapis/google-cloud-node-core/commit/407f111f7e99e57934f3b44e4e6f3705bc3ba03f))
+* **deps:** Update dependency google-proto-files to v4 ([#82](https://github.com/googleapis/google-cloud-node-core/issues/82)) ([6ec85df](https://github.com/googleapis/google-cloud-node-core/commit/6ec85df968cd3aedce38e6345b2e1f8db9fab4b5))
+* **deps:** Update dependency google-proto-files to v5 ([#124](https://github.com/googleapis/google-cloud-node-core/issues/124)) ([6e91f8a](https://github.com/googleapis/google-cloud-node-core/commit/6e91f8a0c73c7ece2406e9c84f9e6e1d439ecbe7))
+* **deps:** Update dependency protobufjs to v7 ([#56](https://github.com/googleapis/google-cloud-node-core/issues/56)) ([748f35d](https://github.com/googleapis/google-cloud-node-core/commit/748f35d2dd27c68527dd6bb287b853faf6379c1c))
+* **deps:** Update protobufjs to 7.2.5 ([426e7b4](https://github.com/googleapis/google-cloud-node-core/commit/426e7b4ff2ab9550dcc3f4c20d7c896626219984))
+* Do not emit empty lists to JSON ([#15](https://github.com/googleapis/google-cloud-node-core/issues/15)) ([aaccf33](https://github.com/googleapis/google-cloud-node-core/commit/aaccf33b42ebdfc1f75efb8e597054a0ddc8cc92))
+* Do not fail for unknown enum values ([#11](https://github.com/googleapis/google-cloud-node-core/issues/11)) ([62ce2a5](https://github.com/googleapis/google-cloud-node-core/commit/62ce2a54af5a5aaa5c89c07ad653ac520d54f5c6))
+* Do not use Node.js assert ([#37](https://github.com/googleapis/google-cloud-node-core/issues/37)) ([5e91138](https://github.com/googleapis/google-cloud-node-core/commit/5e91138e7a9458b846d61ab6957c970270622891))
+* Fix enum serialization in maps and repeated fields ([#129](https://github.com/googleapis/google-cloud-node-core/issues/129)) ([20d790e](https://github.com/googleapis/google-cloud-node-core/commit/20d790e3625469d6e09e467bf251598533dc6d4e))
+* JSON accept special string for NaN, Infinity ([#19](https://github.com/googleapis/google-cloud-node-core/issues/19)) ([d28400d](https://github.com/googleapis/google-cloud-node-core/commit/d28400d8e75e1ccd91da6c0aebba261419cf0dc6))
+* Keep nano second precision when maps between JSON and proto3 ([#28](https://github.com/googleapis/google-cloud-node-core/issues/28)) ([07caed1](https://github.com/googleapis/google-cloud-node-core/commit/07caed1348a0a246e9256fc1e78d99957e17ee46))
+* Monorepo migration ([86a7376](https://github.com/googleapis/google-cloud-node-core/commit/86a7376da60852dae8eacf9ca97a6d302b6b7eb4))
+* Properly convert repeated int64 and maps of int64 ([#96](https://github.com/googleapis/google-cloud-node-core/issues/96)) ([729472e](https://github.com/googleapis/google-cloud-node-core/commit/729472eb2a24df6f5e982691708dd478680ee5c2))
+* Proto3jsonserializer ts config ([dfa0ab4](https://github.com/googleapis/google-cloud-node-core/commit/dfa0ab451c9a95dcb45699834565f7af19142cae))
+* Repeated field can be null in JSON ([#66](https://github.com/googleapis/google-cloud-node-core/issues/66)) ([9ba14c9](https://github.com/googleapis/google-cloud-node-core/commit/9ba14c9836a3ed18d1668eb2c9b1133c6477ce6c))
+* Switch typescript to tilde notation ([#137](https://github.com/googleapis/google-cloud-node-core/issues/137)) ([185846c](https://github.com/googleapis/google-cloud-node-core/commit/185846c43858d027db6d2c0f5a0a13a074add82a))
+* Timestamp without millisecond ([#30](https://github.com/googleapis/google-cloud-node-core/issues/30)) ([a1b15f4](https://github.com/googleapis/google-cloud-node-core/commit/a1b15f40b230fe5bfe62206b94585a10c76bbb32))
+* Use imported protobufjs in toproto3json.ts ([#9](https://github.com/googleapis/google-cloud-node-core/issues/9)) ([e4c35f0](https://github.com/googleapis/google-cloud-node-core/commit/e4c35f0a111be58ea308209d804a2a5b27f6591a))
+
+
+### Miscellaneous Chores
+
+* Require Node 14 ([#72](https://github.com/googleapis/google-cloud-node-core/issues/72)) ([096ee1a](https://github.com/googleapis/google-cloud-node-core/commit/096ee1ac4b65de5582e450b590b6edf73a876738))
+* Upgrade to node 18 ([#113](https://github.com/googleapis/google-cloud-node-core/issues/113)) ([6b263ce](https://github.com/googleapis/google-cloud-node-core/commit/6b263ce83ff3c3785430bc392c2d47713e5e462f))
+
 ## [3.0.2](https://github.com/googleapis/proto3-json-serializer-nodejs/compare/v3.0.1...v3.0.2) (2025-08-12)
 
 

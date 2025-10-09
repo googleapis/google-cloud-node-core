@@ -3,5 +3,5 @@
   "dev-packages/jsdoc-region-tag": "4.0.1",
   "dev-packages/pack-n-play": "4.2.1",
   "packages/gcp-metadata": "8.1.0",
-  "packages/proto3-json-serializer-nodejs": "3.0.2"
+  "packages/proto3-json-serializer-nodejs": "4.0.0"
 }
