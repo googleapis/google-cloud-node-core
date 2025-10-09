@@ -139,21 +139,17 @@ export function fromProto3JSONToInternalRepresentation(
     const fieldType = field.type;
 
     if (field.repeated) {
-      if (value === null) {
-        result[key] = [];
-      } else {
-        if (!Array.isArray(value)) {
-          throw new Error(
-            `fromProto3JSONToInternalRepresentation: expected an array for field ${key}`
-          );
-        }
-        result[key] = value.map(element =>
-          fromProto3JSONToInternalRepresentation(
-            resolvedType || fieldType,
-            element
-          )
+      if (!Array.isArray(value)) {
+        throw new Error(
+          `fromProto3JSONToInternalRepresentation: expected an array for field ${key}`
         );
       }
+      result[key] = value.map(element =>
+        fromProto3JSONToInternalRepresentation(
+          resolvedType || fieldType,
+          element
+        )
+      );
     } else if (field.map) {
       const map: FromObjectValue = {};
       for (const [mapKey, mapValue] of Object.entries(value)) {
