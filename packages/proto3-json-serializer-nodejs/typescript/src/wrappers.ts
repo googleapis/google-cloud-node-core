@@ -48,10 +48,6 @@ export function wrapperToProto3JSON(
     );
     return (obj.value as LongStub).toString();
   }
-  // JSON accept special string values "NaN", "Infinity", and "-Infinity".
-  if (typeof obj.value === 'number' && !Number.isFinite(obj.value)) {
-    return obj.value.toString();
-  }
   return obj.value;
 }
 

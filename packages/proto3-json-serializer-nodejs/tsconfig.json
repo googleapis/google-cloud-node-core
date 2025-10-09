@@ -2,8 +2,7 @@
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "rootDir": "typescript",
-    "outDir": "build",
-    "lib": ["dom"]
+    "outDir": "build"
   },
   "include": [
     "typescript/**/*.ts"
