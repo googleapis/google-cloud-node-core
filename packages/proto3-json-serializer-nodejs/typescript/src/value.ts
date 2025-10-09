@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {assert} from './util';
+import * as assert from 'assert';
 import {FromObjectValue, JSONObject, JSONValue} from './types';
 
 export interface Struct {

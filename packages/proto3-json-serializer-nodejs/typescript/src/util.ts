@@ -35,9 +35,3 @@ export const wrapperTypes = new Set([
   '.google.protobuf.StringValue',
   '.google.protobuf.BytesValue',
 ]);
-
-export function assert(assertion: boolean, message: string) {
-  if (!assertion) {
-    throw new Error(message);
-  }
-}

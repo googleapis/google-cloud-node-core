@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as assert from 'assert';
 import * as protobuf from 'protobufjs';
 import {JSONObject, JSONValue, LongStub} from './types';
 import {Any, googleProtobufAnyToProto3JSON} from './any';
 import {bytesToProto3JSON} from './bytes';
-import {assert, getFullyQualifiedTypeName, wrapperTypes} from './util';
+import {getFullyQualifiedTypeName, wrapperTypes} from './util';
 import {resolveEnumValueToString} from './enum';
 import {
   googleProtobufListValueToProto3JSON,

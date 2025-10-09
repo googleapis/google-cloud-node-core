@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as assert from 'assert';
 import * as protobuf from 'protobufjs';
 import {googleProtobufAnyFromProto3JSON} from './any';
 import {bytesFromProto3JSON} from './bytes';
@@ -22,7 +23,7 @@ import {
   googleProtobufStructFromProto3JSON,
   googleProtobufValueFromProto3JSON,
 } from './value';
-import {assert, getFullyQualifiedTypeName, wrapperTypes} from './util';
+import {getFullyQualifiedTypeName, wrapperTypes} from './util';
 import {googleProtobufDurationFromProto3JSON} from './duration';
 import {googleProtobufTimestampFromProto3JSON} from './timestamp';
 import {wrapperFromProto3JSON} from './wrappers';
@@ -192,11 +193,11 @@ export function fromProto3JSONToInternalRepresentation(
     } else {
       // Message type
       assert(
-        resolvedType !== null,
+        resolvedType,
         `Expected to be able to resolve type for field ${field.name}`
       );
       const deserializedValue = fromProto3JSONToInternalRepresentation(
-        resolvedType!,
+        resolvedType,
         value
       );
       result[key] = deserializedValue;
@@ -216,5 +217,5 @@ export function fromProto3JSON(type: protobuf.Type, json: JSONValue) {
     typeof internalRepr === 'object' && !Array.isArray(internalRepr),
     `fromProto3JSON: expected an object, not ${json}`
   );
-  return type.fromObject(internalRepr as {});
+  return type.fromObject(internalRepr);
 }
