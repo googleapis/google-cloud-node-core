@@ -19,19 +19,18 @@ export function resolveEnumValueToString(
   enumType: protobuf.Enum,
   enumValue: JSONValue
 ) {
-  // for unknown enum values, do not fail and try to do the best we could.
-  // protobuf.js fromObject() will likely ignore unknown values, but at least
-  // we won't fail.
   if (typeof enumValue === 'number') {
     const value = enumType.valuesById[enumValue];
     if (typeof value === 'undefined') {
-      // unknown value, cannot convert to string, returning number as is
-      return enumValue;
+      throw new Error(`enumFromProto3JSON: unknown value id ${enumValue}`);
     }
     return value;
   }
   if (typeof enumValue === 'string') {
-    // for strings, just accept what we got
+    const id = enumType.values[enumValue];
+    if (typeof id === 'undefined') {
+      throw new Error(`enumFromProto3JSON: unknown value ${enumValue}`);
+    }
     return enumValue;
   }
   throw new Error(
