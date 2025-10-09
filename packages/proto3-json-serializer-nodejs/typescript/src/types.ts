@@ -34,7 +34,7 @@ export type FromObjectValue =
   | Uint8Array
   | {[key: string]: FromObjectValue};
 
-// We don't want to import long here, we only need .toString() from it
+// We don't want to import long here, we only need .toNumber() from it
 export interface LongStub {
-  toString: () => string;
+  toNumber: () => number;
 }
