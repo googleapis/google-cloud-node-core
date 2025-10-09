@@ -17,7 +17,7 @@ import {JSONObject, JSONValue, LongStub} from './types';
 import {Any, googleProtobufAnyToProto3JSON} from './any';
 import {bytesToProto3JSON} from './bytes';
 import {assert, getFullyQualifiedTypeName, wrapperTypes} from './util';
-import {resolveEnumValueToNumber, resolveEnumValueToString} from './enum';
+import {resolveEnumValueToString} from './enum';
 import {
   googleProtobufListValueToProto3JSON,
   googleProtobufStructToProto3JSON,
@@ -37,18 +37,11 @@ import {
 } from './wrappers';
 import {FieldMask, googleProtobufFieldMaskToProto3JSON} from './fieldmask';
 
-export interface ToProto3JSONOptions {
-  numericEnums: boolean;
-}
-
 const id = (x: JSONValue) => {
   return x;
 };
 
-export function toProto3JSON(
-  obj: protobuf.Message,
-  options?: ToProto3JSONOptions
-): JSONValue {
+export function toProto3JSON(obj: protobuf.Message): JSONValue {
   const objType = obj.$type;
   if (!objType) {
     throw new Error(
@@ -62,10 +55,7 @@ export function toProto3JSON(
   // Types that require special handling according to
   // https://developers.google.com/protocol-buffers/docs/proto3#json
   if (typeName === '.google.protobuf.Any') {
-    return googleProtobufAnyToProto3JSON(
-      obj as protobuf.Message & Any,
-      options
-    );
+    return googleProtobufAnyToProto3JSON(obj as protobuf.Message & Any);
   }
 
   if (typeName === '.google.protobuf.Value') {
@@ -127,7 +117,7 @@ export function toProto3JSON(
       result[key] = value.map(
         fieldResolvedType
           ? element => {
-              return toProto3JSON(element, options);
+              return toProto3JSON(element);
             }
           : id
       );
@@ -138,7 +128,7 @@ export function toProto3JSON(
       for (const [mapKey, mapValue] of Object.entries(value)) {
         // if the map value has a complex type, convert it to proto3 JSON, otherwise use as is
         map[mapKey] = fieldResolvedType
-          ? toProto3JSON(mapValue as protobuf.Message, options)
+          ? toProto3JSON(mapValue as protobuf.Message)
           : (mapValue as JSONValue);
       }
       result[key] = map;
@@ -149,15 +139,11 @@ export function toProto3JSON(
       continue;
     }
     if (fieldResolvedType && 'values' in fieldResolvedType && value !== null) {
-      if (options?.numericEnums) {
-        result[key] = resolveEnumValueToNumber(fieldResolvedType, value);
-      } else {
-        result[key] = resolveEnumValueToString(fieldResolvedType, value);
-      }
+      result[key] = resolveEnumValueToString(fieldResolvedType, value);
       continue;
     }
     if (fieldResolvedType) {
-      result[key] = toProto3JSON(value, options);
+      result[key] = toProto3JSON(value);
       continue;
     }
     if (
