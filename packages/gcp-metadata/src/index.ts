@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  type GaxiosError,
-  type GaxiosOptions,
-  type GaxiosResponse,
-  request,
-} from 'gaxios';
+import {GaxiosError, GaxiosOptions, GaxiosResponse, request} from 'gaxios';
 import jsonBigint = require('json-bigint');
 import {detectGCPResidency} from './gcp-residency';
 import * as logger from 'google-logging-utils';
