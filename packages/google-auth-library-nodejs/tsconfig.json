@@ -10,7 +10,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
-    "esModuleInterop": true,
+    "esModuleInterop": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "rootDir": ".",
