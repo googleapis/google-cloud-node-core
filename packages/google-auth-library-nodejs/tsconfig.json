@@ -1,7 +1,18 @@
 {
-  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
-    "lib": ["DOM"],
+    "target": "es2019",
+    "module": "commonjs",
+    "lib": [
+      "es2019",
+      "DOM"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "rootDir": ".",
     "outDir": "build"
   },
