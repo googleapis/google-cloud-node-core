@@ -79,7 +79,7 @@
     "pretest": "npm run compile -- --sourceMap",
     "docs": "jsdoc -c .jsdoc.js",
     "samples-setup": "cd samples/ && npm link ../ && npm run setup && cd ../",
-    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
+    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && mocha ../build/test",
     "system-test": "npm run compile && c8 mocha build/system-test",
     "presystem-test": "npm run compile -- --sourceMap",
     "webpack": "webpack",
