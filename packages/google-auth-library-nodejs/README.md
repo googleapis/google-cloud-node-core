@@ -4,7 +4,9 @@
 
 # [Google Auth Library: Node.js Client](https://github.com/googleapis/google-auth-library-nodejs)
 
-[![release level](https://img.shields.io/badge/release%20level-stable-brightgreen.svg?style=flat)](https://cloud.google.com/terms/launch-stages) [![npm version](https://img.shields.io/npm/v/google-auth-library.svg)](https://www.npmjs.com/package/google-auth-library)
+[![release level](https://img.shields.io/badge/release%20level-stable-brightgreen.svg?style=flat)](https://cloud.google.com/terms/launch-stages)
+[![npm version](https://img.shields.io/npm/v/google-auth-library.svg)](https://www.npmjs.com/package/google-auth-library)
+
 
 
 
@@ -310,7 +312,7 @@ $ export CREDS='{
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://accounts.google.com/o/oauth2/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "your-cert-url" 
+  "client_x509_cert_url": "your-cert-url"
 }'
 ```
 Now you can create a new client from the credentials:
@@ -683,7 +685,6 @@ Where the following variables need to be substituted:
 * `$PROJECT_NUMBER`: The Google Cloud project number.
 * `$WORKLOAD_POOL_ID`: The workload pool ID.
 * `$PROVIDER_ID`: The provider ID.
-
 
 The values for audience, service account impersonation URL, and any other builder field can also be found by generating a [credential configuration file with the gcloud CLI](https://cloud.google.com/sdk/gcloud/reference/iam/workload-identity-pools/create-cred-config).
 
