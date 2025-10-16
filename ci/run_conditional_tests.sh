@@ -19,6 +19,10 @@
 # with a non-zero
 set -eo pipefail
 
+echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
+
+export GOOGLE_APPLICATION_CREDENTIALS
+
 export PROJECT_ROOT=$(realpath $(dirname "${BASH_SOURCE[0]}")/..)
 
 # Exit early if owl-bot-staging directory exists. The PR is not ready to merge.
@@ -120,7 +124,7 @@ for subdir in ${subdirs[@]}; do
             pushd ${d}
             # Temporarily allow failure.
             set +e
-            env "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" ${test_script}
+            ${test_script}
             ret=$?
             set -e
             if [ ${ret} -ne 0 ]; then
