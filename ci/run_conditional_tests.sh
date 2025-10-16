@@ -30,8 +30,6 @@ fi
 # A script file for running the test in a sub project.
 test_script="${PROJECT_ROOT}/ci/run_single_test.sh"
 
-export GOOGLE_APPLICATION_CREDENTIALS
-
 
 
 if [ ${BUILD_TYPE} == "presubmit" ]; then
@@ -122,7 +120,7 @@ for subdir in ${subdirs[@]}; do
             pushd ${d}
             # Temporarily allow failure.
             set +e
-            ${test_script}
+            env "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" ${test_script}
             ret=$?
             set -e
             if [ ${ret} -ne 0 ]; then
