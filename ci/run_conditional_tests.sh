@@ -19,8 +19,6 @@
 # with a non-zero
 set -eo pipefail
 
-echo "GOOGLE_APPLICATION_CREDENTIALS is set to: ${GOOGLE_APPLICATION_CREDENTIALS}"
-
 export GOOGLE_APPLICATION_CREDENTIALS
 
 export PROJECT_ROOT=$(realpath $(dirname "${BASH_SOURCE[0]}")/..)

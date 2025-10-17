@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "setup": "node scripts/*.js",
-    "test": "mocha --timeout 60000"
+    "test": "cross-env GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS} mocha --timeout 60000"
   },
   "engines": {
     "node": ">=18"
@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "cross-env": "^7.0.3",
     "mocha": "^8.0.0"
   }
 }
