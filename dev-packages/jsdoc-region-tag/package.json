@@ -4,6 +4,7 @@
   "description": "replace region tags with code samples",
   "main": "src/index.js",
   "scripts": {
+    "prepare": "echo no prepare script needed",
     "test": "c8 mocha test/test.js",
     "lint": "gts check",
     "fix": "gts fix",

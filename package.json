@@ -16,6 +16,9 @@
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
   "scripts": {
+    "preinstall": "npm install --ignore-scripts && npm run prepare",
+    "prepare": "npm run prepare --ws",
+    "compile": "npm run compile --ws",
     "test": "npm test --ws",
     "samples-test": "npm run samples-test --ws",
     "system-test": "npm run system-test --ws",
@@ -26,6 +29,8 @@
   },
   "workspaces": [
     "dev-packages/*",
-    "packages/*"
+    "packages/gaxios",
+    "packages/gcp-metadata",
+    "packages/proto3-json-serializer-nodejs"
   ]
 }
