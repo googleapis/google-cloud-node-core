@@ -15,6 +15,7 @@
  */
 
 import * as execa from 'execa';
+// @ts-ignore
 import * as Arborist from '@npmcli/arborist';
 import * as packlist from 'npm-packlist';
 import * as path from 'path';

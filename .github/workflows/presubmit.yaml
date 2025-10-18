@@ -14,10 +14,10 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: ^10.0.0
-      - run: node --version
-      - run: npm run preinstall
-      - run: npm i && ci/run_conditional_tests.sh
-        name: Run unit tests
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run unit tests
+        run: ci/run_conditional_tests.sh
         env:
           BUILD_TYPE: presubmit
           TEST_TYPE: units
@@ -25,22 +25,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: 18
-      - run: npm run preinstall
-      - run: npm install
-      - run: npm run lint
+          version: ^10.0.0
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run lint
+        run: pnpm -r lint
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: 18
-      - run: npm run preinstall
-      - run: npm install
-      - run: npm run docs
+          version: ^10.0.0
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build docs
+        run: pnpm -r docs
       - uses: JustinBeckwith/linkinator-action@v1
         with:
           paths: docs/
