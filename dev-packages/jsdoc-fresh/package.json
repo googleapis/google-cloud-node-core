@@ -3,6 +3,7 @@
   "version": "5.0.2",
   "description": "Fresh JSDoc 3 Template",
   "scripts": {
+    "prepare": "echo no prepare script needed",
     "prelint": "echo no prelint needed",
     "lint": "gts check",
     "test": "echo no tests",

@@ -15,17 +15,10 @@
   "bugs": {
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
-  "scripts": {
-    "test": "npm test --ws",
-    "samples-test": "npm run samples-test --ws",
-    "system-test": "npm run system-test --ws",
-    "prelint": "npm run prelint --ws",
-    "lint": "npm run lint --ws",
-    "fix": "npm run fix --ws",
-    "docs": "npm run docs --ws"
-  },
-  "workspaces": [
-    "dev-packages/*",
-    "packages/*"
-  ]
+  "dependencies": {
+    "@npmcli/arborist": "^8.0.1",
+    "gts": "^6.0.2",
+    "pnpm": "^10.18.3",
+    "undici-types": "^7.16.0"
+  }
 }
