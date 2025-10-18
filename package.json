@@ -16,7 +16,7 @@
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
   "scripts": {
-    "preinstall": "npm install --ignore-scripts && npm run prepare",
+    "preinstall": "npm install --ignore-scripts --loglevel verbose --no-package-lock-dev && npm run prepare",
     "prepare": "npm run prepare --ws",
     "compile": "npm run compile --ws",
     "test": "npm test --ws",
