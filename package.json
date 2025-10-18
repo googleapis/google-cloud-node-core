@@ -18,6 +18,7 @@
   "dependencies": {
     "@npmcli/arborist": "^8.0.1",
     "gts": "^6.0.2",
-    "pnpm": "^10.18.3"
+    "pnpm": "^10.18.3",
+    "undici-types": "^7.16.0"
   }
 }
