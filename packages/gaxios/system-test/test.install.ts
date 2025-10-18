@@ -21,6 +21,7 @@ import path from 'path';
 import tmp from 'tmp';
 import {promisify} from 'util';
 import {describe, it, before, after} from 'mocha';
+// @ts-ignore
 import {packNTest} from 'pack-n-play';
 
 import {createServer, Server} from 'node:http';
