@@ -12,11 +12,11 @@ jobs:
         with:
           fetch-depth: 300
       - uses: pnpm/action-setup@v4
+        with:
+          version: ^10.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          version: ^10.0.0
-          cache: 'pnpm'
       - run: node --version
       - run: pnpm install
       - run: ci/run_conditional_tests.sh
@@ -29,11 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
+        with:
+          version: ^10.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'pnpm'
-          version: ^10.0.0
       - run: pnpm install
       - run: pnpm run lint
   docs:
@@ -41,11 +41,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
+        with:
+          version: ^10.0.0
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'pnpm'
-          version: ^10.0.0
       - run: pnpm install
       - run: pnpm run docs
       - uses: JustinBeckwith/linkinator-action@v1
