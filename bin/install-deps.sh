@@ -19,7 +19,7 @@ declare -a packages=(
 
 for package in "${packages[@]}"; do
     echo "--- Installing $package ---"
-    npm install "$package"
+    npm install --workspace="$package"
 done
 
 echo "All specified dependencies installed successfully."
