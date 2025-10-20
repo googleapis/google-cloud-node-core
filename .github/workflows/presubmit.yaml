@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          version: ^10.0.0
           cache: 'pnpm'
       - run: node --version
       - run: pnpm install
@@ -32,6 +33,7 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
+          version: ^10.0.0
       - run: pnpm install
       - run: pnpm run lint
   docs:
@@ -43,6 +45,7 @@ jobs:
         with:
           node-version: 18
           cache: 'pnpm'
+          version: ^10.0.0
       - run: pnpm install
       - run: pnpm run docs
       - uses: JustinBeckwith/linkinator-action@v1
