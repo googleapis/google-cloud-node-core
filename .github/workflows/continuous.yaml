@@ -29,8 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install --engine-strict
-      - run: npm test
+      - run: pnpm install
+      - run: pnpm -R test
         env:
           MOCHA_THROW_DEPRECATION: false
   lint:
@@ -40,8 +40,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: npm run lint
+      - run: pnpm install
+      - run: pnpm -r lint
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -49,8 +49,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: npm run docs
+      - run: pnpm install
+      - run: pnpm -r docs
       - uses: JustinBeckwith/linkinator-action@v1
         with:
           paths: docs/
