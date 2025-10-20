@@ -16,7 +16,7 @@
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
   "scripts": {
-    "preinstall": "./bin/install-deps.sh",
+    "preinstall-deps": "./bin/install-deps.sh",
     "test": "npm test --ws",
     "samples-test": "npm run samples-test --ws",
     "system-test": "npm run system-test --ws",

@@ -16,6 +16,7 @@ jobs:
         with:
           version: ^10.0.0
       - run: node --version
+      - run: npm run preinstall-deps
       - run: ci/run_conditional_tests.sh
         name: Run unit tests
         env:
@@ -29,6 +30,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+      - run: npm run preinstall-deps
       - run: npm install --engine-strict
       - run: npm test
         env:
@@ -40,6 +42,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+      - run: npm run preinstall-deps
       - run: npm install
       - run: npm run lint
   docs:
@@ -49,6 +52,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+      - run: npm run preinstall-deps
       - run: npm install
       - run: npm run docs
       - uses: JustinBeckwith/linkinator-action@v1

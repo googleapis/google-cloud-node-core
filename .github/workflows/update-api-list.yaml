@@ -11,6 +11,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 18
+      - run: npm run preinstall-deps
       - run: npm install
       - run: npm run generate
         env:
