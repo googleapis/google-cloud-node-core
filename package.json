@@ -14,5 +14,8 @@
   },
   "bugs": {
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
+  },
+  "dependencies": {
+    "pnpm": "^10.18.3"
   }
 }
