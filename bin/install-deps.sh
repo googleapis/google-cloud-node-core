@@ -13,7 +13,6 @@ declare -a packages=(
     "jsdoc-fresh"
     "pack-n-play"
     "jsdoc-region-tag"
-    "gaxios"
     "gcp-metadata"
 )
 
