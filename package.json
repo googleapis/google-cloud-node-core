@@ -15,6 +15,10 @@
   "bugs": {
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "docs": "pnpm -r docs"
+  },
   "dependencies": {
     "pnpm": "^10.18.3"
   }
