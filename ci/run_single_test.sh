@@ -41,7 +41,7 @@ fi
 
 # Install dependencies
 echo "pnpm install"
-npm pnpm install
+pnpm install
 
 
 retval=0
