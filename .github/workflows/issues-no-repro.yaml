@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 18
-      - run: npm run preinstall-deps
       - run: npm install
         working-directory: ./.github/scripts
       - uses: actions/github-script@v8
