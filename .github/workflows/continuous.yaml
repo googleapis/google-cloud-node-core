@@ -11,44 +11,51 @@ jobs:
       matrix:
         node: [18, 20, 22]
     steps:
-      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
-          version: ^10.0.0
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'pnpm'
       - run: node --version
+      - run: pnpm install
       - run: ci/run_conditional_tests.sh
         name: Run unit tests
         env:
           BUILD_TYPE: continuous
           TEST_TYPE: units
-      - run: npm i && npm test
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
         with:
           node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm -R test
+      - run: pnpm -r test
         env:
           MOCHA_THROW_DEPRECATION: false
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
       - run: pnpm -r lint
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
       - run: pnpm -r docs
       - uses: JustinBeckwith/linkinator-action@v1

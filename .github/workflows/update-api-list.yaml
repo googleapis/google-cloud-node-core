@@ -7,12 +7,12 @@ jobs:
   update-api-list:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: npm run generate
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run generate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: googleapis/code-suggester@v5

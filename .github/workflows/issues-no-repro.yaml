@@ -10,11 +10,11 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v4
         with:
           node-version: 18
-      - run: npm install
+          cache: 'pnpm'
+      - run: pnpm install
         working-directory: ./.github/scripts
       - uses: actions/github-script@v8
         with:
