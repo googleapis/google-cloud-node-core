@@ -12,10 +12,13 @@ jobs:
         with:
           fetch-depth: 300
       - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          version: ^10.0.0
+          node-version: ${{ matrix.node }}
+          cache: 'pnpm'
       - run: node --version
-      - run: npm i && ci/run_conditional_tests.sh
+      - run: pnpm install
+      - run: ci/run_conditional_tests.sh
         name: Run unit tests
         env:
           BUILD_TYPE: presubmit
@@ -24,18 +27,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
       - run: pnpm run lint
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'pnpm'
       - run: pnpm install
       - run: pnpm run docs
       - uses: JustinBeckwith/linkinator-action@v1
