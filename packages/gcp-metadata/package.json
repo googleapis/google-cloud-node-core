@@ -14,7 +14,7 @@
     "build/src"
   ],
   "scripts": {
-    "compile": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsc -p .",
+    "compile": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsc -p tsconfig.json",
     "fix": "gts fix",
     "pretest": "npm run compile",
     "prepare": "npm run compile",
