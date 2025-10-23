@@ -16,13 +16,11 @@ jobs:
         with:
           version: ^10.0.0
       - run: node --version
-      - run: npm run preinstall-deps
       - run: ci/run_conditional_tests.sh
         name: Run unit tests
         env:
           BUILD_TYPE: continuous
           TEST_TYPE: units
-      - run: npm i && npm test
   windows:
     runs-on: windows-latest
     steps:
@@ -30,31 +28,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm run preinstall-deps
-      - run: npm install --engine-strict
-      - run: npm test
+      - run: node --version
+      - run: ci/run_conditional_tests.sh
         env:
           MOCHA_THROW_DEPRECATION: false
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 300 # Fetch all history for comparison
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm run preinstall-deps
       - run: npm install
-      - run: npm run lint
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - run: npm run preinstall-deps
-      - run: npm install
-      - run: npm run docs
-      - uses: JustinBeckwith/linkinator-action@v1
-        with:
-          paths: docs/
+      - run: ci/run_conditional_tests.sh
+        name: Run lint
+        env:
+          BUILD_TYPE: continuous
+          TEST_TYPE: lint
