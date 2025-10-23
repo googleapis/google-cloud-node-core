@@ -6,6 +6,7 @@
     "dev-packages/jsdoc-region-tag": {},
     "dev-packages/pack-n-play": {},
     "packages/gcp-metadata": {},
+    "packages/proto3-json-serializer-nodejs": {},
     "packages/google-auth-library-nodejs": {}
   },
   "plugins": [
