@@ -29,21 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: ci/run_conditional_lint.sh
-        name: Run conditional lint
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 300 # Fetch all history for comparison
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - run: npm install
-      - run: ci/run_conditional_docs.sh
-        name: Run conditional docs
-      - uses: JustinBeckwith/linkinator-action@v1
-        with:
-          paths: docs/
+      - run: npm i && ci/run_conditional_tests.sh
+        name: Run lint
+        env:
+          BUILD_TYPE: presubmit
+          TEST_TYPE: lint
