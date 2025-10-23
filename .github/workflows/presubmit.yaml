@@ -28,7 +28,8 @@ jobs:
         with:
           node-version: 18
       - run: npm install
-      - run: npm run lint
+      - run: ci/run_conditional_lint.sh
+        name: Run conditional lint
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +38,8 @@ jobs:
         with:
           node-version: 18
       - run: npm install
-      - run: npm run docs
+      - run: ci/run_conditional_docs.sh
+        name: Run conditional docs
       - uses: JustinBeckwith/linkinator-action@v1
         with:
           paths: docs/
