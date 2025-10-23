@@ -49,6 +49,6 @@ for pkg_location in ${PACKAGES}; do
     echo "------------------------------------------------------------"
     echo "Running 'npm run ${NPM_SCRIPT}' for changed package in: ${pkg_location}"
     echo "------------------------------------------------------------"
-    (cd "${pkg_location}" && npm run "${NPM_SCRIPT}")
+    (cd "${pkg_location}" && npm i && npm run "${NPM_SCRIPT}")
   fi
 done
