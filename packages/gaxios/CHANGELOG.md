@@ -1,5 +1,94 @@
 # Changelog
 
+## [8.0.0](https://github.com/googleapis/google-cloud-node-core/compare/gaxios-v7.1.2...gaxios-v8.0.0) (2025-10-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* monorepo migration
+* Support AIP-193 for `GaxiosError` ([#699](https://github.com/googleapis/google-cloud-node-core/issues/699))
+* Dual-Support ESM & CJS ([#662](https://github.com/googleapis/google-cloud-node-core/issues/662))
+* Do not treat Buffers as JSON by default ([#621](https://github.com/googleapis/google-cloud-node-core/issues/621))
+* Standardize `baseURL` to `URL`’s spec ([#600](https://github.com/googleapis/google-cloud-node-core/issues/600))
+* Headers should be `Headers` ([#653](https://github.com/googleapis/google-cloud-node-core/issues/653))
+* Upgrade to `node-fetch` v3 ([#617](https://github.com/googleapis/google-cloud-node-core/issues/617))
+* Support Node 18+ ([#650](https://github.com/googleapis/google-cloud-node-core/issues/650))
+* add status as a number to GaxiosError, change code to error code as a string ([#552](https://github.com/googleapis/google-cloud-node-core/issues/552))
+* migrate to Node 14 ([#548](https://github.com/googleapis/google-cloud-node-core/issues/548))
+* examine response content-type if no contentType is set ([#535](https://github.com/googleapis/google-cloud-node-core/issues/535))
+* drop node 10 from engines list, update typescript to 4.6.3 ([#477](https://github.com/googleapis/google-cloud-node-core/issues/477))
+
+### Features
+
+* `fetch`-Compatible API ([#680](https://github.com/googleapis/google-cloud-node-core/issues/680)) ([6d50869](https://github.com/googleapis/google-cloud-node-core/commit/6d50869495bc096887ff2b358e35f45645cef571))
+* Add additional retry configuration options ([#634](https://github.com/googleapis/google-cloud-node-core/issues/634)) ([4930963](https://github.com/googleapis/google-cloud-node-core/commit/493096346b424e07a1ce832a3ea0090aadc7a898))
+* Add request and response interceptors ([#619](https://github.com/googleapis/google-cloud-node-core/issues/619)) ([28719dd](https://github.com/googleapis/google-cloud-node-core/commit/28719dd3dafd8bd35e4dac7c731e22ff737d54b3))
+* Add support for custom backoff ([#498](https://github.com/googleapis/google-cloud-node-core/issues/498)) ([c15ddb0](https://github.com/googleapis/google-cloud-node-core/commit/c15ddb0e2b9ffeaee1e99bb678a9fc57513ebb3f))
+* Do not treat Buffers as JSON by default ([#621](https://github.com/googleapis/google-cloud-node-core/issues/621)) ([30c5d43](https://github.com/googleapis/google-cloud-node-core/commit/30c5d439a8d896d2444f77e1fb7e44e1d33e9dfa))
+* Dual-Support ESM & CJS ([#662](https://github.com/googleapis/google-cloud-node-core/issues/662)) ([0ffaffd](https://github.com/googleapis/google-cloud-node-core/commit/0ffaffda7d0efed02978134dc4873ce2808dd3b0))
+* Enhance Error Redaction ([#609](https://github.com/googleapis/google-cloud-node-core/issues/609)) ([4636b73](https://github.com/googleapis/google-cloud-node-core/commit/4636b73964a8d2c0e1cc387c9e92882d04dcb64c))
+* Extend `instanceof` Support for GaxiosError ([#593](https://github.com/googleapis/google-cloud-node-core/issues/593)) ([9faa857](https://github.com/googleapis/google-cloud-node-core/commit/9faa85799f435ba5190058969902b2b47dc2e40c))
+* Handling missing process global ([c6c9a88](https://github.com/googleapis/google-cloud-node-core/commit/c6c9a88266ddbca8391c44441f9cf4a505af3f8e))
+* Headers should be `Headers` ([#653](https://github.com/googleapis/google-cloud-node-core/issues/653)) ([aaaeddd](https://github.com/googleapis/google-cloud-node-core/commit/aaaeddd6a901e5ba41d3ccf145dd9b350a240668))
+* Open Utility for Merging Headers ([#685](https://github.com/googleapis/google-cloud-node-core/issues/685)) ([a8d2576](https://github.com/googleapis/google-cloud-node-core/commit/a8d25764498ce66b9cbe78ae39eb8e8d27f3a586))
+* Prevent Auth Logging by Default ([#565](https://github.com/googleapis/google-cloud-node-core/issues/565)) ([c547d0c](https://github.com/googleapis/google-cloud-node-core/commit/c547d0c1604b89896669130191e0a545fcb2c3b6))
+* Redact After Retry Attempts ([#689](https://github.com/googleapis/google-cloud-node-core/issues/689)) ([bebc331](https://github.com/googleapis/google-cloud-node-core/commit/bebc3318b87ff3f57e1ec1e9b3f65183b10832cf))
+* Retry `408` by Default ([#616](https://github.com/googleapis/google-cloud-node-core/issues/616)) ([48edf2c](https://github.com/googleapis/google-cloud-node-core/commit/48edf2c09678fa8da2bcf7814c6f67095b0a833c))
+* Standardize `baseURL` to `URL`’s spec ([#600](https://github.com/googleapis/google-cloud-node-core/issues/600)) ([8da492a](https://github.com/googleapis/google-cloud-node-core/commit/8da492a394597a2dfe7d079ba9495ae533467693))
+* Support `HeadersInit` for `GaxiosRequest#headers` ([#686](https://github.com/googleapis/google-cloud-node-core/issues/686)) ([7f1e94d](https://github.com/googleapis/google-cloud-node-core/commit/7f1e94da91f4d043e92c4e86afd59f70d5cbfd12))
+* Support `proxy` option ([#614](https://github.com/googleapis/google-cloud-node-core/issues/614)) ([74b795a](https://github.com/googleapis/google-cloud-node-core/commit/74b795a39babae8a293da6eddfa254dabbd218e9))
+* Support `timeout` for `fetch` and `node-fetch` v3 ([#660](https://github.com/googleapis/google-cloud-node-core/issues/660)) ([cc29562](https://github.com/googleapis/google-cloud-node-core/commit/cc29562c17fc471006bfd9cfafb5e09766f1f1a9))
+* Support AIP-193 for `GaxiosError` ([#699](https://github.com/googleapis/google-cloud-node-core/issues/699)) ([8bef645](https://github.com/googleapis/google-cloud-node-core/commit/8bef64567cab967a0a1d10f2e4d8eb8b17875b6d))
+* Support multipart/related requests ([#610](https://github.com/googleapis/google-cloud-node-core/issues/610)) ([9174265](https://github.com/googleapis/google-cloud-node-core/commit/91742655ef523d9e34d1a5344f7d098c2624d4e6))
+* Support Node 18+ ([#650](https://github.com/googleapis/google-cloud-node-core/issues/650)) ([81f05a1](https://github.com/googleapis/google-cloud-node-core/commit/81f05a1dc03aa008592fe3df10f767ef46c61627))
+* Support URL objects ([#598](https://github.com/googleapis/google-cloud-node-core/issues/598)) ([9b2c6cf](https://github.com/googleapis/google-cloud-node-core/commit/9b2c6cf40f4178315c1fc7475187b54a080c37fb))
+* Upgrade to `node-fetch` v3 ([#617](https://github.com/googleapis/google-cloud-node-core/issues/617)) ([f230c0b](https://github.com/googleapis/google-cloud-node-core/commit/f230c0befae6eb2075b677a78e92ad438e02174a))
+* Use global `URL` ([#703](https://github.com/googleapis/google-cloud-node-core/issues/703)) ([9645e49](https://github.com/googleapis/google-cloud-node-core/commit/9645e490ade7280ad051c7494bcc085e7a9de6df))
+
+
+### Bug Fixes
+
+* `no content` response handling when the `response type` is `json` ([#740](https://github.com/googleapis/google-cloud-node-core/issues/740)) ([65d148a](https://github.com/googleapis/google-cloud-node-core/commit/65d148a7d747c14d085192d43e869d759c44cb5f))
+* Add status as a number to GaxiosError, change code to error code as a string ([#552](https://github.com/googleapis/google-cloud-node-core/issues/552)) ([08f0f90](https://github.com/googleapis/google-cloud-node-core/commit/08f0f90211f0c13692c9cf0b8ee5ea878d5abdb9))
+* Add text to responseType switch statement ([#554](https://github.com/googleapis/google-cloud-node-core/issues/554)) ([fe898d6](https://github.com/googleapis/google-cloud-node-core/commit/fe898d601987576753d9ce52849151ad9f0cf85c))
+* Address codeql warning with hostname matches ([#415](https://github.com/googleapis/google-cloud-node-core/issues/415)) ([b8287f6](https://github.com/googleapis/google-cloud-node-core/commit/b8287f661377aa1dc4b69f6f69309f2f85233293))
+* **deps:** Update dependency uuid to v10 ([#629](https://github.com/googleapis/google-cloud-node-core/issues/629)) ([590f27e](https://github.com/googleapis/google-cloud-node-core/commit/590f27ef571c02ed9f7e48c956c79d2f420589db))
+* **deps:** Update https-proxy-agent to 7.0.1 and fix imports and tests ([#560](https://github.com/googleapis/google-cloud-node-core/issues/560)) ([c4a96d4](https://github.com/googleapis/google-cloud-node-core/commit/c4a96d467b59f6a425bd27cc926dc2fb20f6d235))
+* Do Not Mutate Config for Redacted Retries ([#597](https://github.com/googleapis/google-cloud-node-core/issues/597)) ([2b6eb8c](https://github.com/googleapis/google-cloud-node-core/commit/2b6eb8c36920cb401fc4bb6e257e301eeff73b47))
+* Do not stringify form data ([#475](https://github.com/googleapis/google-cloud-node-core/issues/475)) ([313f802](https://github.com/googleapis/google-cloud-node-core/commit/313f80252949b8110170a4e7edfb4d8e28d07077))
+* Don't iterate over undefined opts.data. ([#711](https://github.com/googleapis/google-cloud-node-core/issues/711)) ([7eb7f77](https://github.com/googleapis/google-cloud-node-core/commit/7eb7f773c9eb58a71b25254406b9cbbed90fa38d))
+* Don't throw an error within a `GaxiosError` ([#569](https://github.com/googleapis/google-cloud-node-core/issues/569)) ([223dc5d](https://github.com/googleapis/google-cloud-node-core/commit/223dc5d6f6be4bf9a424f42be1690626413621e5))
+* Error Redactor Case-Insensitive Matching ([#613](https://github.com/googleapis/google-cloud-node-core/issues/613)) ([8e2a07c](https://github.com/googleapis/google-cloud-node-core/commit/8e2a07c486354c5837bc6cf6b7976a6c2210a0d7))
+* Examine response content-type if no contentType is set ([#535](https://github.com/googleapis/google-cloud-node-core/issues/535)) ([8af6a4b](https://github.com/googleapis/google-cloud-node-core/commit/8af6a4b0b24de75f93422a1de974fed23da04ed1))
+* Fix error handling to extract error information from the response body ([#738](https://github.com/googleapis/google-cloud-node-core/issues/738)) ([d864b64](https://github.com/googleapis/google-cloud-node-core/commit/d864b647655dbaed13b4aeaceeaabd8d66b45e25))
+* Gaxios eslintrc config ([e5019c1](https://github.com/googleapis/google-cloud-node-core/commit/e5019c15950526a931236cee55722316f93ae62d))
+* Gaxios jsdoc template path ([41a809d](https://github.com/googleapis/google-cloud-node-core/commit/41a809d829b6409d21c4a997cd56ae2795591fd8))
+* Gaxios samples and system test scripts commands ([7a7ffe9](https://github.com/googleapis/google-cloud-node-core/commit/7a7ffe9724ad977bab14305987fc00084342414c))
+* Gaxios system test due to missing dependency ([#142](https://github.com/googleapis/google-cloud-node-core/issues/142)) ([9fe2f60](https://github.com/googleapis/google-cloud-node-core/commit/9fe2f601eb74a769cf08ca6556f8c76c1ec1a47e))
+* Gaxios test samples ([9a1b7b5](https://github.com/googleapis/google-cloud-node-core/commit/9a1b7b5978da5c4314cc0fdbb6e539ba44f7f905))
+* Handle invalid json when Content-Type=application/json ([#558](https://github.com/googleapis/google-cloud-node-core/issues/558)) ([4f0a6cd](https://github.com/googleapis/google-cloud-node-core/commit/4f0a6cdfd17b6e82bab11242893e12268289e24a))
+* Monorepo migration ([86a7376](https://github.com/googleapis/google-cloud-node-core/commit/86a7376da60852dae8eacf9ca97a6d302b6b7eb4))
+* Release uuid rollback ([#641](https://github.com/googleapis/google-cloud-node-core/issues/641)) ([05d5ab4](https://github.com/googleapis/google-cloud-node-core/commit/05d5ab42b892a9bcb7ff5d89de7dab71c257b4cd))
+* Return text when content type is text/* ([#579](https://github.com/googleapis/google-cloud-node-core/issues/579)) ([8973397](https://github.com/googleapis/google-cloud-node-core/commit/897339750038ea39e5fc84597072ed39e59364fd))
+* Revert attempting to convert 'text/plain', leave as data in GaxiosError ([#556](https://github.com/googleapis/google-cloud-node-core/issues/556)) ([363f135](https://github.com/googleapis/google-cloud-node-core/commit/363f1356ed5440cb9d46391b501c297ad50a66fa))
+* Translate GaxiosError message to object regardless of return type ([#537](https://github.com/googleapis/google-cloud-node-core/issues/537)) ([2362297](https://github.com/googleapis/google-cloud-node-core/commit/236229748bef9fb1aa6daae823b0414210cee9c4))
+* Translate GaxiosError message to object regardless of return type (return data as default) ([#546](https://github.com/googleapis/google-cloud-node-core/issues/546)) ([fd62be3](https://github.com/googleapis/google-cloud-node-core/commit/fd62be3d66631f537781c284ef038e9ef1b9e854))
+
+
+### Reverts
+
+* Undeprecate `adapter` ([#682](https://github.com/googleapis/google-cloud-node-core/issues/682)) ([f6d7d3f](https://github.com/googleapis/google-cloud-node-core/commit/f6d7d3f412dc69fc1eb03b6e02f02f08b9d46943))
+
+
+### Miscellaneous Chores
+
+* Migrate to Node 14 ([#548](https://github.com/googleapis/google-cloud-node-core/issues/548)) ([ff19222](https://github.com/googleapis/google-cloud-node-core/commit/ff192224e3976cffd26b97b3c7e93e9d97a86942))
+
+
+### Build System
+
+* Drop node 10 from engines list, update typescript to 4.6.3 ([#477](https://github.com/googleapis/google-cloud-node-core/issues/477)) ([c795a21](https://github.com/googleapis/google-cloud-node-core/commit/c795a21c7f63e175c1573a03e232db7b71d97593))
+
 ## [7.1.2](https://github.com/googleapis/gaxios/compare/v7.1.1...v7.1.2) (2025-09-19)
 
 
