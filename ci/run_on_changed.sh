@@ -23,12 +23,16 @@ fi
 NPM_SCRIPT=$1
 
 # Find all package directories by locating their package.json files.
-PACKAGES=$(find packages -name 'package.json' -not -path '*/node_modules/*' -exec dirname {} \;)
+PACKAGES=$(find packages dev-packages -name 'package.json' -not -path '*/node_modules/*' -exec dirname {} \;)
 
 # Determine the list of changed files.
 if [[ -n "$GITHUB_BASE_REF" ]]; then
   # In a pull request context, compare with the base branch.
-  MERGE_BASE=$(git merge-base HEAD "origin/$GITHUB_BASE_REF")
+  # GITHUB_BASE_REF is the name of the branch being targeted (e.g., 'main').
+  # We need to fetch it to be able to compare against it.
+  echo "Fetching origin/${GITHUB_BASE_REF}..."
+  git fetch origin "${GITHUB_BASE_REF}"
+  MERGE_BASE=$(git merge-base HEAD "origin/${GITHUB_BASE_REF}")
   CHANGED_FILES=$(git diff --name-only "$MERGE_BASE" HEAD)
 else
   # In a push context (e.g., to main), compare with the previous commit.
