@@ -85,8 +85,9 @@ async function testShowcase() {
 
   const restClient = new EchoClient(restClientOpts);
   const restClientCompat = new EchoClient(restClientOptsCompat);
+  console.log("PROCESS ENV:", process.env.TEST_TYPE);
 
-  if (process.env.CI) {
+  if (process.env.TEST_TYPE === "system") {
     console.log('CI environment detected, mocking all client methods.');
     const clientsToMock = [
       grpcClient,
