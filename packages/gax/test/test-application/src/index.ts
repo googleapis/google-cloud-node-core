@@ -37,11 +37,13 @@ const pumpify = require('pumpify');
 async function testShowcase() {
   const grpcClientOpts = {
     grpc,
+    servicePath: '127.0.0.1',
     sslCreds: grpc.credentials.createInsecure(),
   };
 
   const grpcClientOptsWithServerStreamingRetries = {
     grpc,
+    servicePath: '127.0.0.1',
     sslCreds: grpc.credentials.createInsecure(),
     gaxServerStreamingRetries: true,
   };
