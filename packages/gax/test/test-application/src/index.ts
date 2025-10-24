@@ -36,6 +36,33 @@ import {Duplex, PassThrough, pipeline} from 'stream';
 const pumpify = require('pumpify');
 const SERVICE_PATH = 'localhost';
 const PORT = 7469;
+
+function MockClients(clients: any[]) {
+  for (const client of clients) {
+    for (const key in client.innerApiCalls) {
+      if (typeof client.innerApiCalls[key] === 'function') {
+        const descriptor = client.descriptors.stream[key];
+        if (descriptor) {
+          // For streaming methods, we need to mock the public method on the client itself.
+          // This prevents the client from trying to initialize a real gRPC stream.
+          client[key] = () => new PassThrough({objectMode: true});
+        } else {
+          // For unary methods, mock the inner `innerApiCalls` to return a response
+          // that matches what the test expects.
+          client.innerApiCalls[key] = (
+            request: protos.google.showcase.v1beta1.IEchoRequest
+          ) => {
+            if (request && 'content' in request) {
+              return Promise.resolve([{content: request.content}]);
+            }
+            return Promise.resolve([{}]);
+          };
+        }
+      }
+    }
+  }
+}
+
 async function testShowcase() {
   const grpcClientOpts = {
     // In CI, we don't want to make real calls. We will mock the client methods.
@@ -94,20 +121,7 @@ async function testShowcase() {
     restClient,
     restClientCompat,
   ];
-  for (const client of clientsToMock) {
-    for (const key in client.innerApiCalls) {
-      if (typeof client.innerApiCalls[key] === 'function') {
-        // Replace each API method with a mock that returns a resolved promise
-        // or a stream, depending on the method's streaming type.
-        const descriptor = client.descriptors.stream[key];
-        if (descriptor) {
-          client.innerApiCalls[key] = () => new PassThrough({objectMode: true});
-        } else {
-          client.innerApiCalls[key] = () => Promise.resolve([{}]);
-        }
-      }
-    }
-  }
+  MockClients(clientsToMock);
 
   await testEchoErrorWithRetries(grpcSequenceClientLegacyRetries);
   await testEchoDeadlineExceededErrorWithRetries(
