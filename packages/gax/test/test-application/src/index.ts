@@ -34,17 +34,21 @@ import {
 import {RequestType} from 'google-gax/build/src/apitypes';
 import {Duplex, PassThrough, pipeline} from 'stream';
 const pumpify = require('pumpify');
+const SERVICE_PATH = 'localhost';
+const PORT = 7469;
 async function testShowcase() {
   const grpcClientOpts = {
     // In CI, we don't want to make real calls. We will mock the client methods.
     // However, we still need to pass valid-looking client options to the constructor.
-    servicePath: process.env.CI ? 'localhost' : undefined,
-    port: process.env.CI ? 1234 : undefined,
+    servicePath: SERVICE_PATH,
+    port: PORT,
     grpc,
     sslCreds: grpc.credentials.createInsecure(),
   };
 
   const grpcClientOptsWithServerStreamingRetries = {
+    servicePath: SERVICE_PATH,
+    port: PORT,
     grpc,
     sslCreds: grpc.credentials.createInsecure(),
     gaxServerStreamingRetries: true,
@@ -53,7 +57,7 @@ async function testShowcase() {
   const restClientOpts = {
     fallback: true,
     protocol: 'http',
-    port: 7469,
+    port: PORT,
     auth: new GoogleAuth({
       authClient: new googleAuthLibrary.PassThroughClient(),
     }),
@@ -62,7 +66,7 @@ async function testShowcase() {
   const restClientOptsCompat = {
     fallback: 'rest' as const,
     protocol: 'http',
-    port: 7469,
+    port: PORT,
     auth: new GoogleAuth({
       authClient: new googleAuthLibrary.PassThroughClient(),
     }),
