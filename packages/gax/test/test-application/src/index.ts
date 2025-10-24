@@ -98,8 +98,9 @@ async function testShowcase() {
     for (const key in client.innerApiCalls) {
       if (typeof client.innerApiCalls[key] === 'function') {
         // Replace each API method with a mock that returns a resolved promise
-        // or a stream, depending on the method type.
-        if (key === 'chat' || key === 'collect') {
+        // or a stream, depending on the method's streaming type.
+        const descriptor = client.descriptors.stream[key];
+        if (descriptor) {
           client.innerApiCalls[key] = () => new PassThrough({objectMode: true});
         } else {
           client.innerApiCalls[key] = () => Promise.resolve([{}]);
