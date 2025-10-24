@@ -41,6 +41,18 @@ function MockClients(clients: any[]) {
   for (const client of clients) {
     for (const key in client.innerApiCalls) {
       if (typeof client.innerApiCalls[key] === 'function') {
+        // Mock LRO methods
+        if (key === 'wait') {
+          client.innerApiCalls[key] = (
+            request: protos.google.showcase.v1beta1.IWaitRequest
+          ) => {
+            const operation = {
+              promise: () => Promise.resolve([request.success]),
+            };
+            return Promise.resolve([operation]);
+          };
+          continue;
+        }
         const descriptor = client.descriptors.stream[key];
         if (descriptor) {
           // For streaming methods, we need to mock the public method on the client itself.
@@ -49,12 +61,18 @@ function MockClients(clients: any[]) {
         } else {
           // For unary methods, mock the inner `innerApiCalls` to return a response
           // that matches what the test expects.
-          client.innerApiCalls[key] = (
-            request: protos.google.showcase.v1beta1.IEchoRequest
-          ) => {
-            if (request && 'content' in request) {
+          client.innerApiCalls[key] = (request: RequestType) => {
+            // EchoClient's `echo` method
+            if (request && 'content' in request && typeof request.content === 'string') {
               return Promise.resolve([{content: request.content}]);
             }
+            // SequenceServiceClient's `createSequence` method
+            if (request && 'sequence' in request) {
+              return Promise.resolve([
+                {name: 'sequences/mocked', responses: []},
+              ]);
+            }
+            // Default mock for other unary calls
             return Promise.resolve([{}]);
           };
         }
