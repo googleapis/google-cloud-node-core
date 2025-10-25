@@ -36,53 +36,87 @@ import {Duplex, PassThrough, pipeline} from 'stream';
 const pumpify = require('pumpify');
 const SERVICE_PATH = 'localhost';
 const PORT = 7469;
+const FAKE_SERVER_RESPONSE = {
+  content: 'fake response',
+};
 
 function MockClients(clients: any[]) {
+  // This is a stateful mock. It keeps track of call counts for each method
+  // to simulate sequences of responses (e.g., for retry tests).
+  const callCounts = new Map<string, number>();
+
   for (const client of clients) {
     for (const key in client.innerApiCalls) {
+      callCounts.set(key, 0);
       if (typeof client.innerApiCalls[key] === 'function') {
-        // Mock LRO methods
-        if (key === 'wait') {
-          client.innerApiCalls[key] = (
-            request: protos.google.showcase.v1beta1.IWaitRequest
-          ) => {
-            const operation = {
-              promise: () => Promise.resolve([request.success]),
-            };
-            return Promise.resolve([operation]);
-          };
-          continue;
-        }
-        // Mock Paged methods
-        if (key === 'pagedExpand') {
-          client.innerApiCalls[key] = (
-            request: protos.google.showcase.v1beta1.IPagedExpandRequest
-          ) => {
-            const responses = (request.content || '').split(' ').map(content => ({ content }));
-            return Promise.resolve([responses, null, { responses }]);
-          };
-        }
         const descriptor = client.descriptors.stream[key];
         if (descriptor) {
           // For streaming methods, we need to mock the public method on the client itself.
           // This prevents the client from trying to initialize a real gRPC stream.
-          client[key] = () => new PassThrough({objectMode: true});
+          client[key] = () => {
+            const stream = new PassThrough({objectMode: true});
+            // For streaming retry tests, we need to simulate a stream that
+            // sends some data and then errors out.
+            if (key === 'attemptStreamingSequence') {
+              const count = callCounts.get(key)!;
+              callCounts.set(key, count + 1);
+              // Fail on the first two attempts for retry tests
+              if (count < 2) {
+                setTimeout(() => {
+                  stream.emit(
+                    'error',
+                    new GoogleError(`Mocked ${Status.UNAVAILABLE} error`)
+                  );
+                }, 10);
+              } else {
+                stream.push(FAKE_SERVER_RESPONSE);
+                stream.end();
+              }
+            } else {
+              // For other streaming methods, just send a fake response and end.
+              stream.push(FAKE_SERVER_RESPONSE);
+              stream.end();
+            }
+            return stream;
+          };
         } else {
           // For unary methods, mock the inner `innerApiCalls` to return a response
           // that matches what the test expects.
           client.innerApiCalls[key] = (request: RequestType) => {
-            // EchoClient's `echo` method
-            if (request && 'content' in request && typeof request.content === 'string') {
-              return Promise.resolve([{content: request.content}]);
+            const count = callCounts.get(key)!;
+            callCounts.set(key, count + 1);
+
+            // For retry tests, fail on the first few calls to `attemptSequence`.
+            if (key === 'attemptSequence' && count < 2) {
+              const error = new GoogleError(
+                `Mocked ${Status.UNAVAILABLE} error`
+              );
+              error.code = Status.UNAVAILABLE;
+              return Promise.reject(error);
             }
-            // SequenceServiceClient's `createSequence` method
-            if (request && 'sequence' in request) {
+
+            // For LRO, return a fake operation object.
+            if (key === 'wait') {
+              const operation = {
+                promise: () => Promise.resolve([(request as any).success]),
+              };
+              return Promise.resolve([operation]);
+            }
+
+            // For paged methods, return a fake paged response.
+            if (key === 'pagedExpand') {
+              return Promise.resolve([[FAKE_SERVER_RESPONSE], null, {}]);
+            }
+
+            // For sequence creation, return a fake sequence name.
+            if (key === 'createSequence' || key === 'createStreamingSequence') {
               return Promise.resolve([
                 {name: 'sequences/mocked', responses: []},
               ]);
             }
-            // Default mock for other unary calls
-            return Promise.resolve([{}]);
+
+            // Default mock for other unary calls (like `echo`).
+            return Promise.resolve([FAKE_SERVER_RESPONSE]);
           };
         }
       }
