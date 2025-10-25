@@ -53,6 +53,15 @@ function MockClients(clients: any[]) {
           };
           continue;
         }
+        // Mock Paged methods
+        if (key === 'pagedExpand') {
+          client.innerApiCalls[key] = (
+            request: protos.google.showcase.v1beta1.IPagedExpandRequest
+          ) => {
+            const responses = (request.content || '').split(' ').map(content => ({ content }));
+            return Promise.resolve([responses, null, { responses }]);
+          };
+        }
         const descriptor = client.descriptors.stream[key];
         if (descriptor) {
           // For streaming methods, we need to mock the public method on the client itself.
