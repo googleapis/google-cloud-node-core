@@ -7,7 +7,8 @@
     "dev-packages/pack-n-play": {},
     "packages/gaxios": {},
     "packages/gcp-metadata": {},
-    "packages/proto3-json-serializer-nodejs": {}
+    "packages/proto3-json-serializer-nodejs": {},
+    "packages/google-auth-library-nodejs": {}
   },
   "plugins": [
     {
