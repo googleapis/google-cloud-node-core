@@ -3,8 +3,7 @@
   "compilerOptions": {
     "lib": ["DOM"],
     "rootDir": ".",
-    "outDir": "build",
-    "skipLibCheck": true
+    "outDir": "build"
   },
   "include": [
     "src/**/*.ts",
