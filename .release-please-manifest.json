@@ -8,5 +8,5 @@
   "packages/google-auth-library-nodejs": "10.4.2",
   "packages/proto3-json-serializer-nodejs": "3.0.3",
   "packages/gax": "5.0.4",
-  "packages/gapic-tools": "1.0.3"
+  "packages/tools": "1.0.3"
 }
