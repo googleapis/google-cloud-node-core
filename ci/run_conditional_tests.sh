@@ -19,10 +19,6 @@
 # with a non-zero
 set -eo pipefail
 
-if [ -z "${BUILD_TYPE}" ]; then
-    export BUILD_TYPE="presubmit"
-fi
-
 export PROJECT_ROOT=$(realpath $(dirname "${BASH_SOURCE[0]}")/..)
 
 # Exit early if owl-bot-staging directory exists. The PR is not ready to merge.
@@ -84,9 +80,6 @@ RETVAL=0
 tests_with_credentials="packages/google-auth-library-nodejs"
 for subdir in ${subdirs[@]}; do
     for d in `ls -d ${subdir}/*/`; do
-        if [[ "${d}" == ".github/scripts/fixtures/" ]]; then
-            continue
-        fi
         d_stripped=${d%/}
         should_test=false
         if [ -n "${GIT_DIFF_ARG}" ]; then
