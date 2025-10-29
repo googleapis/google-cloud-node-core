@@ -78,9 +78,9 @@ subdirs=(
 
 RETVAL=0
 tests_with_credentials="packages/google-auth-library-nodejs"
-
 for subdir in ${subdirs[@]}; do
     for d in `ls -d ${subdir}/*/`; do
+        d_stripped=${d%/}
         should_test=false
         if [ -n "${GIT_DIFF_ARG}" ]; then
             echo "checking changes with 'git diff --quiet ${GIT_DIFF_ARG} ${d}'"
@@ -94,10 +94,10 @@ for subdir in ${subdirs[@]}; do
                 if [[ "${TEST_TYPE}" == "system" ]] || [[ "${TEST_TYPE}" == "lint" ]] || [[ "${TEST_TYPE}" == "units" ]]; then
                     echo "change detected in ${d} for system test"
                     should_test=true
-                elif [[ "${tests_with_credentials[*]}" =~ "${d}" ]] && [[ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+                elif [[ "${tests_with_credentials[*]}" =~ "${d_stripped}" ]] && [[ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
                     echo "change detected in ${d} in a directory that needs credentials"
                     should_test=true
-                elif ! [[ "${tests_with_credentials[*]}" =~ "${d}" ]] && [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+                elif ! [[ "${tests_with_credentials[*]}" =~ "${d_stripped}" ]] && [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
                     echo "change detected in ${d}"
                     should_test=true
                 fi
@@ -107,10 +107,10 @@ for subdir in ${subdirs[@]}; do
             if [[ "${TEST_TYPE}" == "system" ]] || [[ "${TEST_TYPE}" == "lint" ]] || [[ "${TEST_TYPE}" == "units" ]]; then
                 echo "run system test for ${d}"
                 should_test=true
-            elif [[ "${tests_with_credentials[*]}" =~ "${d}" ]] && [[ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+            elif [[ "${tests_with_credentials[*]}" =~ "${d_stripped}" ]] && [[ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
                 echo "run tests with credentials in ${d}"
                 should_test=true
-            elif ! [[ "${tests_with_credentials[*]}" =~ "${d}" ]] && [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+            elif ! [[ "${tests_with_credentials[*]}" =~ "${d_stripped}" ]] && [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
                 echo "run tests in ${d}"
                 should_test=true
             fi
