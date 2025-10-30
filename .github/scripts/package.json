@@ -4,6 +4,8 @@
     "description": "tests for script",
     "scripts": {
         "test": "mocha tests/close-invalid-link.test.cjs && mocha tests/close-or-remove-response-label.test.cjs",
+        "prelint": "echo 'No prelint needed for script tests'",
+        "lint": "echo 'No linting needed for script tests'",
         "samples-test": "echo 'no samples test!'",
         "system-test": "echo 'no system test!'"
     },
