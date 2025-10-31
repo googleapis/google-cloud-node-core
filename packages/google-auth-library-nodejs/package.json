@@ -60,7 +60,7 @@
     "null-loader": "^4.0.0",
     "puppeteer": "^24.0.0",
     "sinon": "^21.0.0",
-    "ts-loader": "^8.0.0",
+    "ts-loader": "^9.0.0",
     "typescript": "5.8.2",
     "webpack": "^5.21.2",
     "webpack-cli": "^4.0.0"

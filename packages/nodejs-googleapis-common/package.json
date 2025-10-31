@@ -83,7 +83,7 @@
     "puppeteer": "^18.2.1",
     "sinon": "^17.0.0",
     "tmp": "^0.2.0",
-    "ts-loader": "^8.0.0",
+    "ts-loader": "^9.0.0",
     "typescript": "^5.8.2",
     "webpack": "^4.0.0",
     "webpack-cli": "^4.0.0"
