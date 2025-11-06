@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.0](https://github.com/googleapis/google-cloud-node-core/compare/gaxios-v7.1.3...gaxios-v7.2.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([294d084](https://github.com/googleapis/google-cloud-node-core/commit/294d0846e644fe81ed71e20452abf21eb8f60c49))
+
 ## [7.1.3](https://github.com/googleapis/google-cloud-node-core/compare/gaxios-v7.1.2...gaxios-v7.1.3) (2025-10-29)
 
 

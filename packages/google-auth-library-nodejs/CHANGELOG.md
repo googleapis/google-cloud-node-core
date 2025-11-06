@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/google-auth-library?activeTab=versions
 
+## [10.6.0](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.5.0...google-auth-library-v10.6.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([a247859](https://github.com/googleapis/google-cloud-node-core/commit/a247859671a791dacc9177fc05332ddabeb81722))
+
 ## [10.5.0](https://github.com/googleapis/google-auth-library-nodejs/compare/v10.4.2...v10.5.0) (2025-10-30)
 
 

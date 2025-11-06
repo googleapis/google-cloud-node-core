@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/googleapis/google-cloud-node-core/compare/google-logging-utils-v1.1.2...google-logging-utils-v1.2.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([0e3a4c0](https://github.com/googleapis/google-cloud-node-core/commit/0e3a4c0358aeb4eceb9c43015c345e732f26aa3b))
+* Add generator tests in actions ([294d084](https://github.com/googleapis/google-cloud-node-core/commit/294d0846e644fe81ed71e20452abf21eb8f60c49))
+
+
+### Bug Fixes
+
+* Package.json links in gax, tools and logging utils ([#498](https://github.com/googleapis/google-cloud-node-core/issues/498)) ([2340de4](https://github.com/googleapis/google-cloud-node-core/commit/2340de472f3936fa80d12535eeaaf540d1f63c8c))
+
 ## [1.1.2](https://github.com/googleapis/google-cloud-node-core/compare/google-logging-utils-v1.1.1...google-logging-utils-v1.1.2) (2025-10-29)
 
 

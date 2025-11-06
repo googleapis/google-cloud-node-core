@@ -5,6 +5,19 @@
 [1]: https://www.npmjs.com/package/gax-nodejs?activeTab=versions
 
 
+## [5.1.0](https://github.com/googleapis/google-cloud-node-core/compare/google-gax-v5.0.5...google-gax-v5.1.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([0e3a4c0](https://github.com/googleapis/google-cloud-node-core/commit/0e3a4c0358aeb4eceb9c43015c345e732f26aa3b))
+* Add generator tests in actions ([294d084](https://github.com/googleapis/google-cloud-node-core/commit/294d0846e644fe81ed71e20452abf21eb8f60c49))
+
+
+### Bug Fixes
+
+* Package.json links in gax, tools and logging utils ([#498](https://github.com/googleapis/google-cloud-node-core/issues/498)) ([2340de4](https://github.com/googleapis/google-cloud-node-core/commit/2340de472f3936fa80d12535eeaaf540d1f63c8c))
+
 ## [5.0.5](https://github.com/googleapis/google-cloud-node-core/compare/google-gax-v5.0.4...google-gax-v5.0.5) (2025-10-29)
 
 

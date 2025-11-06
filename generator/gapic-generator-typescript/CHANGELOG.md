@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.12.0](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.9...gapic-generator-v4.12.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([0ea2f51](https://github.com/googleapis/google-cloud-node-core/commit/0ea2f51742aebd4d255726080075508f914037a0))
+* Add generator tests in actions ([de60bea](https://github.com/googleapis/google-cloud-node-core/commit/de60beaef6be6f5c0ba8bd4a4baef56cdd7d80cf))
+
+
+### Bug Fixes
+
+* Add per-service apiVersion to gapic_metadata ([#788](https://github.com/googleapis/google-cloud-node-core/issues/788)) ([506e3ef](https://github.com/googleapis/google-cloud-node-core/commit/506e3ef1a05ae843a94ee85322b5417774d21227))
+* Generator release config ([#789](https://github.com/googleapis/google-cloud-node-core/issues/789)) ([2a6287c](https://github.com/googleapis/google-cloud-node-core/commit/2a6287cc0fe8f348b282d6a4e07cf536c010fe67))
+
 ## [4.9.12](https://github.com/googleapis/gapic-generator-typescript/compare/v4.11.9...v4.9.12) (2025-10-25)
 
 
