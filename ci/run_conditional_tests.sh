@@ -74,7 +74,6 @@ subdirs=(
     dev-packages
     .github/scripts
     packages
-    generator
 )
 
 RETVAL=0
