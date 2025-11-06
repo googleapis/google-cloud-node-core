@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/gcp-metadata?activeTab=versions
 
+## [8.2.0](https://github.com/googleapis/google-cloud-node-core/compare/gcp-metadata-v8.1.2...gcp-metadata-v8.2.0) (2025-11-06)
+
+
+### Features
+
+* Add generator tests in actions ([294d084](https://github.com/googleapis/google-cloud-node-core/commit/294d0846e644fe81ed71e20452abf21eb8f60c49))
+
 ## [8.1.2](https://github.com/googleapis/google-cloud-node-core/compare/gcp-metadata-v8.1.1...gcp-metadata-v8.1.2) (2025-10-29)
 
 
