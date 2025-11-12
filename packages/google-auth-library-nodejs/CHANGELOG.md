@@ -4,6 +4,14 @@
 
 [1]: https://www.npmjs.com/package/google-auth-library?activeTab=versions
 
+## [10.5.1](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.5.0...google-auth-library-v10.5.1) (2025-11-12)
+
+
+### Bug Fixes
+
+* Monorepo migration ([b7fb314](https://github.com/googleapis/google-cloud-node-core/commit/b7fb314acfb1fde299849a2793e9bf5f0c355867))
+* Monorepo migration ([86a7376](https://github.com/googleapis/google-cloud-node-core/commit/86a7376da60852dae8eacf9ca97a6d302b6b7eb4))
+
 ## [10.5.0](https://github.com/googleapis/google-auth-library-nodejs/compare/v10.4.2...v10.5.0) (2025-10-30)
 
 

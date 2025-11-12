@@ -4,6 +4,32 @@
 
 [1]: https://www.npmjs.com/package/nodejs-googleapis-common?activeTab=versions
 
+## [9.0.0](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.1...googleapis-common-v9.0.0) (2025-11-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump deps ([#591](https://github.com/googleapis/google-cloud-node-core/issues/591))
+* Support Node 18+ ([#583](https://github.com/googleapis/google-cloud-node-core/issues/583))
+
+### Features
+
+* Support Node 18+ ([#583](https://github.com/googleapis/google-cloud-node-core/issues/583)) ([79392f3](https://github.com/googleapis/google-cloud-node-core/commit/79392f315704834f6ed641d6dd8f32df7ec34e94))
+
+
+### Bug Fixes
+
+* Ensure Marshalled `GaxiosResponse` has all properties ([#605](https://github.com/googleapis/google-cloud-node-core/issues/605)) ([5ada723](https://github.com/googleapis/google-cloud-node-core/commit/5ada723b29f43e114cb50d2e8c44cf9b879c100d))
+* Further increase system test timeout ([2253a3d](https://github.com/googleapis/google-cloud-node-core/commit/2253a3d119aa4697d94b006e7f3510b980f46645))
+* Increase system test timeout ([4036df6](https://github.com/googleapis/google-cloud-node-core/commit/4036df62541adb8a2c0ca5b97aee969094b768d3))
+* Monorepo migration ([b7fb314](https://github.com/googleapis/google-cloud-node-core/commit/b7fb314acfb1fde299849a2793e9bf5f0c355867))
+* Monorepo migration ([86a7376](https://github.com/googleapis/google-cloud-node-core/commit/86a7376da60852dae8eacf9ca97a6d302b6b7eb4))
+
+
+### Miscellaneous Chores
+
+* Bump deps ([#591](https://github.com/googleapis/google-cloud-node-core/issues/591)) ([0688fc9](https://github.com/googleapis/google-cloud-node-core/commit/0688fc9e383ff6a92db46b853a4310a54ad48b4f))
+
 ## [8.0.1](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.0...googleapis-common-v8.0.1) (2025-11-11)
 
 
