@@ -4,7 +4,7 @@
 
 [1]: https://www.npmjs.com/package/nodejs-googleapis-common?activeTab=versions
 
-## [8.0.1](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.0...googleapis-common-v8.0.1) (2025-11-06)
+## [8.0.1](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.0...googleapis-common-v8.0.1) (2025-11-11)
 
 
 ### Bug Fixes

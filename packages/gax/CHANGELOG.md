@@ -5,7 +5,7 @@
 [1]: https://www.npmjs.com/package/gax-nodejs?activeTab=versions
 
 
-## [5.0.6](https://github.com/googleapis/google-cloud-node-core/compare/google-gax-v5.0.5...google-gax-v5.0.6) (2025-11-06)
+## [5.0.6](https://github.com/googleapis/google-cloud-node-core/compare/google-gax-v5.0.5...google-gax-v5.0.6) (2025-11-11)
 
 
 ### Bug Fixes
