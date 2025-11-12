@@ -51,7 +51,7 @@
     "@types/json-bigint": "^1.0.4",
     "@types/mocha": "^10.0.9",
     "@types/ncp": "^2.0.8",
-    "@types/node": "^22.9.0",
+    "@types/node": "^24.0.0",
     "@types/sinon": "^17.0.3",
     "@types/tmp": "^0.2.6",
     "c8": "^10.1.2",

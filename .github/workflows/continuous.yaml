@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
       - run: node --version
       - run: ci/run_conditional_tests.sh
         env:
@@ -40,7 +40,7 @@ jobs:
           fetch-depth: 300 # Fetch all history for comparison
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
       - run: npm install
       - run: ci/run_conditional_tests.sh
         name: Run lint
@@ -78,7 +78,7 @@ jobs:
       if: steps.changed-files.outputs.any_changed == 'true'
       uses: actions/setup-node@v6
       with:
-        node-version: 18.x
+        node-version: 24.x
 
     - name: Install Node dependencies with npm
       if: steps.changed-files.outputs.any_changed == 'true'
