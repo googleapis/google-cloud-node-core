@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.11.10](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.9...gapic-generator-v4.11.10) (2025-11-06)
+## [4.11.10](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.9...gapic-generator-v4.11.10) (2025-11-11)
 
 
 ### Bug Fixes
