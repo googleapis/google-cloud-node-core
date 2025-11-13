@@ -81,4 +81,4 @@ async function getToken(tokenOptions: TokenOptions,
     }
 }
 
-export { getToken };
+export { getToken, TokenData };

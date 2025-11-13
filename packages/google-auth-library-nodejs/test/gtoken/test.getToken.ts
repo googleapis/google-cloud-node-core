@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import {describe, it, afterEach} from 'mocha';
 import * as sinon from 'sinon';
 import {GaxiosError, GaxiosOptionsPrepared} from 'gaxios';
-import {getToken} from '../../src/gtoken/getToken';
+import {getToken, TokenData} from '../../src/gtoken/getToken';
 import * as jws from '../../src/gtoken/jwsSign';
 import {Transporter, TokenOptions} from '../../src/gtoken/tokenOptions';
 
@@ -48,6 +48,31 @@ describe('getToken', () => {
     const token = await getToken(tokenOptions, transporter);
 
     assert.deepStrictEqual(token, fakeTokenData);
+    assert.ok(requestStub.calledOnce);
+  });
+
+  it('should return all fields of token data on success', async () => {
+    const fakeTokenData: TokenData = {
+      access_token: 'fake-access-token',
+      expires_in: 3600,
+      token_type: 'Bearer',
+      refresh_token: 'fake-refresh-token',
+      id_token: 'fake-id-token',
+    };
+    const requestStub = sandbox.stub().resolves({data: fakeTokenData});
+    const transporter: Transporter = {
+      request: requestStub,
+    };
+    const tokenOptions: TokenOptions = {
+      iss: 'test@example.com',
+      key: privateKey,
+    };
+
+    const token = await getToken(tokenOptions, transporter);
+
+    assert.deepStrictEqual(token, fakeTokenData);
+    assert.strictEqual(token.refresh_token, fakeTokenData.refresh_token);
+    assert.strictEqual(token.id_token, fakeTokenData.id_token);
     assert.ok(requestStub.calledOnce);
   });
 
