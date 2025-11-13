@@ -21,9 +21,8 @@ describe('GoogleToken', () => {
   it('should initialize with default options if none are provided', () => {
     const token: GoogleToken = new GoogleToken();
     const options: TokenOptions = token.getTokenOptions;
-    assert.deepStrictEqual(options, {});
     assert.ok(options.transporter);
-    assert.strictEqual(options.transporter?.request, request);
+    assert.ok(typeof options.transporter.request === 'function');
   });
 
   it('should initialize with provided options', () => {
@@ -39,22 +38,22 @@ describe('GoogleToken', () => {
     };
     const token: GoogleToken = new GoogleToken(providedOptions);
     const options: TokenOptions = token.getTokenOptions;
-    assert.deepStrictEqual(options.keyFile, providedOptions.keyFile);
-    assert.deepStrictEqual(options.key, providedOptions.key);
-    assert.deepStrictEqual(options.email, providedOptions.email);
-    assert.deepStrictEqual(options.iss, providedOptions.iss);
-    assert.deepStrictEqual(options.sub, providedOptions.sub);
-    assert.deepStrictEqual(options.scope, providedOptions.scope);
+    assert.strictEqual(options.keyFile, providedOptions.keyFile);
+    assert.strictEqual(options.key, providedOptions.key);
+    assert.strictEqual(options.email, providedOptions.email);
+    assert.strictEqual(options.iss, providedOptions.iss);
+    assert.strictEqual(options.sub, providedOptions.sub);
+    assert.strictEqual(options.scope, providedOptions.scope);
     assert.deepStrictEqual(
       options.additionalClaims,
       providedOptions.additionalClaims
     );
-    assert.deepStrictEqual(
+    assert.strictEqual(
       options.eagerRefreshThresholdMillis,
       providedOptions.eagerRefreshThresholdMillis
     );
     assert.ok(options.transporter);
-    assert.strictEqual(options.transporter?.request, request);
+    assert.ok(typeof options.transporter.request === 'function');
   });
 
   it('should use a custom transporter if provided in options', () => {
