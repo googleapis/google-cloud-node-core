@@ -21,7 +21,7 @@ import {
   buildPayloadForJwsSign,
   getJwsSign,
 } from '../../src/gtoken/jwsSign';
-import {TokenOptions} from '../../src/gtoken/googleToken';
+import {TokenOptions} from '../../src/gtoken/tokenOptions';
 
 describe('jwsSign', () => {
   const sandbox = sinon.createSandbox();

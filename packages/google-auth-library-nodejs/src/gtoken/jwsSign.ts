@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {TokenOptions} from './googleToken';
+import {TokenOptions} from './tokenOptions';
 import { sign, SignOptions } from 'jws';
 
 /** The default algorithm for signing JWTs. */
@@ -47,18 +47,15 @@ interface JwsSignPayload {
  */
 function buildPayloadForJwsSign(tokenOptions: TokenOptions): JwsSignPayload {
   const iat = Math.floor(new Date().getTime() / 1000);
-  const additionalClaims = tokenOptions.additionalClaims || {};
-  const payload: JwsSignPayload = Object.assign(
-    {
+  const payload: JwsSignPayload = {
       iss: tokenOptions.iss,
       scope: tokenOptions.scope,
       aud: GOOGLE_TOKEN_URL,
       exp: iat + 3600,
       iat,
       sub: tokenOptions.sub,
-    },
-    additionalClaims
-  );
+      ...tokenOptions.additionalClaims,
+  };
   return payload;
 }
 
