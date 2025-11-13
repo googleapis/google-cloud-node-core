@@ -13,23 +13,28 @@
 // limitations under the License.
 
 import * as assert from 'assert';
-import {describe, it, afterEach} from 'mocha';
+import {describe, it, after} from 'mocha';
 import * as fs from 'fs';
-import * as path from 'path';
-import * as sinon from 'sinon';
 import {getCredentials} from '../../src/gtoken/getCredentials';
 
 describe('getCredentials', () => {
-  const sandbox = sinon.createSandbox();
+  const filePaths: string[] = [];
 
-  afterEach(() => {
-    sandbox.restore();
+  function writeTempFile(name: string, data: string): string {
+    const filePath = `./${name}`;
+    fs.writeFileSync(filePath, data);
+    filePaths.push(filePath);
+    return filePath;
+  }
+
+  after(() => {
+    filePaths.forEach(fs.unlinkSync);
   });
 
   it('should return correct credentials for .json extension', async () => {
     const creds = {private_key: 'private-key', client_email: 'client-email'};
-    sandbox.stub(fs.promises, 'readFile').resolves(JSON.stringify(creds));
-    const credentials = await getCredentials('key.json');
+    const keyPath = writeTempFile('key.json', JSON.stringify(creds));
+    const credentials = await getCredentials(keyPath);
     assert.deepStrictEqual(credentials, {
       privateKey: creds.private_key,
       clientEmail: creds.client_email,
@@ -38,43 +43,55 @@ describe('getCredentials', () => {
 
   it('should throw if private_key is missing from JSON', async () => {
     const creds = {client_email: 'client-email'};
-    sandbox.stub(fs.promises, 'readFile').resolves(JSON.stringify(creds));
-    await assert.rejects(getCredentials('key.json'), /MISSING_CREDENTIALS/);
+    const keyPath = writeTempFile('key-no-pk.json', JSON.stringify(creds));
+    await assert.rejects(getCredentials(keyPath), (err: any) => {
+      assert.strictEqual(err.code, 'MISSING_CREDENTIALS');
+      return true;
+    });
   });
 
   it('should throw if client_email is missing from JSON', async () => {
     const creds = {private_key: 'private-key'};
-    sandbox.stub(fs.promises, 'readFile').resolves(JSON.stringify(creds));
-    await assert.rejects(getCredentials('key.json'), /MISSING_CREDENTIALS/);
+    const keyPath = writeTempFile('key-no-email.json', JSON.stringify(creds));
+    await assert.rejects(getCredentials(keyPath), (err: any) => {
+      assert.strictEqual(err.code, 'MISSING_CREDENTIALS');
+      return true;
+    });
   });
 
   it('should return correct credentials for .pem extension', async () => {
     const privateKey = '-----BEGIN PRIVATE KEY-----...';
-    sandbox.stub(fs.promises, 'readFile').resolves(privateKey);
-    const credentials = await getCredentials('key.pem');
+    const keyPath = writeTempFile('key.pem', privateKey);
+    const credentials = await getCredentials(keyPath);
     assert.deepStrictEqual(credentials, {privateKey});
   });
 
   it('should return correct credentials for .crt extension', async () => {
     const privateKey = '-----BEGIN CERTIFICATE-----...';
-    sandbox.stub(fs.promises, 'readFile').resolves(privateKey);
-    const credentials = await getCredentials('key.crt');
+    const keyPath = writeTempFile('key.crt', privateKey);
+    const credentials = await getCredentials(keyPath);
     assert.deepStrictEqual(credentials, {privateKey});
   });
 
   it('should return correct credentials for .der extension', async () => {
     const privateKey = '-----BEGIN CERTIFICATE-----...';
-    sandbox.stub(fs.promises, 'readFile').resolves(privateKey);
-    const credentials = await getCredentials('key.der');
+    const keyPath = writeTempFile('key.der', privateKey);
+    const credentials = await getCredentials(keyPath);
     assert.deepStrictEqual(credentials, {privateKey});
   });
 
   it('should throw for .p12 extension', async () => {
-    await assert.rejects(getCredentials('key.p12'), /UNKNOWN_CERTIFICATE_TYPE/);
+    await assert.rejects(
+      getCredentials('key.p12'),
+      /certificates are not supported/
+    );
   });
 
   it('should throw for .pfx extension', async () => {
-    await assert.rejects(getCredentials('key.pfx'), /UNKNOWN_CERTIFICATE_TYPE/);
+    await assert.rejects(
+      getCredentials('key.pfx'),
+      /certificates are not supported/
+    );
   });
 
   it('should throw for unknown extension', async () => {
