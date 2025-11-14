@@ -38,11 +38,11 @@ class GoogleToken {
   constructor(options?: TokenOptions) {
     this.tokenOptions = options || {};
     // If a transporter is not set, by default set it to use gaxios.
-    if(options) {
-      this.tokenOptions.transporter = this.tokenOptions.transporter || {
-        request: opts => request(opts),
-      };
-      this.tokenOptions.iss = options.email || options.iss;
+    this.tokenOptions.transporter = this.tokenOptions.transporter || {
+      request: opts => request(opts),
+    };
+    if (!this.tokenOptions.iss) {
+      this.tokenOptions.iss = this.tokenOptions.email;
     }
     if (typeof this.tokenOptions.scope === 'object') {
       this.tokenOptions.scope = this.tokenOptions.scope.join(' ');
@@ -127,9 +127,10 @@ class GoogleToken {
   revokeToken(): Promise<void>;
   revokeToken(callback: (err?: Error) => void): void;
   revokeToken(callback?: (err?: Error) => void): void | Promise<void> {
-    const promise = this.accessToken
-      ? revokeToken(this.accessToken, this.tokenOptions.transporter as Transporter)
-      : Promise.reject(new Error('No token to revoke.'));
+    if (!this.accessToken) {
+      return Promise.reject(new Error('No token to revoke.'));
+    }
+    const promise = revokeToken(this.accessToken, this.tokenOptions.transporter as Transporter);
 
     // If a callback is provided, use it.
     if (callback) {

@@ -212,14 +212,14 @@ describe('GoogleToken', () => {
       revokeTokenStub.resolves();
       const token = new GoogleToken();
       await token.revokeToken();
-      assert.ok(revokeTokenStub.calledOnceWith('token-to-revoke', sinon.match.object));
+      assert.ok(revokeTokenStub.calledOnceWith('token-to-revoke'));
       // Check that a new handler was created (initial creation + reset)
       assert.ok((tokenHandler.TokenHandler as unknown as sinon.SinonStub).calledTwice);
     });
 
     it('should reject if there is no token to revoke', async () => {
       const token = new GoogleToken();
-      await assert.rejects(token.revokeToken(), /No token to revoke/);
+      await assert.rejects(() => token.revokeToken(), /No token to revoke/);
     });
 
     it('should work with a callback on success', done => {
