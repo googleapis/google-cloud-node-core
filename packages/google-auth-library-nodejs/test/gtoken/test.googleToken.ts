@@ -84,7 +84,7 @@ describe('GoogleToken', () => {
       email: 'test@example.com',
     };
     const token: GoogleToken = new GoogleToken(providedOptions);
-    const options: TokenOptions = token.getTokenOptions;
+    const options: TokenOptions = token.googleTokenOptions;
     assert.strictEqual(options.iss, 'test@example.com');
   });
 
@@ -94,13 +94,13 @@ describe('GoogleToken', () => {
       iss: 'original-issuer@example.com',
     };
     const token: GoogleToken = new GoogleToken(providedOptions);
-    const options: TokenOptions = token.getTokenOptions;
+    const options: TokenOptions = token.googleTokenOptions;
     assert.strictEqual(options.iss, 'original-issuer@example.com');
   });
 
   it('should convert array of scopes to a space-delimited string', () => {
     const token = new GoogleToken({scope: ['scope1', 'scope2']});
-    assert.strictEqual(token.getTokenOptions.scope, 'scope1 scope2');
+    assert.strictEqual(token.googleTokenOptions.scope, 'scope1 scope2');
   });
 
   it('should use a custom transporter if provided in options', () => {
