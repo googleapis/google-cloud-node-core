@@ -45,11 +45,68 @@ echo "ℹ️ Initial package: '$initial_package' (from '$initial_package_dir')"
 
 # 2. Find all package.json files in the monorepo.
 echo "🔍 Finding all packages..."
-package_files=$(find packages dev-packages -name "package.json")
+package_files=$(find packages dev-packages -name "package.json" -not -path "*/node_modules/*")
 
 # 3. Build the dependency graph.
-declare -A dependents
-declare -A package_paths
+# --- Map Simulation Functions (for older Bash versions) ---
+# These functions simulate associative arrays using indexed arrays.
+
+_package_paths_keys=()
+_package_paths_values=()
+
+function set_package_path() {
+  local key="$1"
+  local value="$2"
+  local i
+  for i in "${!_package_paths_keys[@]}"; do
+    if [[ "${_package_paths_keys[$i]}" == "$key" ]]; then
+      _package_paths_values[$i]="$value"
+      return
+    fi
+  done
+  _package_paths_keys+=("$key")
+  _package_paths_values+=("$value")
+}
+
+function get_package_path() {
+  local key="$1"
+  local i
+  for i in "${!_package_paths_keys[@]}"; do
+    if [[ "${_package_paths_keys[$i]}" == "$key" ]]; then
+      echo "${_package_paths_values[$i]}"
+      return
+    fi
+  done
+}
+
+_dependents_keys=()
+_dependents_values=()
+
+function add_dependent() {
+  local key="$1"
+  local value="$2"
+  local i
+  for i in "${!_dependents_keys[@]}"; do
+    if [[ "${_dependents_keys[$i]}" == "$key" ]]; then
+      _dependents_values[$i]+="$value "
+      return
+    fi
+  done
+  _dependents_keys+=("$key")
+  _dependents_values+=("$value ")
+}
+
+function get_dependents() {
+  local key="$1"
+  local i
+  for i in "${!_dependents_keys[@]}"; do
+    if [[ "${_dependents_keys[$i]}" == "$key" ]]; then
+      echo "${_dependents_values[$i]}"
+      return
+    fi
+  done
+}
+
 
 echo "🕸️ Building dependency graph..."
 for file in $package_files; do
@@ -60,15 +117,15 @@ for file in $package_files; do
   fi
   package_name=$(jq -r '.name' "$file")
   package_dir=$(dirname "$file")
-  package_paths["$package_name"]="$package_dir"
+  set_package_path "$package_name" "$package_dir"
 
   # Consider both dependencies and devDependencies
-  dependencies=$(jq -r '.dependencies | keys[]?' "$file")
-  devDependencies=$(jq -r '.devDependencies | keys[]?' "$file")
+  dependencies=$(jq -r '(.dependencies // {}) | keys[]?' "$file")
+  devDependencies=$(jq -r '(.devDependencies // {}) | keys[]?' "$file")
 
   for dep in $dependencies $devDependencies; do
     # Add the current package to the list of dependents for the dependency.
-    dependents["$dep"]+="$package_name "
+    add_dependent "$dep" "$package_name"
   done
 done
 
@@ -87,12 +144,12 @@ while [ ${#queue[@]} -gt 0 ]; do
   fi
   visited+=("$current_package")
 
-  if [ -n "${package_paths[$current_package]}" ]; then
+  if [ -n "$(get_package_path "$current_package")" ]; then
     packages_to_test+=("$current_package")
   fi
 
   # Add dependents to the queue
-  for dependent in ${dependents[$current_package]}; do
+  for dependent in $(get_dependents "$current_package"); do
     if ! contains "$dependent" "${visited[@]}"; then
       queue+=("$dependent")
     fi
@@ -104,7 +161,7 @@ echo "✅ Found ${#packages_to_test[@]} packages to test: ${packages_to_test[*]}
 echo ""
 
 for package in "${packages_to_test[@]}"; do
-  package_dir=${package_paths[$package]}
+  package_dir=$(get_package_path "$package")
   echo "--- Running tests for $package in $package_dir ---"
   
   if [ ! -f "$package_dir/package.json" ]; then
