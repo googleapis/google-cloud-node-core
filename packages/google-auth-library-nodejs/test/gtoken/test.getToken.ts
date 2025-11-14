@@ -43,9 +43,10 @@ describe('getToken', () => {
     const tokenOptions: TokenOptions = {
       iss: 'test@example.com',
       key: privateKey,
+      transporter,
     };
 
-    const token = await getToken(tokenOptions, transporter);
+    const token = await getToken(tokenOptions);
 
     assert.deepStrictEqual(token, fakeTokenData);
     assert.ok(requestStub.calledOnce);
@@ -66,9 +67,10 @@ describe('getToken', () => {
     const tokenOptions: TokenOptions = {
       iss: 'test@example.com',
       key: privateKey,
+      transporter,
     };
 
-    const token = await getToken(tokenOptions, transporter);
+    const token = await getToken(tokenOptions);
 
     assert.deepStrictEqual(token, fakeTokenData);
     assert.strictEqual(token.refresh_token, fakeTokenData.refresh_token);
@@ -85,9 +87,10 @@ describe('getToken', () => {
     const tokenOptions: TokenOptions = {
       iss: 'test@example.com',
       key: privateKey,
+      transporter,
     };
 
-    await assert.rejects(getToken(tokenOptions, transporter), expectedError);
+    await assert.rejects(getToken(tokenOptions), expectedError);
   });
 
   it('should format the error message if error details are available', async () => {
@@ -108,10 +111,11 @@ describe('getToken', () => {
     const tokenOptions: TokenOptions = {
       iss: 'test@example.com',
       key: privateKey,
+      transporter,
     };
 
     try {
-      await getToken(tokenOptions, transporter);
+      await getToken(tokenOptions);
       assert.fail('Expected to throw');
     } catch (err: any) {
       assert.strictEqual(err.message, "Request failed with status code 400");
@@ -125,9 +129,11 @@ describe('getToken', () => {
     const transporter: Transporter = {
       request: requestStub,
     };
-    const tokenOptions: TokenOptions = {};
+    const tokenOptions: TokenOptions = {
+      transporter,
+    };
 
-    getToken(tokenOptions, transporter);
+    getToken(tokenOptions);
 
     const gaxiosOpts = requestStub.firstCall.args[0];
     assert.strictEqual(gaxiosOpts.method, 'POST');

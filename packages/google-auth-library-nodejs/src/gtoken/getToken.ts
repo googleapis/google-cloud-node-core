@@ -60,14 +60,16 @@ const generateRequestOptions = (tokenOptions: TokenOptions): GaxiosOptions => {
 /**
  * Fetches an access token.
  * @param tokenOptions The options for the token.
- * @param transporter The transporter to make the request with.
  * @returns A promise that resolves with the token data.
  */
-async function getToken(tokenOptions: TokenOptions,
-    transporter: Transporter): Promise<TokenData> {
+async function getToken(tokenOptions: TokenOptions): Promise<TokenData> {
+    if (!tokenOptions.transporter) {
+        throw new Error('No transporter set.');
+    }
+
     try {
         const gaxiosOptions = generateRequestOptions(tokenOptions);
-        const response: GaxiosResponse<TokenData>= await transporter.request<TokenData>(gaxiosOptions);
+        const response: GaxiosResponse<TokenData>= await tokenOptions.transporter.request<TokenData>(gaxiosOptions);
         return response.data;
     } catch (e) {
         // The error is re-thrown, but we want to format it to be more
