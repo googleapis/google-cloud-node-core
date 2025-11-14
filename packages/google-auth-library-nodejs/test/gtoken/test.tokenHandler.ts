@@ -172,4 +172,33 @@ describe('TokenHandler', () => {
       assert.strictEqual(handler.isTokenExpiring(), false);
     });
   });
+
+  describe('hasExpired', () => {
+    it('should return true if there is no token', () => {
+      const handler = new TokenHandler({}, transporter);
+      assert.strictEqual(handler.hasExpired(), true);
+    });
+
+    it('should return true if token is expired', () => {
+      const handler = new TokenHandler({}, transporter);
+      handler.token = {access_token: 'token'};
+      handler.tokenExpiresAt = new Date().getTime() - 1000;
+      assert.strictEqual(handler.hasExpired(), true);
+    });
+
+    it('should return false if token is within eager refresh threshold but not expired', () => {
+      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000};
+      const handler = new TokenHandler(tokenOptions, transporter);
+      handler.token = {access_token: 'token'};
+      handler.tokenExpiresAt = new Date().getTime() + 3000; // Expires in 3s
+      assert.strictEqual(handler.hasExpired(), false);
+    });
+
+    it('should return false if token is not expired', () => {
+      const handler = new TokenHandler({}, transporter);
+      handler.token = {access_token: 'token'};
+      handler.tokenExpiresAt = new Date().getTime() + 10000; // Expires in 10s
+      assert.strictEqual(handler.hasExpired(), false);
+    });
+  });
 });
