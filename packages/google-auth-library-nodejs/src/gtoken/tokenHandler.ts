@@ -11,8 +11,6 @@ class TokenHandler {
     public tokenExpiresAt: number | undefined;
     /** A promise for an in-flight token request. */
     private inFlightRequest: Promise<TokenData> | undefined;
-    /** The transporter to use for making token requests. */
-    private transporter: Transporter;
     private tokenOptions: TokenOptions;
 
     /**
@@ -20,9 +18,8 @@ class TokenHandler {
      * @param tokenOptions The options for fetching tokens.
      * @param transporter The transporter to use for making requests.
      */
-    constructor(tokenOptions: TokenOptions, transporter: Transporter) {
+    constructor(tokenOptions: TokenOptions) {
         this.tokenOptions = tokenOptions;
-        this.transporter = transporter;
     }
 
     /**
@@ -86,7 +83,7 @@ class TokenHandler {
         }
         // Otherwise, fetch a new token.
         try {
-            this.inFlightRequest = getToken(this.tokenOptions, this.transporter);
+            this.inFlightRequest = getToken(this.tokenOptions);
             const token = await this.inFlightRequest;
             // Cache the new token and its expiration time.
             this.token = token;
