@@ -5,14 +5,29 @@ import { TokenHandler } from './tokenHandler';
 import { revokeToken } from './revokeToken';
 import { TokenData } from './getToken';
 
+/**
+ * Options for fetching an access token.
+ */
 export interface GetTokenOptions {
+  /**
+   * If true, a new token will be fetched, ignoring any cached token.
+   */
   forceRefresh?: boolean;
 }
 
+/**
+ * Callback type for the `getToken` method.
+ */
 export type GetTokenCallback = (err: Error | null, token?: TokenData) => void;
 
+/**
+ * The GoogleToken class is used to manage authentication with Google's OAuth 2.0 authorization server.
+ * It handles fetching, caching, and refreshing of access tokens.
+ */
 class GoogleToken {
+  /** The configuration options for this token instance. */
   private tokenOptions: TokenOptions;
+  /** The handler for token fetching and caching logic. */
   private tokenHandler: TokenHandler;
 
   /**
@@ -22,7 +37,7 @@ class GoogleToken {
    */
   constructor(options?: TokenOptions) {
     this.tokenOptions = options || {};
-    // If transporter is not set, by default set Gaxios.request.
+    // If a transporter is not set, by default set it to use gaxios.
     if(this.tokenOptions) {
       this.tokenOptions.transporter = this.tokenOptions.transporter || {
         request: opts => request(opts),
@@ -32,49 +47,50 @@ class GoogleToken {
   }
 
   /**
-   * Returns the access token.
+   * The most recent access token obtained by this client.
    */
   get accessToken(): string | undefined {
     return this.tokenHandler.token?.access_token;
   }
 
   /**
-   * Returns the ID token.
+   * The most recent ID token obtained by this client.
    */
   get idToken(): string | undefined {
     return this.tokenHandler.token?.id_token;
   }
 
   /**
-   * Returns the token type.
+   * The token type of the most recent access token.
    */
   get tokenType(): string | undefined {
     return this.tokenHandler.token?.token_type;
   }
 
   /**
-   * Returns the refresh token.
+   * The refresh token for the current credentials.
    */
   get refreshToken(): string | undefined {
     return this.tokenHandler.token?.refresh_token;
   }
 
   /**
-   * Returns true if the token has expired.
+   * A boolean indicating if the current token has expired.
    */
   hasExpired(): boolean {
     return this.tokenHandler.hasExpired();
   }
 
   /**
-   * Returns true if the token is expiring soon.
+   * A boolean indicating if the current token is expiring soon,
+   * based on the `eagerRefreshThresholdMillis` option.
    */
   isTokenExpiring(): boolean {
     return this.tokenHandler.isTokenExpiring();
   }
 
   /**
-   * Fetches a new access token.
+   * Fetches a new access token and returns it.
    * @param opts Options for fetching the token.
    */
   getToken(opts?: GetTokenOptions): Promise<TokenData>;
@@ -83,6 +99,7 @@ class GoogleToken {
     callbackOrOptions?: GetTokenCallback | GetTokenOptions,
     opts: GetTokenOptions = {forceRefresh: false}
   ): void | Promise<TokenData> {
+    // Handle the various method overloads.
     let callback: GetTokenCallback | undefined;
     if (typeof callbackOrOptions === 'function') {
       callback = callbackOrOptions;
@@ -90,8 +107,10 @@ class GoogleToken {
       opts = callbackOrOptions;
     }
 
+    // Delegate the token fetching to the token handler.
     const promise = this.tokenHandler.getToken(opts.forceRefresh ?? false);
 
+    // If a callback is provided, use it, otherwise return the promise.
     if (callback) {
       promise.then(token => callback(null, token), callback);
     }
@@ -99,7 +118,7 @@ class GoogleToken {
   }
 
   /**
-   * Revokes the current access token.
+   * Revokes the current access token and resets the token handler.
    */
   revokeToken(): Promise<void>;
   revokeToken(callback: (err?: Error) => void): void;
@@ -108,12 +127,16 @@ class GoogleToken {
       ? revokeToken(this.accessToken, this.tokenOptions.transporter as Transporter)
       : Promise.reject(new Error('No token to revoke.'));
 
+    // If a callback is provided, use it.
     if (callback) {
       promise.then(() => callback(), callback);
     }
-    return promise;
+    // After revoking, reset the token handler to clear the cached token.
+    this.tokenHandler = new TokenHandler(this.tokenOptions);
   }
-
+  /**
+   * Returns the configuration options for this token instance.
+   */
   get googleTokenOptions(): TokenOptions {
     return this.tokenOptions;
   }

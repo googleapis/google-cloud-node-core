@@ -13,11 +13,34 @@
 // limitations under the License.
 
 import * as assert from 'assert';
-import {describe, it} from 'mocha';
-import {GoogleToken, TokenOptions, Transporter} from '../../src/gtoken/googleToken';
-import {GaxiosOptions, GaxiosResponse, request} from 'gaxios';
+import {describe, it, beforeEach, afterEach} from 'mocha';
+import * as sinon from 'sinon';
+import {
+  GoogleToken,
+  TokenOptions,
+  Transporter,
+  TokenData,
+} from '../../src/gtoken/googleToken';
+import {GaxiosOptions, GaxiosResponse} from 'gaxios';
+import * as tokenHandler from '../../src/gtoken/tokenHandler';
+import * as revokeTokenModule from '../../src/gtoken/revokeToken';
 
 describe('GoogleToken', () => {
+  const sandbox = sinon.createSandbox();
+  let tokenHandlerStub: sinon.SinonStubbedInstance<tokenHandler.TokenHandler>;
+  let revokeTokenStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    // Stub the TokenHandler constructor to control its behavior
+    tokenHandlerStub = sandbox.createStubInstance(tokenHandler.TokenHandler);
+    sandbox.stub(tokenHandler, 'TokenHandler').returns(tokenHandlerStub);
+    revokeTokenStub = sandbox.stub(revokeTokenModule, 'revokeToken');
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should initialize with default options if none are provided', () => {
     const token: GoogleToken = new GoogleToken();
     const options: TokenOptions = token.googleTokenOptions;
@@ -81,5 +104,121 @@ describe('GoogleToken', () => {
     const providedOptions: TokenOptions = {email: 'getter@example.com'};
     const token: GoogleToken = new GoogleToken(providedOptions);
     assert.deepStrictEqual(token.googleTokenOptions.email, providedOptions.email);
+  });
+
+  describe('Getters', () => {
+    it('should return undefined for token properties if no token is set', () => {
+      const token = new GoogleToken();
+      assert.strictEqual(token.accessToken, undefined);
+      assert.strictEqual(token.idToken, undefined);
+      assert.strictEqual(token.tokenType, undefined);
+      assert.strictEqual(token.refreshToken, undefined);
+    });
+
+    it('should return correct values from the cached token', () => {
+      const tokenData: TokenData = {
+        access_token: 'access',
+        id_token: 'id',
+        token_type: 'Bearer',
+        refresh_token: 'refresh',
+      };
+      tokenHandlerStub.token = tokenData;
+      const token = new GoogleToken();
+      assert.strictEqual(token.accessToken, 'access');
+      assert.strictEqual(token.idToken, 'id');
+      assert.strictEqual(token.tokenType, 'Bearer');
+      assert.strictEqual(token.refreshToken, 'refresh');
+    });
+  });
+
+  describe('Expiration methods', () => {
+    it('should delegate hasExpired to the token handler', () => {
+      tokenHandlerStub.hasExpired.returns(true);
+      const token = new GoogleToken();
+      assert.strictEqual(token.hasExpired(), true);
+      assert.ok(tokenHandlerStub.hasExpired.calledOnce);
+    });
+
+    it('should delegate isTokenExpiring to the token handler', () => {
+      tokenHandlerStub.isTokenExpiring.returns(false);
+      const token = new GoogleToken();
+      assert.strictEqual(token.isTokenExpiring(), false);
+      assert.ok(tokenHandlerStub.isTokenExpiring.calledOnce);
+    });
+  });
+
+  describe('getToken', () => {
+    it('should call tokenHandler.getToken and return a promise', async () => {
+      const tokenData: TokenData = {access_token: 'new-token'};
+      tokenHandlerStub.getToken.resolves(tokenData);
+      const token = new GoogleToken();
+      const result = await token.getToken({forceRefresh: true});
+      assert.strictEqual(result, tokenData);
+      assert.ok(tokenHandlerStub.getToken.calledOnceWith(true));
+    });
+
+    it('should work with a callback on success', done => {
+      const tokenData: TokenData = {access_token: 'new-token'};
+      tokenHandlerStub.getToken.resolves(tokenData);
+      const token = new GoogleToken();
+      token.getToken((err, result) => {
+        assert.ifError(err);
+        assert.strictEqual(result, tokenData);
+        assert.ok(tokenHandlerStub.getToken.calledOnceWith(false));
+        done();
+      });
+    });
+
+    it('should work with a callback on error', done => {
+      const error = new Error('getToken failed');
+      tokenHandlerStub.getToken.rejects(error);
+      const token = new GoogleToken();
+      token.getToken((err, result) => {
+        assert.strictEqual(err, error);
+        assert.strictEqual(result, undefined);
+        done();
+      });
+    });
+  });
+
+  describe('revokeToken', () => {
+    it('should call revokeToken and reset the handler', async () => {
+      const tokenData: TokenData = {access_token: 'token-to-revoke'};
+      tokenHandlerStub.token = tokenData;
+      revokeTokenStub.resolves();
+      const token = new GoogleToken();
+      await token.revokeToken();
+      assert.ok(revokeTokenStub.calledOnceWith('token-to-revoke', sinon.match.object));
+      // Check that a new handler was created (initial creation + reset)
+      assert.ok((tokenHandler.TokenHandler as unknown as sinon.SinonStub).calledTwice);
+    });
+
+    it('should reject if there is no token to revoke', async () => {
+      const token = new GoogleToken();
+      await assert.rejects(token.revokeToken(), /No token to revoke/);
+    });
+
+    it('should work with a callback on success', done => {
+      const tokenData: TokenData = {access_token: 'token-to-revoke'};
+      tokenHandlerStub.token = tokenData;
+      revokeTokenStub.resolves();
+      const token = new GoogleToken();
+      token.revokeToken(err => {
+        assert.ifError(err);
+        assert.ok(revokeTokenStub.calledOnce);
+        done();
+      });
+    });
+
+    it('should work with a callback on error', done => {
+      const error = new Error('Revoke failed');
+      revokeTokenStub.rejects(error);
+      tokenHandlerStub.token = {access_token: 'token'};
+      const token = new GoogleToken();
+      token.revokeToken(err => {
+        assert.strictEqual(err, error);
+        done();
+      });
+    });
   });
 });
