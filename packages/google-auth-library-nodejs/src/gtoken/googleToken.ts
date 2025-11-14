@@ -38,10 +38,14 @@ class GoogleToken {
   constructor(options?: TokenOptions) {
     this.tokenOptions = options || {};
     // If a transporter is not set, by default set it to use gaxios.
-    if(this.tokenOptions) {
+    if(options) {
       this.tokenOptions.transporter = this.tokenOptions.transporter || {
         request: opts => request(opts),
       };
+      this.tokenOptions.iss = options.email || options.iss;
+    }
+    if (typeof this.tokenOptions.scope === 'object') {
+      this.tokenOptions.scope = this.tokenOptions.scope.join(' ');
     }
     this.tokenHandler = new TokenHandler(this.tokenOptions);
   }

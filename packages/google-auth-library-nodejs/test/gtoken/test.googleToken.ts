@@ -79,6 +79,30 @@ describe('GoogleToken', () => {
     assert.ok(typeof options.transporter.request === 'function');
   });
 
+  it('should set iss from email if provided', () => {
+    const providedOptions: TokenOptions = {
+      email: 'test@example.com',
+    };
+    const token: GoogleToken = new GoogleToken(providedOptions);
+    const options: TokenOptions = token.getTokenOptions;
+    assert.strictEqual(options.iss, 'test@example.com');
+  });
+
+  it('should not override iss with email if both are provided', () => {
+    const providedOptions: TokenOptions = {
+      email: 'test@example.com',
+      iss: 'original-issuer@example.com',
+    };
+    const token: GoogleToken = new GoogleToken(providedOptions);
+    const options: TokenOptions = token.getTokenOptions;
+    assert.strictEqual(options.iss, 'original-issuer@example.com');
+  });
+
+  it('should convert array of scopes to a space-delimited string', () => {
+    const token = new GoogleToken({scope: ['scope1', 'scope2']});
+    assert.strictEqual(token.getTokenOptions.scope, 'scope1 scope2');
+  });
+
   it('should use a custom transporter if provided in options', () => {
     const customTransporter: Transporter = {
       request: async <T>(opts: GaxiosOptions) => {
