@@ -20,7 +20,7 @@ import {GaxiosOptions, GaxiosResponse, request} from 'gaxios';
 describe('GoogleToken', () => {
   it('should initialize with default options if none are provided', () => {
     const token: GoogleToken = new GoogleToken();
-    const options: TokenOptions = token.getTokenOptions;
+    const options: TokenOptions = token.googleTokenOptions;
     assert.ok(options.transporter);
     assert.ok(typeof options.transporter.request === 'function');
   });
@@ -37,7 +37,7 @@ describe('GoogleToken', () => {
       eagerRefreshThresholdMillis: 5000,
     };
     const token: GoogleToken = new GoogleToken(providedOptions);
-    const options: TokenOptions = token.getTokenOptions;
+    const options: TokenOptions = token.googleTokenOptions;
     assert.strictEqual(options.keyFile, providedOptions.keyFile);
     assert.strictEqual(options.key, providedOptions.key);
     assert.strictEqual(options.email, providedOptions.email);
@@ -72,14 +72,14 @@ describe('GoogleToken', () => {
       transporter: customTransporter,
     };
     const token: GoogleToken = new GoogleToken(providedOptions);
-    const options: TokenOptions = token.getTokenOptions;
+    const options: TokenOptions = token.googleTokenOptions;
     assert.deepStrictEqual(options.email, providedOptions.email);
     assert.strictEqual(options.transporter, customTransporter);
   });
 
-  it('getTokenOptions should return the internal tokenOptions object', () => {
+  it('googleTokenOptions should return the internal tokenOptions object', () => {
     const providedOptions: TokenOptions = {email: 'getter@example.com'};
     const token: GoogleToken = new GoogleToken(providedOptions);
-    assert.deepStrictEqual(token.getTokenOptions.email, providedOptions.email);
+    assert.deepStrictEqual(token.googleTokenOptions.email, providedOptions.email);
   });
 });

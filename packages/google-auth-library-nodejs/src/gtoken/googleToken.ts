@@ -20,7 +20,7 @@ class GoogleToken {
     }
   }
 
-  get getTokenOptions(): TokenOptions {
+  get googleTokenOptions(): TokenOptions {
     return this.tokenOptions;
   }
 }
