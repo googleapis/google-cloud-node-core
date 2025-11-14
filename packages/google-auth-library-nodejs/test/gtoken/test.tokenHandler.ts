@@ -38,8 +38,8 @@ describe('TokenHandler', () => {
   });
 
   it('should throw if neither key nor keyFile are provided', async () => {
-    const tokenOptions: TokenOptions = {};
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const tokenOptions: TokenOptions = {transporter};
+    const handler = new TokenHandler(tokenOptions);
     await assert.rejects(
       handler.getToken(false),
       /No key or keyFile set/
@@ -47,14 +47,14 @@ describe('TokenHandler', () => {
   });
 
   it('should process keyFile and fetch a token', async () => {
-    const tokenOptions: TokenOptions = {keyFile: 'key.json'};
+    const tokenOptions: TokenOptions = {keyFile: 'key.json', transporter};
     const credentials = {privateKey: 'private-key', clientEmail: 'email'};
     const tokenData: TokenData = {access_token: 'token'};
 
     getCredentialsStub.resolves(credentials);
     getTokenStub.resolves(tokenData);
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
     const token = await handler.getToken(false);
 
     assert.strictEqual(token, tokenData);
@@ -66,11 +66,11 @@ describe('TokenHandler', () => {
   });
 
   it('should use provided key to fetch a token', async () => {
-    const tokenOptions: TokenOptions = {key: 'private-key'};
+    const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const tokenData: TokenData = {access_token: 'token'};
     getTokenStub.resolves(tokenData);
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
     const token = await handler.getToken(false);
 
     assert.strictEqual(token, tokenData);
@@ -79,11 +79,11 @@ describe('TokenHandler', () => {
   });
 
   it('should return a cached token if it is not expiring', async () => {
-    const tokenOptions: TokenOptions = {key: 'private-key'};
+    const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const tokenData: TokenData = {access_token: 'token'};
     getTokenStub.resolves(tokenData);
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
     handler.token = tokenData;
     handler.tokenExpiresAt = new Date().getTime() + 5000; // Expires in 5 seconds
 
@@ -94,12 +94,12 @@ describe('TokenHandler', () => {
   });
 
   it('should fetch a new token if the cached one is expiring', async () => {
-    const tokenOptions: TokenOptions = {key: 'private-key'};
+    const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const oldToken: TokenData = {access_token: 'old-token'};
     const newToken: TokenData = {access_token: 'new-token'};
     getTokenStub.resolves(newToken);
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
     handler.token = oldToken;
     handler.tokenExpiresAt = new Date().getTime() - 1000; // Expired 1 second ago
 
@@ -110,12 +110,12 @@ describe('TokenHandler', () => {
   });
 
   it('should fetch a new token if forceRefresh is true', async () => {
-    const tokenOptions: TokenOptions = {key: 'private-key'};
+    const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const oldToken: TokenData = {access_token: 'old-token'};
     const newToken: TokenData = {access_token: 'new-token'};
     getTokenStub.resolves(newToken);
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
     handler.token = oldToken;
     handler.tokenExpiresAt = new Date().getTime() + 5000; // Not expired
 
@@ -126,12 +126,12 @@ describe('TokenHandler', () => {
   });
 
   it('should handle in-flight requests correctly', async () => {
-    const tokenOptions: TokenOptions = {key: 'private-key'};
+    const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const tokenData: TokenData = {access_token: 'token'};
     // Make the stub resolve asynchronously to simulate a network request
     getTokenStub.returns(new Promise(resolve => setTimeout(() => resolve(tokenData), 50)));
 
-    const handler = new TokenHandler(tokenOptions, transporter);
+    const handler = new TokenHandler(tokenOptions);
 
     const [token1, token2] = await Promise.all([
       handler.getToken(false),
@@ -145,28 +145,28 @@ describe('TokenHandler', () => {
 
   describe('isTokenExpiring', () => {
     it('should return true if there is no token', () => {
-      const handler = new TokenHandler({}, transporter);
+      const handler = new TokenHandler({transporter});
       assert.strictEqual(handler.isTokenExpiring(), true);
     });
 
     it('should return true if token is expired', () => {
-      const handler = new TokenHandler({}, transporter);
+      const handler = new TokenHandler({transporter});
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() - 1000;
       assert.strictEqual(handler.isTokenExpiring(), true);
     });
 
     it('should return true if token is within eager refresh threshold', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000};
-      const handler = new TokenHandler(tokenOptions, transporter);
+      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 3000; // Expires in 3s, which is < 5s threshold
       assert.strictEqual(handler.isTokenExpiring(), true);
     });
 
     it('should return false if token is not expiring', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000};
-      const handler = new TokenHandler(tokenOptions, transporter);
+      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 10000; // Expires in 10s
       assert.strictEqual(handler.isTokenExpiring(), false);
@@ -175,27 +175,27 @@ describe('TokenHandler', () => {
 
   describe('hasExpired', () => {
     it('should return true if there is no token', () => {
-      const handler = new TokenHandler({}, transporter);
+      const handler = new TokenHandler({transporter});
       assert.strictEqual(handler.hasExpired(), true);
     });
 
     it('should return true if token is expired', () => {
-      const handler = new TokenHandler({}, transporter);
+      const handler = new TokenHandler({transporter});
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() - 1000;
       assert.strictEqual(handler.hasExpired(), true);
     });
 
     it('should return false if token is within eager refresh threshold but not expired', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000};
-      const handler = new TokenHandler(tokenOptions, transporter);
+      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 3000; // Expires in 3s
       assert.strictEqual(handler.hasExpired(), false);
     });
 
     it('should return false if token is not expired', () => {
-      const handler = new TokenHandler({}, transporter);
+      const handler = new TokenHandler({transporter});
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 10000; // Expires in 10s
       assert.strictEqual(handler.hasExpired(), false);
