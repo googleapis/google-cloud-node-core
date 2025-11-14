@@ -35,9 +35,27 @@ describe('index', () => {
     assert(gal.AwsClient);
     assert(gal.BaseExternalAccountClient);
     assert(gal.DownscopedClient);
+    assert(gal.GoogleToken);
     assert(gal.Impersonated);
 
     assert(gal.gaxios);
     assert(gal.gcpMetadata);
+  });
+
+  it('should export GoogleToken types', () => {
+    const tokenOptions: gal.TokenOptions = {
+      key: 'key',
+    };
+    assert.ok(tokenOptions);
+
+    const tokenData: gal.TokenData = {
+      access_token: 'token',
+    };
+    assert.ok(tokenData);
+
+    const transporter: gal.Transporter = {
+      request: async () => ({} as any),
+    };
+    assert.ok(transporter);
   });
 });

@@ -50,6 +50,10 @@ class GoogleToken {
     this.tokenHandler = new TokenHandler(this.tokenOptions);
   }
 
+  get expiresAt(): number | undefined {
+    return this.tokenHandler.tokenExpiresAt;
+  }
+
   /**
    * The most recent access token obtained by this client.
    */

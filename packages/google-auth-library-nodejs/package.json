@@ -26,7 +26,6 @@
     "gaxios": "^7.0.0",
     "gcp-metadata": "^8.0.0",
     "google-logging-utils": "^1.0.0",
-    "gtoken": "^8.0.0",
     "jws": "^4.0.0"
   },
   "devDependencies": {
