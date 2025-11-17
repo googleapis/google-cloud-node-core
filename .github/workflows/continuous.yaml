@@ -58,11 +58,11 @@ jobs:
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       with:
-        fetch-depth: 300
+        fetch-depth: 0 # Fetch all history for comparison on push events
 
     - name: Get changed files
       id: changed-files
-      uses: tj-actions/changed-files@v44
+      uses: tj-actions/changed-files@b6f17e1a44ff6e3dba72d93d4c7b302f4c3cfb9c # v44.0.0
       with:
         files: generator/**
 
