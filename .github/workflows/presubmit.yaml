@@ -47,6 +47,9 @@ jobs:
       with:
         fetch-depth: 0 # Fetch all history for comparison on pull request events
 
+    - name: Mark repo as safe for git
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
     - name: Check for changes in generator
       id: generator-changes
       run: |
