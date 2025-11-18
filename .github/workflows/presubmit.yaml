@@ -45,7 +45,7 @@ jobs:
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       with:
-        fetch-depth: 300
+        fetch-depth: 0 # Fetch all history for comparison on pull request events
 
     - name: Check for changes in generator
       id: generator-changes

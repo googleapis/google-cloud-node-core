@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 300 # Fetch all history for comparison
+          fetch-depth: 0 # Fetch all history for comparison
       - uses: actions/setup-node@v4
         with:
           node-version: 18
