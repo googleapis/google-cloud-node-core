@@ -47,14 +47,16 @@ jobs:
       with:
         fetch-depth: 300
 
-    - name: Get changed files
-      id: changed-files
-      uses: tj-actions/changed-files@v47
+    - name: Check for changes in generator
+      uses: dorny/paths-filter@v3
+      id: generator-changes
       with:
-        files: generator/**
+        filters: |
+          generator:
+            - 'generator/**'
 
     - name: Cache Bazel files
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       id: cache-bazel
       uses: actions/cache@v4
       with:
@@ -62,27 +64,27 @@ jobs:
         key: ${{ runner.os }}-googleapis-20250422-${{ secrets.CACHE_VERSION }}
 
     - name: Setup Node.js
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       uses: actions/setup-node@v6
       with:
         node-version: 18.x
 
     - name: Install Node dependencies with npm
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       run: npm install
       
     - name: Run bazel build
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       working-directory: ./generator/gapic-generator-typescript
       run: bazelisk build --noremote_accept_cached '//...'
 
     - name: Run bazel test
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       working-directory: ./generator/gapic-generator-typescript
       run: bazelisk test --test_output=errors --noremote_accept_cached //...
 
     - name: Verify error conformance
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       working-directory: ./generator/gapic-generator-typescript
       run: |
         curl -sSL https://github.com/googleapis/gapic-config-validator/releases/download/v0.6.0/gapic-config-validator-0.6.0-linux-amd64.tar.gz > config-validator.tar.gz
@@ -92,7 +94,7 @@ jobs:
         ./gapic-error-conformance -plugin="bazel-bin/protoc_plugin_/protoc_plugin"
 
     - name: Prepare baseline artifacts
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       working-directory: ./generator/gapic-generator-typescript
       run: |
         mkdir -p ~/artifacts
@@ -101,14 +103,14 @@ jobs:
         tar cfz ~/artifacts/node_modules.tar.gz node_modules
 
     - name: Save artifacts
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       uses: actions/upload-artifact@v5
       with:
         name: artifacts
         path: ~/artifacts
 
     - name: Test generated libraries
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       run: |
         set -ex
         unzip ~/artifacts/outputs.zip -d library
@@ -126,7 +128,7 @@ jobs:
         done
 
     - name: Test generated ESM libraries
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       run: |
         set -ex
         for lib in showcase kms translate monitoring dlp texttospeech showcase-legacy compute logging bigquery-v2 redis retail; do
@@ -142,13 +144,13 @@ jobs:
         done
 
     - name: Test combined library (Speech)
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       env:
         TEST_ENV_DESTINATION_PATH: generator/gapic-generator-typescript/test-fixtures/google-cloud-speech
       run: generator/gapic-generator-typescript/rules_typescript_gapic/combine_script.sh generator/gapic-generator-typescript/test-fixtures/google-cloud-speech-nodejs v1 "" "" generator/gapic-generator-typescript/node_modules/gapic-tools/build/src/compileProtos.js generator/gapic-generator-typescript/node_modules/gapic-node-processing/build/src/cli.js ""
 
     - name: Run tests for combined library (Speech)
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       run: |
         set -ex
         cd generator/gapic-generator-typescript/test-fixtures/google-cloud-speech
@@ -157,13 +159,13 @@ jobs:
         npm run system-test
 
     - name: Test combined library (Tasks)
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       env:
         TEST_ENV_DESTINATION_PATH: generator/gapic-generator-typescript/test-fixtures/google-cloud-tasks
       run: generator/gapic-generator-typescript/rules_typescript_gapic/combine_script.sh generator/gapic-generator-typescript/test-fixtures/google-cloud-tasks-nodejs v2 "" "" generator/gapic-generator-typescript/node_modules/gapic-tools/build/src/compileProtos.js generator/gapic-generator-typescript/node_modules/gapic-node-processing/build/src/cli.js ""
 
     - name: Run tests for combined library (Tasks)
-      if: steps.changed-files.outputs.any_changed == 'true'
+      if: steps.generator-changes.outputs.generator == 'true'
       run: |
         set -ex
         cd generator/gapic-generator-typescript/test-fixtures/google-cloud-tasks
