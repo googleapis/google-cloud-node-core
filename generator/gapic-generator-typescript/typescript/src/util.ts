@@ -16,6 +16,8 @@ import type * as protos from '../../protos/index.js';
 
 export function commonPrefix(strings: string[]): string {
   if (strings.length === 0) {
+    // testing
+    console.log("testing");
     return '';
   }
   let result = '';
