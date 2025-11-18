@@ -64,13 +64,9 @@ jobs:
       id: generator-changes
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          COMMIT_RANGE="${{ github.event.pull_request.base.sha }}..${{ github.sha }}"
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "^generator/" && echo "changes=true" >> $GITHUB_OUTPUT
         else
-          COMMIT_RANGE="${{ github.event.before }}..${{ github.sha }}"
-        fi
-        echo "Checking for changes in 'generator/**' in range ${COMMIT_RANGE}"
-        if git diff --name-only ${COMMIT_RANGE} | grep -q "^generator/"; then
-          echo "changes=true" >> $GITHUB_OUTPUT
+          git diff --name-only HEAD^ HEAD | grep -q "^generator/" && echo "changes=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Cache Bazel files
