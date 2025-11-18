@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 300
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: ^10.0.0
@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 300 # Fetch all history for comparison
+          fetch-depth: 0 # Fetch all history for comparison
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -51,7 +51,8 @@ jobs:
       id: generator-changes
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q "^generator/" && echo "changes=true" >> $GITHUB_OUTPUT
+          git fetch origin ${{ github.base_ref }}
+          git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep -q "^generator/" && echo "changes=true" >> $GITHUB_OUTPUT
         else
           git diff --name-only HEAD~1 HEAD | grep -q "^generator/" && echo "changes=true" >> $GITHUB_OUTPUT
         fi
