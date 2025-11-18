@@ -23,6 +23,7 @@ import protoJson from '../../protos/protos.json' assert {type: 'json'};
 import * as url from 'url';
 import {API} from './schema/api.js';
 import {processTemplates} from './templater.js';
+console.log("test")
 import {BundleConfigClient, BundleConfig} from './bundle.js';
 import {ServiceYaml} from './serviceyaml.js';
 import {commonPrefix} from './util.js';
