@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/googleapis/gaxios/branch/master/graph/badge.svg)](https://codecov.io/gh/googleapis/gaxios)
 [![Code Style: Google](https://img.shields.io/badge/code%20style-google-blueviolet.svg)](https://github.com/google/gts)
 
-> An HTTP request client that provides an `axios` like interface over top of `node-fetch`.
+> An HTTP request client that provides an `axios` like interface over top of native `fetch`.
 
 ## Install
 
@@ -144,8 +144,8 @@ interface GaxiosOptions = {
   validateStatus: (status: number) => true,
 
   /**
-   * Implementation of `fetch` to use when making the API call. Will use
-   * `node-fetch` by default.
+   * Implementation of `fetch` to use when making the API call. Uses
+   * native `fetch` (Node.js 18+) by default.
    */
   fetchImplementation?: typeof fetch;
 
