@@ -13,8 +13,7 @@
 
 import extend from 'extend';
 import {Agent} from 'http';
-import {Agent as HTTPSAgent} from 'https';
-import type nodeFetch from 'node-fetch' with {'resolution-mode': 'import'};
+import type {Dispatcher} from 'undici';
 
 import {
   GaxiosMultipartOptions,
@@ -49,7 +48,7 @@ const HTTP_STATUS_NO_CONTENT = 204;
 export class Gaxios implements FetchCompliance {
   protected agentCache = new Map<
     string | URL,
-    Agent | ((parsedUrl: URL) => Agent)
+    Agent | Dispatcher | ((parsedUrl: URL) => Agent)
   >();
 
   /**
@@ -152,25 +151,30 @@ export class Gaxios implements FetchCompliance {
       this.defaults.fetchImplementation ||
       (await Gaxios.#getFetch());
 
-    // node-fetch v3 warns when `data` is present
-    // https://github.com/node-fetch/node-fetch/issues/1000
+    // Prepare options for fetch - remove gaxios-specific properties
     const preparedOpts = {...config};
     delete preparedOpts.data;
+
+    // Native fetch + undici supports dispatcher option for agents
+    // Pass agent as dispatcher if present
+    if (config.agent && !preparedOpts.dispatcher) {
+      // Agent can be Dispatcher, http.Agent, or function
+      // Undici dispatchers work directly; http.Agent may have limited functionality
+      if (typeof config.agent !== 'function') {
+        preparedOpts.dispatcher = config.agent as Dispatcher;
+      }
+    }
 
     const res = (await fetchImpl(config.url, preparedOpts as {})) as Response;
     const data = await this.getResponseData(config, res);
 
-    if (!Object.getOwnPropertyDescriptor(res, 'data')?.configurable) {
-      // Work-around for `node-fetch` v3 as accessing `data` would otherwise throw
-      Object.defineProperties(res, {
-        data: {
-          configurable: true,
-          writable: true,
-          enumerable: true,
-          value: data,
-        },
-      });
-    }
+    // Add data property to response object
+    Object.defineProperty(res, 'data', {
+      configurable: true,
+      writable: true,
+      enumerable: true,
+      value: data,
+    });
 
     // Keep object as an instance of `Response`
     return Object.assign(res, {config, data});
@@ -226,7 +230,9 @@ export class Gaxios implements FetchCompliance {
       } else if (e instanceof Error) {
         err = new GaxiosError(e.message, opts, undefined, e);
       } else {
-        err = new GaxiosError('Unexpected Gaxios Error', opts, undefined, e);
+        // Handle abort reasons and other non-Error throws
+        const message = typeof e === 'string' ? e : 'Unexpected Gaxios Error';
+        err = new GaxiosError(message, opts, undefined, e);
       }
 
       const {shouldRetry, config} = await getRetryConfig(err);
@@ -513,26 +519,40 @@ export class Gaxios implements FetchCompliance {
     if (opts.agent) {
       // don't do any of the following options - use the user-provided agent.
     } else if (proxy && this.#urlMayUseProxy(opts.url, opts.noProxy)) {
-      const HttpsProxyAgent = await Gaxios.#getProxyAgent();
+      const ProxyAgent = await Gaxios.#getProxyAgent();
 
       if (this.agentCache.has(proxy)) {
         opts.agent = this.agentCache.get(proxy);
       } else {
-        opts.agent = new HttpsProxyAgent(proxy, {
-          cert: opts.cert,
-          key: opts.key,
-        });
+        // Use undici's ProxyAgent with requestTls for mTLS support
+        const proxyUri = typeof proxy === 'string' ? proxy : proxy.toString();
+        const proxyOptions: {
+          uri: string;
+          requestTls?: {cert: string; key: string};
+        } = {
+          uri: proxyUri,
+        };
+        if (opts.cert && opts.key) {
+          proxyOptions.requestTls = {
+            cert: opts.cert,
+            key: opts.key,
+          };
+        }
+        opts.agent = new ProxyAgent(proxyOptions);
 
         this.agentCache.set(proxy, opts.agent);
       }
     } else if (opts.cert && opts.key) {
-      // Configure client for mTLS
+      // Configure client for mTLS using undici's Agent
       if (this.agentCache.has(opts.key)) {
         opts.agent = this.agentCache.get(opts.key);
       } else {
-        opts.agent = new HTTPSAgent({
-          cert: opts.cert,
-          key: opts.key,
+        const {Agent: UndiciAgent} = await import('undici');
+        opts.agent = new UndiciAgent({
+          connect: {
+            cert: opts.cert,
+            key: opts.key,
+          },
         });
         this.agentCache.set(opts.key, opts.agent);
       }
@@ -646,23 +666,21 @@ export class Gaxios implements FetchCompliance {
    * Should use {@link Gaxios[#getProxyAgent]} to retrieve.
    */
   // using `import` to dynamically import the types here
-  static #proxyAgent?: typeof import('https-proxy-agent').HttpsProxyAgent;
+  static #proxyAgent?: typeof import('undici').ProxyAgent;
 
   /**
-   * A cache for the lazily-loaded fetch library.
-   *
-   * Should use {@link Gaxios[#getFetch]} to retrieve.
+   * Native fetch is always available in Node.js 18+.
+   * This cache exists for consistency with the existing API.
    */
-  //
-  static #fetch?: typeof nodeFetch | typeof fetch;
+  static #fetch?: typeof fetch;
 
   /**
-   * Imports, caches, and returns a proxy agent - if not already imported
+   * Imports, caches, and returns undici's ProxyAgent - if not already imported
    *
-   * @returns A proxy agent
+   * @returns A ProxyAgent class
    */
   static async #getProxyAgent() {
-    this.#proxyAgent ||= (await import('https-proxy-agent')).HttpsProxyAgent;
+    this.#proxyAgent ||= (await import('undici')).ProxyAgent;
 
     return this.#proxyAgent;
   }
@@ -670,9 +688,8 @@ export class Gaxios implements FetchCompliance {
   static async #getFetch() {
     const hasWindow = typeof window !== 'undefined' && !!window;
 
-    this.#fetch ||= hasWindow
-      ? window.fetch
-      : (await import('node-fetch')).default;
+    // Native fetch is available in Node.js 18+ and all modern browsers
+    this.#fetch ||= hasWindow ? window.fetch : fetch;
 
     return this.#fetch;
   }

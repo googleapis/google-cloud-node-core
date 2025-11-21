@@ -151,8 +151,7 @@ export class GaxiosError<T = ReturnType<JSON['parse']>> extends Error {
       try {
         this.response.data = translateData(
           this.config.responseType,
-          // workaround for `node-fetch`'s `.data` deprecation...
-          this.response?.bodyUsed ? this.response?.data : undefined,
+          this.response.data,
         );
       } catch {
         // best effort - don't throw an error within an error
@@ -395,12 +394,29 @@ export interface GaxiosOptions extends RequestInit {
     | 'text'
     | 'stream'
     | 'unknown';
-  agent?: Agent | ((parsedUrl: URL) => Agent);
+  /**
+   * HTTP agent for custom connection handling.
+   *
+   * Supports:
+   * - Node.js `http.Agent` / `https.Agent` (for backward compatibility)
+   * - Undici `Dispatcher` (including `Agent` and `ProxyAgent`)
+   * - Function that returns an agent
+   *
+   * When using native fetch (Node.js 18+), undici dispatchers are used directly.
+   * Traditional http.Agent instances may have limited functionality with native fetch.
+   */
+  agent?: Agent | import('undici').Dispatcher | ((parsedUrl: URL) => Agent);
+  /**
+   * Undici dispatcher for custom connection handling.
+   * This is set automatically from the agent property when using native fetch.
+   * @see {@link https://undici.nodejs.org/#/docs/api/Dispatcher}
+   */
+  dispatcher?: import('undici').Dispatcher;
   validateStatus?: (status: number) => boolean;
   retryConfig?: RetryConfig;
   retry?: boolean;
   /**
-   * @deprecated non-spec. https://github.com/node-fetch/node-fetch/issues/1438
+   * @deprecated non-spec, not supported by native fetch
    */
   size?: number;
   /**
@@ -623,7 +639,7 @@ export function defaultErrorRedactor<
     } else if (
       obj instanceof FormData ||
       obj instanceof URLSearchParams ||
-      // support `node-fetch` FormData/URLSearchParams
+      // support FormData/URLSearchParams-like objects via duck typing
       ('forEach' in obj && 'set' in obj)
     ) {
       (obj as FormData | URLSearchParams).forEach((_, key) => {
@@ -668,8 +684,8 @@ export function defaultErrorRedactor<
     defaultErrorRedactor({config: data.response.config});
     redactHeaders(data.response.headers);
 
-    // workaround for `node-fetch`'s `.data` deprecation...
-    if ((data.response as {} as Response).bodyUsed) {
+    // Only redact if data exists (body has been consumed)
+    if (data.response.data !== undefined) {
       redactString(data.response, 'data');
       redactObject(data.response.data);
     }
