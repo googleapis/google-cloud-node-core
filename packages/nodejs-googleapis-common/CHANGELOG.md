@@ -4,6 +4,24 @@
 
 [1]: https://www.npmjs.com/package/nodejs-googleapis-common?activeTab=versions
 
+## [9.0.0](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.1...googleapis-common-v9.0.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump deps ([#591](https://github.com/googleapis/google-cloud-node-core/issues/591))
+
+### Bug Fixes
+
+* Ensure Marshalled `GaxiosResponse` has all properties ([#605](https://github.com/googleapis/google-cloud-node-core/issues/605)) ([5ada723](https://github.com/googleapis/google-cloud-node-core/commit/5ada723b29f43e114cb50d2e8c44cf9b879c100d))
+* Further increase system test timeout ([2253a3d](https://github.com/googleapis/google-cloud-node-core/commit/2253a3d119aa4697d94b006e7f3510b980f46645))
+* Increase system test timeout ([4036df6](https://github.com/googleapis/google-cloud-node-core/commit/4036df62541adb8a2c0ca5b97aee969094b768d3))
+
+
+### Miscellaneous Chores
+
+* Bump deps ([#591](https://github.com/googleapis/google-cloud-node-core/issues/591)) ([0688fc9](https://github.com/googleapis/google-cloud-node-core/commit/0688fc9e383ff6a92db46b853a4310a54ad48b4f))
+
 ## [8.0.1](https://github.com/googleapis/google-cloud-node-core/compare/googleapis-common-v8.0.0...googleapis-common-v8.0.1) (2025-11-11)
 
 

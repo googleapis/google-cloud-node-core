@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.6](https://github.com/googleapis/google-cloud-node-core/compare/gapic-tools-v1.0.5...gapic-tools-v1.0.6) (2025-11-21)
+
+
+### Bug Fixes
+
+* Add missing dependency in tools and gax ([87a9245](https://github.com/googleapis/google-cloud-node-core/commit/87a92452ef143543a6ba7cee6d9d84a2211140b1))
+* Package.json links in gax, tools and logging utils ([#498](https://github.com/googleapis/google-cloud-node-core/issues/498)) ([2340de4](https://github.com/googleapis/google-cloud-node-core/commit/2340de472f3936fa80d12535eeaaf540d1f63c8c))
+* Remove skipLibCheck from tools ([49a717a](https://github.com/googleapis/google-cloud-node-core/commit/49a717a21b6903cbe844c1474d5b0cf6246c454d))
+
 ## [1.0.5](https://github.com/googleapis/google-cloud-node-core/compare/gapic-tools-v1.0.4...gapic-tools-v1.0.5) (2025-11-11)
 
 
