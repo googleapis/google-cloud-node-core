@@ -62,7 +62,7 @@ const defaultTemplates = [
   'typescript_samples',
 ];
 const metadataTemplate = 'typescript_gapic_metadata';
-
+console.log("test");
 export class Generator {
   request: protos.google.protobuf.compiler.CodeGeneratorRequest;
   response: protos.google.protobuf.compiler.CodeGeneratorResponse;
