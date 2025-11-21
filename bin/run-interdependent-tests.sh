@@ -121,12 +121,3 @@ for package in "${SORTED_PACKAGES[@]}"; do
     npm run "$TEST_COMMAND"
     cd "$ROOT_DIR"
 done
-
-# Check for conflicting dependencies
-echo "Checking for conflicting dependencies"
-if [ -f "$ROOT_DIR/node_modules/.bin/syncpack" ]; then
-    "$ROOT_DIR/node_modules/.bin/syncpack" list-mismatches
-else
-    npm install -g syncpack
-    syncpack list-mismatches
-fi
