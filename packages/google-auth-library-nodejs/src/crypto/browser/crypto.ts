@@ -92,7 +92,7 @@ export class BrowserCrypto implements Crypto {
       algo,
       cryptoKey,
       Buffer.from(signatureArray),
-      dataArray
+      dataArray,
     );
     return result;
   }
