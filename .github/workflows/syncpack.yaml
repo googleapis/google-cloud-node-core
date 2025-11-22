@@ -16,4 +16,8 @@ jobs:
           node-version: 18
       - run: npm install
       - run: npm install -g syncpack
-      - run: syncpack list-mismatches
+      - run: syncpack fix-mismatches
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "fix(deps): syncpack dependency versions"
