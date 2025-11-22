@@ -54,19 +54,19 @@ lint)
     retval=$?
     ;;
 samples)
-    bin/run-interdependent-tests.sh "samples-test"
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "samples-test"
     retval=$?
     ;;
 system)
-    bin/run-interdependent-tests.sh "system-test"
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "system-test"
     retval=$?
     ;;
 units)
-    bin/run-interdependent-tests.sh "test"
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "test"
     retval=$?
     ;;
 *)
-    bin/run-interdependent-tests.sh "$TEST_TYPE"
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "$TEST_TYPE"
     retval=$?
     ;;
 esac
