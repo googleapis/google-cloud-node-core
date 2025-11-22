@@ -87,10 +87,12 @@ export class NodeCrypto implements Crypto {
  * @return The ArrayBuffer representation of the input.
  */
 function toArrayBuffer(buffer: Buffer): ArrayBuffer {
-  return buffer.buffer.slice(
-    buffer.byteOffset,
-    buffer.byteOffset + buffer.byteLength,
-  );
+  const ab = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < buffer.length; ++i) {
+    view[i] = buffer[i];
+  }
+  return ab;
 }
 
 /**

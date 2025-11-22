@@ -114,7 +114,7 @@ export function googleProtobufAnyFromProto3JSON(
   }
 
   const uint8array = type.encode(valueMessage).finish();
-  const buffer = Buffer.from(uint8array, 0, uint8array.byteLength);
+  const buffer = Buffer.from(uint8array);
   const base64 = buffer.toString('base64');
 
   return {

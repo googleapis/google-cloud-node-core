@@ -54,18 +54,20 @@ lint)
     retval=$?
     ;;
 samples)
-    npm run samples-test
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "samples-test"
     retval=$?
     ;;
 system)
-    npm run system-test
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "system-test"
     retval=$?
     ;;
 units)
-    npm run test
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "test"
     retval=$?
     ;;
 *)
+    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "$TEST_TYPE"
+    retval=$?
     ;;
 esac
 set -e

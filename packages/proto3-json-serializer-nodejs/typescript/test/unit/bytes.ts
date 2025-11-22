@@ -25,7 +25,7 @@ function testBytes(root: protobuf.Root) {
   const message = MessageWithBytesField.fromObject({
     bytesField: buffer,
   });
-  const uint8Array = new Uint8Array(buffer, 0, buffer.length);
+  const uint8Array = new Uint8Array(buffer);
   const messageWithUint8Array = MessageWithBytesField.fromObject({
     bytesField: uint8Array,
   });
