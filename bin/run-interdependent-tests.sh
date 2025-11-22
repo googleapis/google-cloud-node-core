@@ -32,7 +32,11 @@ ROOT_DIR=${ROOT_DIR:-$(pwd)}
 TEST_COMMAND="${1:-test}"
 
 # An array of all the packages in the monorepo
-PACKAGES=$(ls -d "$ROOT_DIR/packages/"*/)
+if [ -d "$ROOT_DIR/packages/" ]; then
+    PACKAGES=$(ls -d "$ROOT_DIR/packages/"*/)
+else
+    PACKAGES=()
+fi
 
 # Two arrays to hold the dependency graph
 PACKAGE_NAMES=()
