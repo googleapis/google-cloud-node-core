@@ -1,6 +1,28 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:base",
+    ":disableDependencyDashboard",
+    "docker:disable"
+  ],
+  "constraintsFiltering": "strict",
+  "pinVersions": false,
+  "rebaseStalePrs": false,
+  "schedule": [
+    "* 9 * * 1"
+  ],
+  "prCreation": "not-recreate",
+  "gitAuthor": null,
+  "packageRules": [
+    {
+      "extends": "packages:linters",
+      "groupName": "linters"
+    },
+    {
+    "matchPackageNames": "*",
+     "matchUpdateTypes": ["major", "patch"]
+    }
+  ],
+  "ignoreDeps": [
+    "typescript"
   ]
 }
