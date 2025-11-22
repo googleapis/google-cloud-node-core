@@ -108,7 +108,9 @@ describe('gRPC-google error decoding', () => {
     const status_buffer = Status.encode(status).finish();
     const decoder = new GoogleErrorDecoder();
 
-    const decodedError = decoder.decodeRpcStatus(status_buffer);
+    const decodedError = decoder.decodeRpcStatus(
+      Buffer.from(status_buffer)
+    );
 
     assert.strictEqual(
       JSON.stringify(decodedError),
@@ -124,7 +126,7 @@ describe('gRPC-google error decoding', () => {
     const decoder = new GoogleErrorDecoder();
 
     const gRPCStatusDetailsObj = decoder.decodeGRPCStatusDetails([
-      status_buffer,
+      Buffer.from(status_buffer),
     ]);
     const unknownTypeDetail = {
       type_url: 'noMatch',

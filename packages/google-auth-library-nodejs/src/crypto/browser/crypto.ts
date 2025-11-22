@@ -91,8 +91,8 @@ export class BrowserCrypto implements Crypto {
     const result = await window.crypto.subtle.verify(
       algo,
       cryptoKey,
-      signatureArray,
-      dataArray,
+      Buffer.from(signatureArray),
+      dataArray
     );
     return result;
   }
