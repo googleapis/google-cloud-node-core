@@ -1,6 +1,5 @@
-
 import {request} from 'gaxios';
-import { TokenOptions, Transporter } from './tokenOptions';
+import {TokenOptions, Transporter} from './tokenOptions';
 
 class GoogleToken {
   private tokenOptions: TokenOptions;
@@ -25,4 +24,4 @@ class GoogleToken {
   }
 }
 
-export { GoogleToken, Transporter, TokenOptions };
+export {GoogleToken, Transporter, TokenOptions};
