@@ -46,7 +46,7 @@ describe('GToken ErrorWithCode', () => {
         throw new ErrorWithCode(errorMessage, 'THROWABLE');
       },
       (err: ErrorWithCode) =>
-        err.message === errorMessage && err.code === 'THROWABLE'
+        err.message === errorMessage && err.code === 'THROWABLE',
     );
   });
 });
