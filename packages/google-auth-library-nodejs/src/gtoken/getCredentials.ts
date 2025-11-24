@@ -59,7 +59,7 @@ class JsonCredentialsProvider implements ICredentialsProvider {
     if (!privateKey || !clientEmail) {
       throw new ErrorWithCode(
         'private_key and client_email are required.',
-        'MISSING_CREDENTIALS'
+        'MISSING_CREDENTIALS',
       );
     }
     return {privateKey, clientEmail};
@@ -94,7 +94,7 @@ class P12CredentialsProvider implements ICredentialsProvider {
     throw new ErrorWithCode(
       '*.p12 certificates are not supported after v6.1.2. ' +
         'Consider utilizing *.json format or converting *.p12 to *.pem using the OpenSSL CLI.',
-      'UNKNOWN_CERTIFICATE_TYPE'
+      'UNKNOWN_CERTIFICATE_TYPE',
     );
   }
 }
@@ -124,20 +124,20 @@ class CredentialsProviderFactory {
         throw new ErrorWithCode(
           'Unknown certificate type. Type is determined based on file extension. ' +
             'Current supported extensions are *.json, and *.pem.',
-          'UNKNOWN_CERTIFICATE_TYPE'
+          'UNKNOWN_CERTIFICATE_TYPE',
         );
     }
   }
 }
 
 /**
-   * Given a keyFile, extract the key and client email if available
-   * @param keyFile Path to a json, pem, or p12 file that contains the key.
-   * @returns an object with privateKey and clientEmail properties
-   */
+ * Given a keyFile, extract the key and client email if available
+ * @param keyFile Path to a json, pem, or p12 file that contains the key.
+ * @returns an object with privateKey and clientEmail properties
+ */
 async function getCredentials(keyFilePath: string): Promise<Credentials> {
   const provider = CredentialsProviderFactory.create(keyFilePath);
   return provider.getCredentials();
 }
 
-export { getCredentials, Credentials }
+export {getCredentials, Credentials};
