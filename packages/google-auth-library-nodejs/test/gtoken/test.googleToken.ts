@@ -14,7 +14,11 @@
 
 import * as assert from 'assert';
 import {describe, it} from 'mocha';
-import {GoogleToken, TokenOptions, Transporter} from '../../src/gtoken/googleToken';
+import {
+  GoogleToken,
+  TokenOptions,
+  Transporter,
+} from '../../src/gtoken/googleToken';
 import {GaxiosOptions, GaxiosResponse, request} from 'gaxios';
 
 describe('GoogleToken', () => {
@@ -46,11 +50,11 @@ describe('GoogleToken', () => {
     assert.strictEqual(options.scope, providedOptions.scope);
     assert.deepStrictEqual(
       options.additionalClaims,
-      providedOptions.additionalClaims
+      providedOptions.additionalClaims,
     );
     assert.strictEqual(
       options.eagerRefreshThresholdMillis,
-      providedOptions.eagerRefreshThresholdMillis
+      providedOptions.eagerRefreshThresholdMillis,
     );
     assert.ok(options.transporter);
     assert.ok(typeof options.transporter.request === 'function');
@@ -80,6 +84,9 @@ describe('GoogleToken', () => {
   it('googleTokenOptions should return the internal tokenOptions object', () => {
     const providedOptions: TokenOptions = {email: 'getter@example.com'};
     const token: GoogleToken = new GoogleToken(providedOptions);
-    assert.deepStrictEqual(token.googleTokenOptions.email, providedOptions.email);
+    assert.deepStrictEqual(
+      token.googleTokenOptions.email,
+      providedOptions.email,
+    );
   });
 });
