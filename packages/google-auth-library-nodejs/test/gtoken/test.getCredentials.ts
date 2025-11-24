@@ -83,21 +83,18 @@ describe('getCredentials', () => {
   it('should throw for .p12 extension', async () => {
     await assert.rejects(
       getCredentials('key.p12'),
-      /certificates are not supported/
+      /certificates are not supported/,
     );
   });
 
   it('should throw for .pfx extension', async () => {
     await assert.rejects(
       getCredentials('key.pfx'),
-      /certificates are not supported/
+      /certificates are not supported/,
     );
   });
 
   it('should throw for unknown extension', async () => {
-    await assert.rejects(
-      getCredentials('key.txt'),
-      /Unknown certificate type/
-    );
+    await assert.rejects(getCredentials('key.txt'), /Unknown certificate type/);
   });
 });
