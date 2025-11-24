@@ -1,4 +1,4 @@
-import { GaxiosOptions, GaxiosPromise } from 'gaxios';
+import {GaxiosOptions, GaxiosPromise} from 'gaxios';
 
 // Transporter needed in GoogleToken to make request.
 interface Transporter {
@@ -41,8 +41,8 @@ interface TokenOptions {
    * Defaults to 0.
    */
   eagerRefreshThresholdMillis?: number;
-  
+
   transporter?: Transporter;
 }
 
-export { Transporter, TokenOptions };
+export {Transporter, TokenOptions};
