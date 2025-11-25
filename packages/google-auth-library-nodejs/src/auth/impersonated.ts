@@ -24,6 +24,7 @@ import {IdTokenProvider} from './idtokenclient';
 import {GaxiosError} from 'gaxios';
 import {SignBlobResponse} from './googleauth';
 import {originalOrCamelOptions} from '../util';
+import {SERVICE_ACCOUNT_LOOKUP_ENDPOINT} from './trustboundary';
 
 export interface ImpersonatedOptions extends OAuth2ClientOptions {
   /**
@@ -202,6 +203,7 @@ export class Impersonated extends OAuth2Client implements IdTokenProvider {
       const tokenResponse = res.data;
       this.credentials.access_token = tokenResponse.accessToken;
       this.credentials.expiry_date = Date.parse(tokenResponse.expireTime);
+      this.trustBoundary = await this.refreshTrustBoundary(this.credentials);
       return {
         tokens: this.credentials,
         res,
@@ -259,5 +261,19 @@ export class Impersonated extends OAuth2Client implements IdTokenProvider {
     });
 
     return res.data.token;
+  }
+
+  protected async getTrustBoundaryUrl(): Promise<string> {
+    const targetPrincipal = this.getTargetPrincipal();
+    if (!targetPrincipal) {
+      throw new Error(
+        'TrustBoundary: A targetPrincipal is required for trust boundary lookups but was not provided in the ImpersonatedClient options.',
+      );
+    }
+    const trustBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+      '{universe_domain}',
+      this.universeDomain,
+    ).replace('{service_account_email}', encodeURIComponent(targetPrincipal));
+    return trustBoundaryUrl;
   }
 }

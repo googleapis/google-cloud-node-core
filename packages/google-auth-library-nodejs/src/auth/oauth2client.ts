@@ -901,8 +901,7 @@ export class OAuth2Client extends AuthClient {
   }
 
   private async getAccessTokenAsync(): Promise<GetAccessTokenResponse> {
-    const shouldRefresh =
-      !this.credentials.access_token || this.isTokenExpiring();
+    const shouldRefresh = !this.credentials.access_token || this.isExpired();
     if (shouldRefresh) {
       if (!this.credentials.refresh_token) {
         if (this.refreshHandler) {
@@ -1122,7 +1121,7 @@ export class OAuth2Client extends AuthClient {
       const r = await this.getRequestMetadataAsync();
       opts.headers = Gaxios.mergeHeaders(opts.headers);
 
-      this.addUserProjectAndAuthHeaders(opts.headers, r.headers);
+      this.applyHeadersFromSource(opts.headers, r.headers);
 
       if (this.apiKey) {
         opts.headers.set('X-Goog-Api-Key', this.apiKey);

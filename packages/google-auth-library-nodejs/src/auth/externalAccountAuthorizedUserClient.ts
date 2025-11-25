@@ -33,6 +33,8 @@ import {
   EXPIRATION_TIME_OFFSET,
   SharedExternalAccountClientOptions,
 } from './baseexternalclient';
+import {WORKFORCE_LOOKUP_ENDPOINT} from './trustboundary';
+import {getWorkforcePoolIdFromAudience} from '../util';
 
 /**
  * The credentials JSON file type for external account authorized user clients.
@@ -158,6 +160,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
   private cachedAccessToken: CredentialsWithResponse | null;
   private readonly externalAccountAuthorizedUserHandler: ExternalAccountAuthorizedUserHandler;
   private refreshToken: string;
+  private readonly audience: string;
 
   /**
    * Instantiates an ExternalAccountAuthorizedUserClient instances using the
@@ -171,6 +174,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     if (options.universe_domain) {
       this.universeDomain = options.universe_domain;
     }
+    this.audience = options.audience;
     this.refreshToken = options.refresh_token;
     const clientAuthentication = {
       confidentialClientType: 'basic',
@@ -259,7 +263,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
       const requestHeaders = await this.getRequestHeaders();
       opts.headers = Gaxios.mergeHeaders(opts.headers);
 
-      this.addUserProjectAndAuthHeaders(opts.headers, requestHeaders);
+      this.applyHeadersFromSource(opts.headers, requestHeaders);
 
       response = await this.transporter.request<T>(opts);
     } catch (e) {
@@ -307,21 +311,33 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
 
     if (refreshResponse.refresh_token !== undefined) {
       this.refreshToken = refreshResponse.refresh_token;
+
+      // Set credentials and refresh trust boundary data.
+      this.credentials = {...this.cachedAccessToken};
+      delete (this.credentials as CredentialsWithResponse).res;
+      this.trustBoundary = await this.refreshTrustBoundary(this.credentials);
     }
 
     return this.cachedAccessToken;
   }
 
   /**
-   * Returns whether the provided credentials are expired or not.
-   * If there is no expiry time, assumes the token is not expired or expiring.
-   * @param credentials The credentials to check for expiration.
-   * @return Whether the credentials are expired or not.
+   * Constructs the trust boundary lookup URL for the client.
+   *
+   * @return The trust boundary URL string, or `null` if the client type
+   * does not support trust boundaries.
+   * @throws {Error} If the URL cannot be constructed for a compatible client.
    */
-  private isExpired(credentials: Credentials): boolean {
-    const now = new Date().getTime();
-    return credentials.expiry_date
-      ? now >= credentials.expiry_date - this.eagerRefreshThresholdMillis
-      : false;
+  protected async getTrustBoundaryUrl(): Promise<string | null> {
+    const poolId = getWorkforcePoolIdFromAudience(this.audience);
+    if (!poolId) {
+      throw new Error(
+        `TrustBoundary: A workforce pool ID is required for trust boundary lookups but could not be determined from the audience: ${this.audience}.`,
+      );
+    }
+    return WORKFORCE_LOOKUP_ENDPOINT.replace(
+      '{universe_domain}',
+      this.universeDomain,
+    ).replace('{pool_id}', encodeURIComponent(poolId));
   }
 }
