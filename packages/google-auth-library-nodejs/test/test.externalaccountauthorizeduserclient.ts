@@ -17,7 +17,7 @@ import {describe, it, afterEach, beforeEach} from 'mocha';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as qs from 'querystring';
-import {assertGaxiosResponsePresent, getAudience} from './externalclienthelper';
+import {assertGaxiosResponsePresent} from './externalclienthelper';
 import {
   EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE,
   ExternalAccountAuthorizedUserClient,
