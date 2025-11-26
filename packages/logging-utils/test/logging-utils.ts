@@ -17,18 +17,19 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 
 import * as al from '../src/logging-utils';
+import * as alTypes from '../src/types';
 
 interface TestLog {
   namespace: string;
-  fields: al.LogFields;
+  fields: alTypes.LogFields;
   args: unknown[];
 }
 
 class TestSink extends al.DebugLogBackendBase {
   logs: TestLog[] = [];
 
-  makeLogger(namespace: string): al.AdhocDebugLogCallable {
-    return (fields: al.LogFields, ...args: unknown[]) => {
+  makeLogger(namespace: string): any {
+    return (fields: alTypes.LogFields, ...args: unknown[]) => {
       this.logs.push({namespace, fields, args});
     };
   }
@@ -73,7 +74,7 @@ describe('adhoc-logging', () => {
   });
 
   describe('Manually enabled', () => {
-    let logger: al.AdhocDebugLogFunction;
+    let logger: any;
     const system = 'basic';
 
     beforeEach(() => {
@@ -97,7 +98,7 @@ describe('adhoc-logging', () => {
   });
 
   describe('Basic enabled', () => {
-    let logger: al.AdhocDebugLogFunction;
+    let logger: any;
     const system = 'basic';
 
     beforeEach(() => {
@@ -120,11 +121,11 @@ describe('adhoc-logging', () => {
     });
 
     it('logs with fields', () => {
-      logger({severity: al.LogSeverity.INFO}, 'test log', 5, {other: 'foo'});
+      logger({severity: alTypes.LogSeverity.INFO}, 'test log', 5, {other: 'foo'});
       assert.deepStrictEqual(sink.logs, [
         {
           namespace: system,
-          fields: {severity: al.LogSeverity.INFO},
+          fields: {severity: alTypes.LogSeverity.INFO},
           args: ['test log', 5, {other: 'foo'}],
         },
       ]);
@@ -138,22 +139,22 @@ describe('adhoc-logging', () => {
       assert.deepStrictEqual(sink.logs, [
         {
           namespace: system,
-          fields: {severity: al.LogSeverity.INFO},
+          fields: {severity: alTypes.LogSeverity.INFO},
           args: ['test info'],
         },
         {
           namespace: system,
-          fields: {severity: al.LogSeverity.WARNING},
+          fields: {severity: alTypes.LogSeverity.WARNING},
           args: ['test warn'],
         },
         {
           namespace: system,
-          fields: {severity: al.LogSeverity.DEBUG},
+          fields: {severity: alTypes.LogSeverity.DEBUG},
           args: ['test debug'],
         },
         {
           namespace: system,
-          fields: {severity: al.LogSeverity.ERROR},
+          fields: {severity: alTypes.LogSeverity.ERROR},
           args: ['test error'],
         },
       ]);
@@ -173,7 +174,7 @@ describe('adhoc-logging', () => {
   });
 
   describe('Tap', () => {
-    let logger: al.AdhocDebugLogFunction;
+    let logger: any;
     const system = 'taps';
 
     beforeEach(() => {
@@ -187,13 +188,13 @@ describe('adhoc-logging', () => {
     it('allows receiving logs', () => {
       const received = [{fields: {}, args: [] as unknown[]}];
       received.pop();
-      logger.on('log', (fields: al.LogFields, args: unknown[]) => {
+      logger.on('log', (fields: alTypes.LogFields, args: unknown[]) => {
         received.push({fields, args});
       });
       logger.info('cool cool');
       assert.deepStrictEqual(received, [
         {
-          fields: {severity: al.LogSeverity.INFO},
+          fields: {severity: alTypes.LogSeverity.INFO},
           args: ['cool cool'],
         },
       ]);
@@ -204,7 +205,7 @@ describe('adhoc-logging', () => {
     const system = 'structured';
     const structured = al.getStructuredBackend(sink);
 
-    let logger: al.AdhocDebugLogFunction;
+    let logger: any;
     beforeEach(() => {
       al.setBackend(structured);
       sink.reset();
@@ -270,7 +271,7 @@ describe('adhoc-logging', () => {
   });
 
   describe('sub-logs', () => {
-    let logger: al.AdhocDebugLogFunction;
+    let logger: any;
     const system = 'sublogs';
     const subsystem = 'subsys';
 

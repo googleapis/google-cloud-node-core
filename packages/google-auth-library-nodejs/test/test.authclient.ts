@@ -35,16 +35,17 @@ interface TestLog {
   args: unknown[];
 }
 
-class TestLogSink extends logging.DebugLogBackendBase {
+class TestLogSink implements logging.DebugLogBackend {
   logs: TestLog[] = [];
+  filters: string[] = [];
 
-  makeLogger(namespace: string): logging.AdhocDebugLogCallable {
-    return (fields: logging.LogFields, ...args: unknown[]) => {
-      this.logs.push({namespace, fields, args});
-    };
+  log(namespace: string, fields: logging.LogFields, ...args: unknown[]): void {
+    this.logs.push({namespace, fields, args});
   }
 
-  setFilters(): void {}
+  setFilters(filters: string[]): void {
+    this.filters = filters;
+  }
 
   reset() {
     this.filters = [];
@@ -262,7 +263,7 @@ describe('AuthClient', () => {
     describe('logging', () => {
       // Enable and capture any log lines that happen during these tests.
       let testLogSink: TestLogSink;
-      let replacementLogger: logging.AdhocDebugLogFunction;
+      let replacementLogger: any;
       beforeEach(() => {
         process.env[logging.env.nodeEnables] = 'auth';
         testLogSink = new TestLogSink();

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 set -e
 
 # This script is used to run tests on all of the interdependent libraries
@@ -33,19 +32,31 @@ TEST_COMMAND="${1:-test}"
 
 # An array of all the packages in the monorepo
 if [ -d "$ROOT_DIR/packages/" ]; then
-    PACKAGES=$(ls -d "$ROOT_DIR/packages/"*/)
+    PACKAGE_DIRS=$(ls -d "$ROOT_DIR/packages/"*/)
 else
-    PACKAGES=()
+    PACKAGE_DIRS=()
 fi
 
 # Two arrays to hold the dependency graph
 PACKAGE_NAMES=()
 PACKAGE_DEPS=()
+# Arrays to simulate an associative array mapping package name to its directory name
+PKG_NAME_TO_DIR_MAP_KEYS=()
+PKG_NAME_TO_DIR_MAP_VALUES=()
+
+# A function to get the package name from package.json
+get_package_name() {
+    local package_dir=$1
+    local package_json="$package_dir/package.json"
+    if [ -f "$package_json" ]; then
+        cat "$package_json" | jq -r '.name'
+    fi
+}
 
 # A function to get the dependencies of a package
 get_dependencies() {
-    local package=$1
-    local package_json="$ROOT_DIR/${package}package.json"
+    local package_dir=$1
+    local package_json="$package_dir/package.json"
     if [ -f "$package_json" ]; then
         local dependencies=$(cat "$package_json" | jq -r '(.dependencies // {}) | keys | .[]' | tr '\n' ' ')
         local dev_dependencies=$(cat "$package_json" | jq -r '(.devDependencies // {}) | keys | .[]' | tr '\n' ' ')
@@ -54,11 +65,18 @@ get_dependencies() {
 }
 
 # Build the dependency graph
-for package in ${PACKAGES[@]}; do
-    package_name=$(basename "$package")
-    dependencies=$(get_dependencies "$package")
+for package_dir in ${PACKAGE_DIRS[@]}; do
+    package_dir=${package_dir%/}
+    package_name=$(get_package_name "$package_dir")
+    if [ -z "$package_name" ]; then
+        echo "Warning: could not get package name from $package_dir/package.json. Skipping."
+        continue
+    fi
+    dependencies=$(get_dependencies "$package_dir")
     PACKAGE_NAMES+=("$package_name")
     PACKAGE_DEPS+=("$dependencies")
+    PKG_NAME_TO_DIR_MAP_KEYS+=("$package_name")
+    PKG_NAME_TO_DIR_MAP_VALUES+=("$(basename "$package_dir")")
 done
 
 # A function toposort the dependency graph
@@ -108,7 +126,7 @@ toposort_util() {
                 toposort_util "$dependency_index"
             fi
         fi
-    done
+done
 
     recursion_stack[$package_index]=0
     sorted_packages+=("${PACKAGE_NAMES[$package_index]}")
@@ -117,11 +135,80 @@ toposort_util() {
 # Get the sorted packages
 SORTED_PACKAGES=($(toposort))
 
-# Run the tests for each package
-for package in "${SORTED_PACKAGES[@]}"; do
-    echo "Running tests for $package with command: npm run $TEST_COMMAND"
-    cd "$ROOT_DIR/packages/$package"
+# Arrays to map package name to its tarball path
+PKG_TARBALL_MAP_KEYS=()
+PKG_TARBALL_MAP_VALUES=()
+
+# Build, pack, and test all packages in a single loop
+for package_name in "${SORTED_PACKAGES[@]}"; do
+    package_dir_name=""
+    for i in "${!PKG_NAME_TO_DIR_MAP_KEYS[@]}"; do
+        if [ "${PKG_NAME_TO_DIR_MAP_KEYS[$i]}" = "$package_name" ]; then
+            package_dir_name="${PKG_NAME_TO_DIR_MAP_VALUES[$i]}"
+            break
+        fi
+    done
+
+    if [ -z "$package_dir_name" ]; then
+        echo "Warning: could not find directory for package $package_name. Skipping."
+        continue
+    fi
+
+    echo "Processing $package_name..."
+    cd "$ROOT_DIR/packages/$package_dir_name"
+
+    # Install dependencies from registry first.
+    rm -rf node_modules package-lock.json
     npm install
+
+    # Find monorepo dependencies and install their packed versions
+    current_package_index=-1
+    for i in "${!PACKAGE_NAMES[@]}"; do
+        if [ "${PACKAGE_NAMES[$i]}" = "$package_name" ]; then
+            current_package_index=$i
+            break
+        fi
+    done
+    
+    dependencies=${PACKAGE_DEPS[$current_package_index]}
+    for dependency in $dependencies; do
+        # Check if the dependency is a monorepo package that has been packed
+        tarball_path=""
+        for i in "${!PKG_TARBALL_MAP_KEYS[@]}"; do
+            if [ "${PKG_TARBALL_MAP_KEYS[$i]}" = "$dependency" ]; then
+                tarball_path="${PKG_TARBALL_MAP_VALUES[$i]}"
+                break
+            fi
+        done
+
+        if [ -n "$tarball_path" ]; then
+            echo "Installing monorepo dependency $dependency from $tarball_path"
+            # Use --no-save to avoid adding the file path to package.json
+            npm install "$tarball_path" --no-save
+        fi
+    done
+
+    if grep -q '"compile":' package.json; then
+    echo "Compiling $package_name..."
+    
+    # 🌟 ADDED: Explicitly delete the build directory before compilation
+    rm -rf ./build
+    
+    tsc -p . --skipLibCheck
+    fi
+
+    # Pack the current package for downstream dependencies
+    # The `npm pack` command outputs the filename of the tarball. We capture it.
+    # The output might have other warnings, so we take the last line.
+    tarball_filename=$(npm pack | tail -n 1)
+    tarball_path="$ROOT_DIR/packages/$package_dir_name/$tarball_filename"
+    PKG_TARBALL_MAP_KEYS+=("$package_name")
+    PKG_TARBALL_MAP_VALUES+=("$tarball_path")
+    echo "Packed $package_name to $tarball_path"
+
+    # Run tests for this package
+    echo "Running tests for $package_name with command: npm run $TEST_COMMAND"
     npm run "$TEST_COMMAND"
+
     cd "$ROOT_DIR"
 done

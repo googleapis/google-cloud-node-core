@@ -26,6 +26,7 @@ import {
   GRPCCall,
   RequestType,
   CancellableStream,
+  SimpleCallbackFunction,
 } from '../../src/apitypes';
 import {createApiCall} from '../../src/createApiCall';
 import {StreamingApiCaller} from '../../src/streamingCalls/streamingApiCaller';
@@ -38,8 +39,9 @@ import internal = require('stream');
 import {StreamArrayParser} from '../../src/streamArrayParser';
 import path = require('path');
 import protobuf = require('protobufjs');
-import {GoogleError} from '../../src';
+import {CallSettings, GoogleError} from '../../src';
 import {Metadata} from '@grpc/grpc-js';
+import { StreamProxy } from '../../src/streamingCalls/streaming';
 
 function createApiCallStreaming(
   func:
@@ -2119,7 +2121,13 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy
+        ) => {
         assert(typeof argument === 'object');
         assert(typeof apiCall === 'function');
         assert(stream instanceof streaming.StreamProxy);
@@ -2218,7 +2226,13 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy
+        ) => {
         assert(typeof argument === 'object');
         assert(typeof apiCall === 'function');
         assert(stream instanceof streaming.StreamProxy);
@@ -2317,7 +2331,13 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy
+        ) => {
         assert(typeof argument === 'object');
         assert(typeof apiCall === 'function');
         assert(stream instanceof streaming.StreamProxy);
@@ -2415,7 +2435,13 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy
+        ) => {
         assert(typeof argument === 'object');
         assert(typeof apiCall === 'function');
         assert(stream instanceof streaming.StreamProxy);
