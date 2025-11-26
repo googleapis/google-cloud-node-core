@@ -159,7 +159,7 @@ for package_name in "${SORTED_PACKAGES[@]}"; do
 
     # Install dependencies from registry first.
     rm -rf node_modules package-lock.json
-    npm install
+    npm install --ignore-scripts
 
     # Find monorepo dependencies and install their packed versions
     current_package_index=-1
