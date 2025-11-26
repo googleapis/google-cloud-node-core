@@ -42,8 +42,8 @@
   "author": "Google LLC",
   "license": "Apache-2.0",
   "dependencies": {
-    "gaxios": "file:../gaxios",
-    "google-logging-utils": "file:../logging-utils",
+    "gaxios": "7.1.3",
+    "google-logging-utils": "1.1.3",
     "json-bigint": "^1.0.0"
   },
   "devDependencies": {
