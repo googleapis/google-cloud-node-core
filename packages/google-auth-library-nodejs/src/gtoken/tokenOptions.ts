@@ -34,7 +34,7 @@ interface TokenOptions {
   /**
    * Additional claims to include in the JWT payload.
    */
-  additionalClaims?: {};
+  additionalClaims?: {[key: string]: any};
   /**
    * Eagerly refresh unexpired tokens when they are within this many
    * milliseconds from expiring.
