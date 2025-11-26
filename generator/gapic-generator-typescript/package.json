@@ -43,7 +43,7 @@
     "postpack:cjs": "cd templates/cjs/typescript_gapic && mv package.json.njk package.json && ln -s package.json package.json.njk",
     "postpack:esm": "cd templates/esm/typescript_gapic && mv package.json.njk package.json && ln -s package.json package.json.njk",
     "postpack": "npm run postpack:cjs && npm run postpack:esm",
-    "test": "bazelisk test --test_output=errors //:unit_tests",
+    "test": "bazelisk test --test_output=streamed //:unit_tests",
     "ts-test-application": "mocha bazel-bin/typescript/test/test-application/test-ts --timeout 600000",
     "system-test": "echo 'no system test'",
     "samples-test": "echo 'no samples test'"

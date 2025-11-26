@@ -3,7 +3,7 @@
 ### Start script that is an entry point for a Docker image.
 
 # Dump the version of the current code to stderr
-echo "gapic-generator-typescript: https://github.com/googleapis/gapic-generator-typescript" 1>&2
+echo "gapic-generator-typescript: https://github.com/googleapis/google-cloud-node-core/tree/main/generator/gapic-generator-typescript" 1>&2
 echo "Latest commit: " 1>&2
 cat /gitlog.txt 1>&2
 echo 1>&2

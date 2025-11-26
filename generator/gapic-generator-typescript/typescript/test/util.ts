@@ -147,7 +147,12 @@ export function runBaselineTest(options: BaselineOptions) {
     if (options.mixins) {
       commandLine += ` --mixins="${options.mixins}"`;
     }
+    try {
     execSync(commandLine);
+    } catch (e) {
+      console.log("COMMAND LINE:", commandLine);
+      console.log("ERROR AQUI", e);
+    }
     assert(equalToBaseline(outputDir, baselineDir));
   });
 }
