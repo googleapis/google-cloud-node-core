@@ -17,7 +17,7 @@ jobs:
           version: ^10.0.0
       - run: node --version
       - run: ci/run_conditional_tests.sh
-        name: Run cascading unit tests
+        name: Run unit tests
         env:
           BUILD_TYPE: continuous
           TEST_TYPE: units
