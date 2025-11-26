@@ -16,7 +16,13 @@ import {EventEmitter} from 'events';
 import * as process from 'process';
 import * as util from 'util';
 import {Colours} from './colours';
-import {LogFields, LogSeverity, AdhocDebugLogCallable, AdhocDebugLogFunction, DebugLogBackend} from './types';
+import {
+  LogFields,
+  LogSeverity,
+  AdhocDebugLogCallable,
+  AdhocDebugLogFunction,
+  DebugLogBackend,
+} from './types';
 
 // Some functions (as noted) are based on the Node standard library, from
 // the following file:

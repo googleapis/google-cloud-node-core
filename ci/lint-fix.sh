@@ -31,7 +31,9 @@ for subdir in ${subdirs[@]}; do
             if grep -q '"fix"' "${d}package.json"; then
                 echo "running lint fix in ${d}"
                 pushd ${d}
-                npm install
+                rm -rf node_modules
+                rm -rf build
+                npm install --ignore-scripts --engine-strict; npm install
                 npm run fix
                 popd
             fi

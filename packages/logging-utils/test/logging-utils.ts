@@ -121,7 +121,9 @@ describe('adhoc-logging', () => {
     });
 
     it('logs with fields', () => {
-      logger({severity: alTypes.LogSeverity.INFO}, 'test log', 5, {other: 'foo'});
+      logger({severity: alTypes.LogSeverity.INFO}, 'test log', 5, {
+        other: 'foo',
+      });
       assert.deepStrictEqual(sink.logs, [
         {
           namespace: system,

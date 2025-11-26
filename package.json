@@ -16,7 +16,7 @@
     "url": "https://github.com/googleapis/google-cloud-node-core/issues"
   },
   "scripts": {
-    "lint-fix": "bin/lint-fix.sh",
+    "lint-fix": "ci/lint-fix.sh",
     "syncpack-fix": "syncpack fix-mismatches"
   },
   "devDependencies": {

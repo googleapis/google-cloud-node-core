@@ -55,25 +55,25 @@ lint)
     retval=$?
     ;;
 samples)
-    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "samples-test"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "samples-test"
     npm install --ignore-scripts --engine-strict; npm install
     npm run samples-test
     retval=$?
     ;;
 system)
-    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "system-test"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "system-test"
     npm install --ignore-scripts --engine-strict; npm install
     npm run system-test
     retval=$?
     ;;
 units)
-    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "test"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "test"
     npm install --ignore-scripts --engine-strict; npm install
     npm run test
     retval=$?
     ;;
 *)
-    ${PROJECT_ROOT}/bin/run-interdependent-tests.sh "$TEST_TYPE"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "$TEST_TYPE"
     retval=$?
     ;;
 esac
