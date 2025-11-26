@@ -39,16 +39,12 @@ if [ ${BUILD_TYPE} != "presubmit" ]; then
     export MOCHA_REPORTER=xunit
 fi
 
-# Install dependencies
-echo "npm install --ignore-scripts --engine-strict; npm install"
-npm install --ignore-scripts --engine-strict; npm install
-
-
 retval=0
 
 set +e
 case ${TEST_TYPE} in
 lint)
+    npm install --ignore-scripts --engine-strict
     npm run prelint
     npm run lint
     retval=$?
