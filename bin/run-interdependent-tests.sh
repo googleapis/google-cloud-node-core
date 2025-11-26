@@ -158,7 +158,6 @@ for package_name in "${SORTED_PACKAGES[@]}"; do
     cd "$ROOT_DIR/packages/$package_dir_name"
 
     # Install dependencies from registry first.
-    rm -rf node_modules package-lock.json
     npm install --ignore-scripts
 
     # Find monorepo dependencies and install their packed versions
