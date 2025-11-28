@@ -864,22 +864,23 @@ describe('🎏 data handling', () => {
   it('should return stream if asked nicely', async () => {
     const body = {hello: '🌎'};
     const scope = nock(url).get('/').reply(200, body);
-    const res = await request<ReadableStream>({url, responseType: 'stream'});
+    const res = await request<Readable>({url, responseType: 'stream'});
     scope.done();
-    // With native fetch, we get ReadableStream instead of stream.Readable
-    assert(res.data instanceof ReadableStream);
+    // Shimmed to return Node.js Readable for backwards compatibility
+    assert(res.data instanceof Readable);
   });
 
-  it('should return a `ReadableStream` when `fetch` has been provided ', async () => {
+  it('should return a `Readable` when `fetch` has been provided ', async () => {
     const body = {hello: '🌎'};
     const scope = nock(url).get('/').reply(200, body);
-    const res = await request<ReadableStream>({
+    const res = await request<Readable>({
       url,
       responseType: 'stream',
       fetchImplementation: fetch,
     });
     scope.done();
-    assert(res.data instanceof ReadableStream);
+    // Shimmed to return Node.js Readable for backwards compatibility
+    assert(res.data instanceof Readable);
   });
 
   it('should return an ArrayBuffer if asked nicely', async () => {

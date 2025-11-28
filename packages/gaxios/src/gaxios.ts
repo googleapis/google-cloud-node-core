@@ -281,6 +281,11 @@ export class Gaxios implements FetchCompliance {
 
     switch (opts.responseType) {
       case 'stream':
+        // Shim for backwards compatibility: convert Web ReadableStream to Node.js Readable
+        // This ensures existing consumers expecting stream.Readable continue to work
+        if (res.body && typeof Readable.fromWeb === 'function') {
+          return Readable.fromWeb(res.body as import('stream/web').ReadableStream);
+        }
         return res.body;
       case 'json': {
         const data = await res.text();

@@ -384,8 +384,8 @@ export interface GaxiosOptions extends RequestInit {
    */
   onUploadProgress?: (progressEvent: GaxiosResponseData) => void;
   /**
-   * If the `fetchImplementation` is native `fetch`, the
-   * stream is a `ReadableStream`, otherwise `readable.Stream`
+   * The type of data that should be returned.
+   * When set to `stream`, returns a Node.js `stream.Readable` for backwards compatibility.
    */
   responseType?:
     | 'arraybuffer'
