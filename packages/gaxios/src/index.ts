@@ -23,6 +23,8 @@ export {
 } from './common.js';
 export {Gaxios, GaxiosOptions};
 export * from './interceptor.js';
+export * from './teeny-statistics.js';
+export * from './teeny-request.js';
 
 /**
  * The default instance used when the `request` method is directly
