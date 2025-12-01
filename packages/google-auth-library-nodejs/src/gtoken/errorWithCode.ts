@@ -20,4 +20,4 @@ class ErrorWithCode extends Error {
   }
 }
 
-export { ErrorWithCode };
+export {ErrorWithCode};
