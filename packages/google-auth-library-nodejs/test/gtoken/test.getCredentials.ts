@@ -15,13 +15,15 @@
 import * as assert from 'assert';
 import {describe, it, after} from 'mocha';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import {getCredentials} from '../../src/gtoken/getCredentials';
 
 describe('getCredentials', () => {
   const filePaths: string[] = [];
 
   function writeTempFile(name: string, data: string): string {
-    const filePath = `./${name}`;
+    const filePath = path.join(os.tmpdir(), name);
     fs.writeFileSync(filePath, data);
     filePaths.push(filePath);
     return filePath;
@@ -83,21 +85,18 @@ describe('getCredentials', () => {
   it('should throw for .p12 extension', async () => {
     await assert.rejects(
       getCredentials('key.p12'),
-      /certificates are not supported/
+      /certificates are not supported/,
     );
   });
 
   it('should throw for .pfx extension', async () => {
     await assert.rejects(
       getCredentials('key.pfx'),
-      /certificates are not supported/
+      /certificates are not supported/,
     );
   });
 
   it('should throw for unknown extension', async () => {
-    await assert.rejects(
-      getCredentials('key.txt'),
-      /Unknown certificate type/
-    );
+    await assert.rejects(getCredentials('key.txt'), /Unknown certificate type/);
   });
 });
