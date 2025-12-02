@@ -55,15 +55,15 @@ lint)
     retval=$?
     ;;
 samples)
-    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "samples-test"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
     npm install --ignore-scripts --engine-strict; npm install
-    npm run samples-test
+    npm run ${TEST_TYPE}-test
     retval=$?
     ;;
 system)
-    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "system-test"
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
     npm install --ignore-scripts --engine-strict; npm install
-    npm run system-test
+    npm run ${TEST_TYPE}-test
     retval=$?
     ;;
 units)

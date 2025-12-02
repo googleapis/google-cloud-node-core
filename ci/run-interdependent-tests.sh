@@ -64,20 +64,25 @@ get_dependencies() {
     fi
 }
 
+# A function to build the dependency graph
+build_dependency_graph() {
+    for package_dir in ${PACKAGE_DIRS[@]}; do
+        package_dir=${package_dir%/}
+        package_name=$(get_package_name "$package_dir")
+        if [ -z "$package_name" ]; then
+            echo "Warning: could not get package name from $package_dir/package.json. Skipping."
+            continue
+        fi
+        dependencies=$(get_dependencies "$package_dir")
+        PACKAGE_NAMES+=("$package_name")
+        PACKAGE_DEPS+=("$dependencies")
+        PKG_NAME_TO_DIR_MAP_KEYS+=("$package_name")
+        PKG_NAME_TO_DIR_MAP_VALUES+=("$(basename "$package_dir")")
+    done
+}
+
 # Build the dependency graph
-for package_dir in ${PACKAGE_DIRS[@]}; do
-    package_dir=${package_dir%/}
-    package_name=$(get_package_name "$package_dir")
-    if [ -z "$package_name" ]; then
-        echo "Warning: could not get package name from $package_dir/package.json. Skipping."
-        continue
-    fi
-    dependencies=$(get_dependencies "$package_dir")
-    PACKAGE_NAMES+=("$package_name")
-    PACKAGE_DEPS+=("$dependencies")
-    PKG_NAME_TO_DIR_MAP_KEYS+=("$package_name")
-    PKG_NAME_TO_DIR_MAP_VALUES+=("$(basename "$package_dir")")
-done
+build_dependency_graph
 
 # A function toposort the dependency graph
 toposort() {
