@@ -1,3 +1,17 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import * as path from 'path';
 import * as fs from 'fs';
 import {promisify} from 'util';
@@ -53,13 +67,19 @@ class JsonCredentialsProvider implements ICredentialsProvider {
    */
   async getCredentials(): Promise<Credentials> {
     const key = await readFile(this.keyFilePath, 'utf8');
-    const body = JSON.parse(key);
+    let body: any;
+    try {
+      body = JSON.parse(key);
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Invalid JSON key file: ${err.message}`);
+    }
     const privateKey = body.private_key;
     const clientEmail = body.client_email;
     if (!privateKey || !clientEmail) {
       throw new ErrorWithCode(
         'private_key and client_email are required.',
-        'MISSING_CREDENTIALS'
+        'MISSING_CREDENTIALS',
       );
     }
     return {privateKey, clientEmail};
@@ -94,7 +114,7 @@ class P12CredentialsProvider implements ICredentialsProvider {
     throw new ErrorWithCode(
       '*.p12 certificates are not supported after v6.1.2. ' +
         'Consider utilizing *.json format or converting *.p12 to *.pem using the OpenSSL CLI.',
-      'UNKNOWN_CERTIFICATE_TYPE'
+      'UNKNOWN_CERTIFICATE_TYPE',
     );
   }
 }
@@ -124,20 +144,20 @@ class CredentialsProviderFactory {
         throw new ErrorWithCode(
           'Unknown certificate type. Type is determined based on file extension. ' +
             'Current supported extensions are *.json, and *.pem.',
-          'UNKNOWN_CERTIFICATE_TYPE'
+          'UNKNOWN_CERTIFICATE_TYPE',
         );
     }
   }
 }
 
 /**
-   * Given a keyFile, extract the key and client email if available
-   * @param keyFile Path to a json, pem, or p12 file that contains the key.
-   * @returns an object with privateKey and clientEmail properties
-   */
+ * Given a keyFile, extract the key and client email if available
+ * @param keyFile Path to a json, pem, or p12 file that contains the key.
+ * @returns an object with privateKey and clientEmail properties
+ */
 async function getCredentials(keyFilePath: string): Promise<Credentials> {
   const provider = CredentialsProviderFactory.create(keyFilePath);
   return provider.getCredentials();
 }
 
-export { getCredentials, Credentials }
+export {getCredentials, Credentials};
