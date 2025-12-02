@@ -67,7 +67,13 @@ class JsonCredentialsProvider implements ICredentialsProvider {
    */
   async getCredentials(): Promise<Credentials> {
     const key = await readFile(this.keyFilePath, 'utf8');
-    const body = JSON.parse(key);
+    let body: any;
+    try {
+      body = JSON.parse(key);
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Invalid JSON key file: ${err.message}`);
+    }
     const privateKey = body.private_key;
     const clientEmail = body.client_email;
     if (!privateKey || !clientEmail) {
