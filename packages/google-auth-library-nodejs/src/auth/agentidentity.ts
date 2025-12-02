@@ -15,6 +15,7 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import {log as makeLog} from 'google-logging-utils';
+import {constants} from 'fs';
 
 const log = makeLog('google-auth-library:agentidentity');
 
@@ -29,12 +30,24 @@ const AGENT_IDENTITY_SPIFFE_PATTERNS = [
 
 // Polling configuration
 // Total timeout: 30 seconds
+const TOTAL_TIMEOUT_MS = 30000;
 // Phase 1: 5 seconds of fast polling (every 0.1s) = 50 cycles
-// Phase 2: 25 seconds of slow polling (every 0.5s) = 50 cycles
-const FAST_POLL_INTERVAL_MS = 100;
 const FAST_POLL_CYCLES = 50;
+const FAST_POLL_INTERVAL_MS = 100;
+// Phase 2: 25 seconds of slow polling (every 0.5s) = 50 cycles
 const SLOW_POLL_INTERVAL_MS = 500;
-const SLOW_POLL_CYCLES = 50;
+
+// Precalculates the polling intervals.
+const POLLING_INTERVALS: number[] = (() => {
+  const fast = Array(FAST_POLL_CYCLES).fill(FAST_POLL_INTERVAL_MS);
+
+  const remainingTime =
+    TOTAL_TIMEOUT_MS - FAST_POLL_CYCLES * FAST_POLL_INTERVAL_MS;
+  const slowCycles = Math.floor(remainingTime / SLOW_POLL_INTERVAL_MS);
+  const slow = Array(slowCycles).fill(SLOW_POLL_INTERVAL_MS);
+
+  return fast.concat(slow);
+})();
 
 /**
  * Interface for the certificate configuration file.
@@ -62,17 +75,20 @@ async function sleep(ms: number): Promise<void> {
  * @throws Error if the configuration or certificate file cannot be found after the timeout.
  */
 async function getAgentIdentityCertificatePath(): Promise<string | null> {
-  const configPath = process.env[CERT_CONFIG_ENV_VAR];
-  if (!configPath) {
+  const certConfigPath = process.env[CERT_CONFIG_ENV_VAR];
+  if (!certConfigPath) {
     return null;
   }
 
   let hasLoggedWarning = false;
-
-  for (let i = 0; i < FAST_POLL_CYCLES + SLOW_POLL_CYCLES; i++) {
+  for (const interval of POLLING_INTERVALS) {
     try {
-      if (fs.existsSync(configPath)) {
-        const configContent = await fs.promises.readFile(configPath, 'utf-8');
+      if (fs.existsSync(certConfigPath)) {
+        // If cert-config file exists, extract cert path from contents.
+        const configContent = await fs.promises.readFile(
+          certConfigPath,
+          'utf-8',
+        );
         const config = JSON.parse(configContent) as CertificateConfigFile;
         const certPath = config.cert_configs?.workload?.cert_path;
 
@@ -85,15 +101,14 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
     }
 
     if (!hasLoggedWarning) {
+      // Log warning once about polling cycle.
       log.warn(
-        `Certificate config file not found at ${configPath} (from ${CERT_CONFIG_ENV_VAR} environment variable). ` +
+        `Certificate config file not found at ${certConfigPath} (from ${CERT_CONFIG_ENV_VAR} environment variable). ` +
           'Retrying for up to 30 seconds.',
       );
       hasLoggedWarning = true;
     }
 
-    const interval =
-      i < FAST_POLL_CYCLES ? FAST_POLL_INTERVAL_MS : SLOW_POLL_INTERVAL_MS;
     await sleep(interval);
   }
 
@@ -156,29 +171,29 @@ function calculateCertificateFingerprint(cert: crypto.X509Certificate): string {
 export async function getBindCertificateFingerprint(): Promise<
   string | undefined
 > {
-  // 1. Check opt-out
+  // Check opt-out.
   if (process.env[PREVENT_SHARING_ENV_VAR]?.toLowerCase() === 'false') {
     return undefined;
   }
 
-  // 2. Get certificate path (polling if necessary)
+  // Get certificate path (polling if necessary).
   const certPath = await getAgentIdentityCertificatePath();
   if (!certPath) {
     return undefined;
   }
 
-  // 3. Read and parse certificate
+  // Read and parse certificate
   // We use fs.promises.readFile here. The existence was checked in polling,
   // but it might have disappeared or be unreadable.
   // We let standard IO errors propagate if it fails now after polling succeeded.
   const certBuffer = await fs.promises.readFile(certPath);
   const cert = parseCertificate(certBuffer);
 
-  // 4. Check if it's an Agent Identity certificate
+  // Check if it's an Agent Identity certificate
   if (!isAgentIdentityCertificate(cert)) {
     return undefined;
   }
 
-  // 5. Calculate and return fingerprint
+  // Calculate and return fingerprint
   return calculateCertificateFingerprint(cert);
 }
