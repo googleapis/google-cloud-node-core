@@ -43,8 +43,8 @@ retval=0
 
 # In this run, we're running both 1) cascading tests, as well as
 # 2) individual tests for a given package. The reason we run them separately
-# 3) is because cascading tests need to run without compilation; so, we're
-# 4) also running individual package tests to ensure compilation is done correctly
+# is because cascading tests need to run without compilation; so, we're
+# also running individual package tests to ensure compilation is done correctly
 
 set +e
 case ${TEST_TYPE} in
