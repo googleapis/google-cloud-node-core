@@ -15,7 +15,6 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import {log as makeLog} from 'google-logging-utils';
-import {constants} from 'fs';
 
 const log = makeLog('google-auth-library:agentidentity');
 
