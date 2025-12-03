@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Transporter } from './tokenOptions';
+import {Transporter} from './tokenOptions';
 
 /** The URL for Google's OAuth 2.0 token revocation endpoint. */
 const GOOGLE_REVOKE_TOKEN_URL = 'https://oauth2.googleapis.com/revoke?token=';
@@ -26,11 +26,11 @@ const DEFAULT_RETRY_VALUE = true;
  * @returns A promise that resolves with the revocation response.
  */
 async function revokeToken(accessToken: string, transporter: Transporter) {
-    const url = GOOGLE_REVOKE_TOKEN_URL + accessToken;
-    return await transporter.request({
-      url,
-      retry: DEFAULT_RETRY_VALUE,
-    });
+  const url = GOOGLE_REVOKE_TOKEN_URL + accessToken;
+  return await transporter.request({
+    url,
+    retry: DEFAULT_RETRY_VALUE,
+  });
 }
 
-export { revokeToken };
+export {revokeToken};
