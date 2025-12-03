@@ -137,7 +137,7 @@ describe('getToken', () => {
       transporter,
     };
 
-    getToken(tokenOptions);
+    void getToken(tokenOptions);
 
     const gaxiosOpts = requestStub.firstCall.args[0];
     assert.strictEqual(gaxiosOpts.method, 'POST');
