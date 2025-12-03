@@ -15,13 +15,15 @@
 import * as assert from 'assert';
 import {describe, it, after} from 'mocha';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import {getCredentials} from '../../src/gtoken/getCredentials';
 
 describe('getCredentials', () => {
   const filePaths: string[] = [];
 
   function writeTempFile(name: string, data: string): string {
-    const filePath = `./${name}`;
+    const filePath = path.join(os.tmpdir(), name);
     fs.writeFileSync(filePath, data);
     filePaths.push(filePath);
     return filePath;
