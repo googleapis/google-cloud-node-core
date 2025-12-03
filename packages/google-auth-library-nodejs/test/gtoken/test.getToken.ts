@@ -101,9 +101,13 @@ describe('getToken', () => {
 
     // Create a new error object for each rejection to avoid mutation issues.
     const requestStub = sandbox.stub().callsFake(() => {
-      throw new GaxiosError('Request failed with status code 400', {} as GaxiosOptionsPrepared, {
-        data: errorInfo,
-      } as any);
+      throw new GaxiosError(
+        'Request failed with status code 400',
+        {} as GaxiosOptionsPrepared,
+        {
+          data: errorInfo,
+        } as any,
+      );
     });
     const transporter: Transporter = {
       request: requestStub,
@@ -118,7 +122,7 @@ describe('getToken', () => {
       await getToken(tokenOptions);
       assert.fail('Expected to throw');
     } catch (err: any) {
-      assert.strictEqual(err.message, "Request failed with status code 400");
+      assert.strictEqual(err.message, 'Request failed with status code 400');
     }
   });
 

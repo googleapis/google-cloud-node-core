@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Transporter, TokenOptions } from './tokenOptions';
-import { GaxiosOptions, GaxiosResponse, GaxiosError } from 'gaxios';
-import { getJwsSign } from './jwsSign';
+import {Transporter, TokenOptions} from './tokenOptions';
+import {GaxiosOptions, GaxiosResponse, GaxiosError} from 'gaxios';
+import {getJwsSign} from './jwsSign';
 
 /**
  * Interface for the data returned from the token endpoint.
@@ -43,18 +43,18 @@ const GOOGLE_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
  * @returns The Gaxios options for the request.
  */
 const generateRequestOptions = (tokenOptions: TokenOptions): GaxiosOptions => {
-    return {
-        method: 'POST',
-        url: GOOGLE_TOKEN_URL,
-        data: new URLSearchParams({
-            grant_type: GOOGLE_GRANT_TYPE, // Grant type for JWT
-            assertion: getJwsSign(tokenOptions),
-        }),
-        responseType: 'json',
-        retryConfig: {
-            httpMethodsToRetry: ['POST'],
-        },
-    } as GaxiosOptions;
+  return {
+    method: 'POST',
+    url: GOOGLE_TOKEN_URL,
+    data: new URLSearchParams({
+      grant_type: GOOGLE_GRANT_TYPE, // Grant type for JWT
+      assertion: getJwsSign(tokenOptions),
+    }),
+    responseType: 'json',
+    retryConfig: {
+      httpMethodsToRetry: ['POST'],
+    },
+  } as GaxiosOptions;
 };
 
 /**
@@ -63,24 +63,25 @@ const generateRequestOptions = (tokenOptions: TokenOptions): GaxiosOptions => {
  * @returns A promise that resolves with the token data.
  */
 async function getToken(tokenOptions: TokenOptions): Promise<TokenData> {
-    if (!tokenOptions.transporter) {
-        throw new Error('No transporter set.');
-    }
+  if (!tokenOptions.transporter) {
+    throw new Error('No transporter set.');
+  }
 
-    try {
-        const gaxiosOptions = generateRequestOptions(tokenOptions);
-        const response: GaxiosResponse<TokenData>= await tokenOptions.transporter.request<TokenData>(gaxiosOptions);
-        return response.data;
-    } catch (e) {
-        // The error is re-thrown, but we want to format it to be more
-        // informative.
-        const err = e as GaxiosError;
-        const errorData = err.response?.data;
-        if (errorData?.error) {
-            err.message = `${errorData.error}: ${errorData.error_description}`;
-        }
-        throw err;
+  try {
+    const gaxiosOptions = generateRequestOptions(tokenOptions);
+    const response: GaxiosResponse<TokenData> =
+      await tokenOptions.transporter.request<TokenData>(gaxiosOptions);
+    return response.data;
+  } catch (e) {
+    // The error is re-thrown, but we want to format it to be more
+    // informative.
+    const err = e as GaxiosError;
+    const errorData = err.response?.data;
+    if (errorData?.error) {
+      err.message = `${errorData.error}: ${errorData.error_description}`;
     }
+    throw err;
+  }
 }
 
-export { getToken, TokenData };
+export {getToken, TokenData};
