@@ -26,6 +26,7 @@ import {
   GRPCCall,
   RequestType,
   CancellableStream,
+  SimpleCallbackFunction,
 } from '../../src/apitypes';
 import {createApiCall} from '../../src/createApiCall';
 import {StreamingApiCaller} from '../../src/streamingCalls/streamingApiCaller';
@@ -38,8 +39,9 @@ import internal = require('stream');
 import {StreamArrayParser} from '../../src/streamArrayParser';
 import path = require('path');
 import protobuf = require('protobufjs');
-import {GoogleError} from '../../src';
+import {CallSettings, GoogleError} from '../../src';
 import {Metadata} from '@grpc/grpc-js';
+import {StreamProxy} from '../../src/streamingCalls/streaming';
 
 function createApiCallStreaming(
   func:
@@ -2119,36 +2121,43 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
-        assert(typeof argument === 'object');
-        assert(typeof apiCall === 'function');
-        assert(stream instanceof streaming.StreamProxy);
-        try {
-          assert(settings.retry);
-          assert(typeof settings.retryRequestOptions === 'undefined');
-          assert.strictEqual(
-            settings.retry?.backoffSettings.maxRetryDelayMillis,
-            70000,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.retryDelayMultiplier,
-            3,
-          );
-          // totalTimeout is undefined because maxRetries is passed
-          assert(
-            typeof settings.retry?.backoffSettings.totalTimeoutMillis ===
-              'undefined',
-          );
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy,
+        ) => {
+          assert(typeof argument === 'object');
+          assert(typeof apiCall === 'function');
+          assert(stream instanceof streaming.StreamProxy);
+          try {
+            assert(settings.retry);
+            assert(typeof settings.retryRequestOptions === 'undefined');
+            assert.strictEqual(
+              settings.retry?.backoffSettings.maxRetryDelayMillis,
+              70000,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.retryDelayMultiplier,
+              3,
+            );
+            // totalTimeout is undefined because maxRetries is passed
+            assert(
+              typeof settings.retry?.backoffSettings.totalTimeoutMillis ===
+                'undefined',
+            );
 
-          assert.strictEqual(settings.retry?.backoffSettings.maxRetries, 1);
-          assert(settings.retry.shouldRetryFn);
-          assert(settings.retry.retryCodes.length === 0);
-          assert(settings.retry !== new gax.CallSettings().retry);
-          done();
-        } catch (err) {
-          done(err);
-        }
-      });
+            assert.strictEqual(settings.retry?.backoffSettings.maxRetries, 1);
+            assert(settings.retry.shouldRetryFn);
+            assert(settings.retry.retryCodes.length === 0);
+            assert(settings.retry !== new gax.CallSettings().retry);
+            done();
+          } catch (err) {
+            done(err);
+          }
+        },
+      );
 
     const spy = sinon.spy((...args: Array<{}>) => {
       assert.strictEqual(args.length, 3);
@@ -2218,36 +2227,43 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
-        assert(typeof argument === 'object');
-        assert(typeof apiCall === 'function');
-        assert(stream instanceof streaming.StreamProxy);
-        try {
-          assert(settings.retry);
-          assert(typeof settings.retryRequestOptions === 'undefined');
-          assert.strictEqual(
-            settings.retry?.backoffSettings.maxRetryDelayMillis,
-            0,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.retryDelayMultiplier,
-            0,
-          );
-          // totalTimeout is undefined because maxRetries is passed
-          assert(
-            typeof settings.retry?.backoffSettings.totalTimeoutMillis ===
-              'undefined',
-          );
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy,
+        ) => {
+          assert(typeof argument === 'object');
+          assert(typeof apiCall === 'function');
+          assert(stream instanceof streaming.StreamProxy);
+          try {
+            assert(settings.retry);
+            assert(typeof settings.retryRequestOptions === 'undefined');
+            assert.strictEqual(
+              settings.retry?.backoffSettings.maxRetryDelayMillis,
+              0,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.retryDelayMultiplier,
+              0,
+            );
+            // totalTimeout is undefined because maxRetries is passed
+            assert(
+              typeof settings.retry?.backoffSettings.totalTimeoutMillis ===
+                'undefined',
+            );
 
-          assert.strictEqual(settings.retry?.backoffSettings.maxRetries, 0);
-          assert(settings.retry.shouldRetryFn);
-          assert(settings.retry.retryCodes.length === 0);
-          assert(settings.retry !== new gax.CallSettings().retry);
-          done();
-        } catch (err) {
-          done(err);
-        }
-      });
+            assert.strictEqual(settings.retry?.backoffSettings.maxRetries, 0);
+            assert(settings.retry.shouldRetryFn);
+            assert(settings.retry.retryCodes.length === 0);
+            assert(settings.retry !== new gax.CallSettings().retry);
+            done();
+          } catch (err) {
+            done(err);
+          }
+        },
+      );
 
     const spy = sinon.spy((...args: Array<{}>) => {
       assert.strictEqual(args.length, 3);
@@ -2317,36 +2333,43 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
-        assert(typeof argument === 'object');
-        assert(typeof apiCall === 'function');
-        assert(stream instanceof streaming.StreamProxy);
-        try {
-          assert(settings.retry);
-          assert(typeof settings.retryRequestOptions === 'undefined');
-          assert.strictEqual(
-            settings.retry?.backoffSettings.maxRetryDelayMillis,
-            70000,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.retryDelayMultiplier,
-            3,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.totalTimeoutMillis,
-            650000,
-          );
-          assert(
-            typeof settings.retry?.backoffSettings.maxRetries === 'undefined',
-          );
-          assert(settings.retry.shouldRetryFn);
-          assert(settings.retry.retryCodes.length === 0);
-          assert(settings.retry !== new gax.CallSettings().retry);
-          done();
-        } catch (err) {
-          done(err);
-        }
-      });
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy,
+        ) => {
+          assert(typeof argument === 'object');
+          assert(typeof apiCall === 'function');
+          assert(stream instanceof streaming.StreamProxy);
+          try {
+            assert(settings.retry);
+            assert(typeof settings.retryRequestOptions === 'undefined');
+            assert.strictEqual(
+              settings.retry?.backoffSettings.maxRetryDelayMillis,
+              70000,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.retryDelayMultiplier,
+              3,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.totalTimeoutMillis,
+              650000,
+            );
+            assert(
+              typeof settings.retry?.backoffSettings.maxRetries === 'undefined',
+            );
+            assert(settings.retry.shouldRetryFn);
+            assert(settings.retry.retryCodes.length === 0);
+            assert(settings.retry !== new gax.CallSettings().retry);
+            done();
+          } catch (err) {
+            done(err);
+          }
+        },
+      );
 
     const spy = sinon.spy((...args: Array<{}>) => {
       assert.strictEqual(args.length, 3);
@@ -2415,36 +2438,43 @@ describe('handles server streaming retries in gax when gaxStreamingRetries is en
     const warnStub = sinon.stub(warnings, 'warn');
     sinon
       .stub(StreamingApiCaller.prototype, 'call')
-      .callsFake((apiCall, argument, settings, stream) => {
-        assert(typeof argument === 'object');
-        assert(typeof apiCall === 'function');
-        assert(stream instanceof streaming.StreamProxy);
-        try {
-          assert(settings.retry);
-          assert(typeof settings.retryRequestOptions === 'undefined');
-          assert.strictEqual(
-            settings.retry?.backoffSettings.maxRetryDelayMillis,
-            0,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.retryDelayMultiplier,
-            0,
-          );
-          assert.strictEqual(
-            settings.retry?.backoffSettings.totalTimeoutMillis,
-            0,
-          );
-          assert(
-            typeof settings.retry?.backoffSettings.maxRetries === 'undefined',
-          );
-          assert(settings.retry.shouldRetryFn);
-          assert(settings.retry.retryCodes.length === 0);
-          assert(settings.retry !== new gax.CallSettings().retry);
-          done();
-        } catch (err) {
-          done(err);
-        }
-      });
+      .callsFake(
+        (
+          apiCall: SimpleCallbackFunction,
+          argument: {},
+          settings: CallSettings,
+          stream: StreamProxy,
+        ) => {
+          assert(typeof argument === 'object');
+          assert(typeof apiCall === 'function');
+          assert(stream instanceof streaming.StreamProxy);
+          try {
+            assert(settings.retry);
+            assert(typeof settings.retryRequestOptions === 'undefined');
+            assert.strictEqual(
+              settings.retry?.backoffSettings.maxRetryDelayMillis,
+              0,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.retryDelayMultiplier,
+              0,
+            );
+            assert.strictEqual(
+              settings.retry?.backoffSettings.totalTimeoutMillis,
+              0,
+            );
+            assert(
+              typeof settings.retry?.backoffSettings.maxRetries === 'undefined',
+            );
+            assert(settings.retry.shouldRetryFn);
+            assert(settings.retry.retryCodes.length === 0);
+            assert(settings.retry !== new gax.CallSettings().retry);
+            done();
+          } catch (err) {
+            done(err);
+          }
+        },
+      );
 
     const spy = sinon.spy((...args: Array<{}>) => {
       assert.strictEqual(args.length, 3);
