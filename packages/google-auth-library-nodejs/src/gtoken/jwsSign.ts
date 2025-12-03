@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {TokenOptions} from './tokenOptions';
-import { sign, SignOptions } from 'jws';
+import {sign, SignOptions} from 'jws';
 
 /** The default algorithm for signing JWTs. */
 const ALG_RS256 = 'RS256';
@@ -48,13 +48,13 @@ interface JwsSignPayload {
 function buildPayloadForJwsSign(tokenOptions: TokenOptions): JwsSignPayload {
   const iat = Math.floor(new Date().getTime() / 1000);
   const payload: JwsSignPayload = {
-      iss: tokenOptions.iss,
-      scope: tokenOptions.scope,
-      aud: GOOGLE_TOKEN_URL,
-      exp: iat + 3600,
-      iat,
-      sub: tokenOptions.sub,
-      ...tokenOptions.additionalClaims,
+    iss: tokenOptions.iss,
+    scope: tokenOptions.scope,
+    aud: GOOGLE_TOKEN_URL,
+    exp: iat + 3600,
+    iat,
+    sub: tokenOptions.sub,
+    ...tokenOptions.additionalClaims,
   };
   return payload;
 }
@@ -73,4 +73,4 @@ function getJwsSign(tokenOptions: TokenOptions): string {
   } as SignOptions);
 }
 
-export { buildPayloadForJwsSign, getJwsSign };
+export {buildPayloadForJwsSign, getJwsSign};

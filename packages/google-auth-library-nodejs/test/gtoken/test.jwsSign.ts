@@ -17,10 +17,7 @@ import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
 import * as sinon from 'sinon';
 import * as jws from 'jws';
-import {
-  buildPayloadForJwsSign,
-  getJwsSign,
-} from '../../src/gtoken/jwsSign';
+import {buildPayloadForJwsSign, getJwsSign} from '../../src/gtoken/jwsSign';
 import {TokenOptions} from '../../src/gtoken/tokenOptions';
 
 describe('jwsSign', () => {
