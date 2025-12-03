@@ -157,7 +157,10 @@ export function generateServiceStub(
       let response204Ok = false;
       const fetchRequest: gaxios.GaxiosOptions = {
         headers: headers,
-        body: fetchParameters.body,
+        body:
+          typeof fetchParameters.body === 'string'
+            ? fetchParameters.body
+            : Buffer.from(fetchParameters.body),
         method: fetchParameters.method,
         signal: cancelSignal,
         responseType: 'stream', // ensure gaxios returns the data directly so that it handle data/streams itself
