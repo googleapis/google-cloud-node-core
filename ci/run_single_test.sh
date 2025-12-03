@@ -39,54 +39,44 @@ if [ ${BUILD_TYPE} != "presubmit" ]; then
     export MOCHA_REPORTER=xunit
 fi
 
-# Install dependencies
-echo "npm install --ignore-scripts --engine-strict; npm install"
-npm install --ignore-scripts --engine-strict; npm install
-
-
 retval=0
+
+# In this run, we're running both 1) cascading tests, as well as
+# 2) individual tests for a given package. The reason we run them separately
+# is because cascading tests need to run without compilation; so, we're
+# also running individual package tests to ensure compilation is done correctly
 
 set +e
 case ${TEST_TYPE} in
 lint)
+    npm install --ignore-scripts --engine-strict
     npm run prelint
     npm run lint
     retval=$?
     ;;
 samples)
-    npm run samples-test
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
+    npm install --ignore-scripts --engine-strict; npm install
+    npm run ${TEST_TYPE}-test
     retval=$?
     ;;
 system)
-    npm run system-test
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
+    npm install --ignore-scripts --engine-strict; npm install
+    npm run ${TEST_TYPE}-test
     retval=$?
     ;;
 units)
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "test"
+    npm install --ignore-scripts --engine-strict; npm install
     npm run test
     retval=$?
     ;;
 *)
+    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "$TEST_TYPE"
+    retval=$?
     ;;
 esac
 set -e
-
-# Run flakybot for non-presubmit builds
-if [ ${BUILD_TYPE} != "presubmit" ]; then
-    if [ ${TEST_TYPE} == "system" ] || [ ${TEST_TYPE} == "samples" ]; then
-        if [ -f "${PROJECT}_sponge_log.xml" ]; then
-            echo "Contents in ${PROJECT}_sponge_log.xml:"
-            cat ${PROJECT}_sponge_log.xml
-
-            echo "Calling flakybot --repo ${REPO_OWNER}/${REPO_NAME} --commit_hash ${COMMIT_SHA} --build_url https://console.cloud.google.com/cloud-build/builds;region=global/${BUILD_ID}?project=${PROJECT_ID}"
-            flakybot \
-                --repo "${REPO_OWNER}/${REPO_NAME}" \
-                --commit_hash "${COMMIT_SHA}" \
-                --build_url \
-                "https://console.cloud.google.com/cloud-build/builds;region=global/${BUILD_ID}?project=${PROJECT_ID}"
-        else
-            echo "Missing sponge log: ${PROJECT}_sponge_log.xml"
-        fi
-    fi
-fi
 
 exit ${retval}
