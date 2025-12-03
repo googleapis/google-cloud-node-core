@@ -40,10 +40,7 @@ describe('TokenHandler', () => {
   it('should throw if neither key nor keyFile are provided', async () => {
     const tokenOptions: TokenOptions = {transporter};
     const handler = new TokenHandler(tokenOptions);
-    await assert.rejects(
-      handler.getToken(false),
-      /No key or keyFile set/
-    );
+    await assert.rejects(handler.getToken(false), /No key or keyFile set/);
   });
 
   it('should process keyFile and fetch a token', async () => {
@@ -129,7 +126,9 @@ describe('TokenHandler', () => {
     const tokenOptions: TokenOptions = {key: 'private-key', transporter};
     const tokenData: TokenData = {access_token: 'token'};
     // Make the stub resolve asynchronously to simulate a network request
-    getTokenStub.returns(new Promise(resolve => setTimeout(() => resolve(tokenData), 50)));
+    getTokenStub.returns(
+      new Promise(resolve => setTimeout(() => resolve(tokenData), 50)),
+    );
 
     const handler = new TokenHandler(tokenOptions);
 
@@ -157,7 +156,10 @@ describe('TokenHandler', () => {
     });
 
     it('should return true if token is within eager refresh threshold', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const tokenOptions: TokenOptions = {
+        eagerRefreshThresholdMillis: 5000,
+        transporter,
+      };
       const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 3000; // Expires in 3s, which is < 5s threshold
@@ -165,7 +167,10 @@ describe('TokenHandler', () => {
     });
 
     it('should return false if token is not expiring', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const tokenOptions: TokenOptions = {
+        eagerRefreshThresholdMillis: 5000,
+        transporter,
+      };
       const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 10000; // Expires in 10s
@@ -187,7 +192,10 @@ describe('TokenHandler', () => {
     });
 
     it('should return false if token is within eager refresh threshold but not expired', () => {
-      const tokenOptions: TokenOptions = {eagerRefreshThresholdMillis: 5000, transporter};
+      const tokenOptions: TokenOptions = {
+        eagerRefreshThresholdMillis: 5000,
+        transporter,
+      };
       const handler = new TokenHandler(tokenOptions);
       handler.token = {access_token: 'token'};
       handler.tokenExpiresAt = new Date().getTime() + 3000; // Expires in 3s
