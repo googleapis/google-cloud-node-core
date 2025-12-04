@@ -3,7 +3,11 @@
   "version": "8.0.2",
   "description": "Retry a request.",
   "main": "index.js",
-  "repository": "stephenplusplus/retry-request",
+  "repository": {
+    "type": "git",
+    "directory": "packages/retry-request",
+    "url": "https://github.com/googleapis/google-cloud-node-core.git"
+  },
   "scripts": {
     "docs": "jsdoc -c .jsdoc.js",
     "predocs-test": "npm run docs",
@@ -11,7 +15,8 @@
     "fix": "gts fix",
     "lint": "gts check",
     "test": "mocha --timeout 30000",
-    "system-test": ""
+    "system-test": "npm run compile && c8 mocha build/system-test",
+    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test"
   },
   "files": [
     "index.js",
@@ -44,5 +49,6 @@
     "lodash.range": "^3.2.0",
     "mocha": "^11.1.0",
     "typescript": "^5.7.3"
-  }
+  },
+  "homepage": "https://github.com/googleapis/google-cloud-node-core/tree/main/packages/retry-request"
 }
