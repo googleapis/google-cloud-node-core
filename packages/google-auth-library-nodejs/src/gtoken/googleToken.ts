@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import {request} from 'gaxios';
-import { TokenOptions, Transporter } from './tokenOptions';
-import { TokenHandler } from './tokenHandler';
-import { revokeToken } from './revokeToken';
-import { TokenData } from './getToken';
+import {TokenOptions, Transporter} from './tokenOptions';
+import {TokenHandler} from './tokenHandler';
+import {revokeToken} from './revokeToken';
+import {TokenData} from './getToken';
 
 /**
  * Options for fetching an access token.
@@ -51,12 +51,20 @@ class GoogleToken {
   constructor(options?: TokenOptions) {
     this.tokenOptions = options || {};
     // If a transporter is not set, by default set it to use gaxios.
-    if(this.tokenOptions) {
-      this.tokenOptions.transporter = this.tokenOptions.transporter || {
-        request: opts => request(opts),
-      };
+    this.tokenOptions.transporter = this.tokenOptions.transporter || {
+      request: opts => request(opts),
+    };
+    if (!this.tokenOptions.iss) {
+      this.tokenOptions.iss = this.tokenOptions.email;
+    }
+    if (typeof this.tokenOptions.scope === 'object') {
+      this.tokenOptions.scope = this.tokenOptions.scope.join(' ');
     }
     this.tokenHandler = new TokenHandler(this.tokenOptions);
+  }
+
+  get expiresAt(): number | undefined {
+    return this.tokenHandler.tokenExpiresAt;
   }
 
   /**
@@ -110,7 +118,7 @@ class GoogleToken {
   getToken(callback: GetTokenCallback, opts?: GetTokenOptions): void;
   getToken(
     callbackOrOptions?: GetTokenCallback | GetTokenOptions,
-    opts: GetTokenOptions = {forceRefresh: false}
+    opts: GetTokenOptions = {forceRefresh: false},
   ): void | Promise<TokenData> {
     // Handle the various method overloads.
     let callback: GetTokenCallback | undefined;
@@ -136,9 +144,13 @@ class GoogleToken {
   revokeToken(): Promise<void>;
   revokeToken(callback: (err?: Error) => void): void;
   revokeToken(callback?: (err?: Error) => void): void | Promise<void> {
-    const promise = this.accessToken
-      ? revokeToken(this.accessToken, this.tokenOptions.transporter as Transporter)
-      : Promise.reject(new Error('No token to revoke.'));
+    if (!this.accessToken) {
+      return Promise.reject(new Error('No token to revoke.'));
+    }
+    const promise = revokeToken(
+      this.accessToken,
+      this.tokenOptions.transporter as Transporter,
+    );
 
     // If a callback is provided, use it.
     if (callback) {
@@ -155,4 +167,4 @@ class GoogleToken {
   }
 }
 
-export { GoogleToken, Transporter, TokenOptions, TokenData };
+export {GoogleToken, Transporter, TokenOptions, TokenData};

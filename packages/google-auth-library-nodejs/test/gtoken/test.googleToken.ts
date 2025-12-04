@@ -69,14 +69,38 @@ describe('GoogleToken', () => {
     assert.strictEqual(options.scope, providedOptions.scope);
     assert.deepStrictEqual(
       options.additionalClaims,
-      providedOptions.additionalClaims
+      providedOptions.additionalClaims,
     );
     assert.strictEqual(
       options.eagerRefreshThresholdMillis,
-      providedOptions.eagerRefreshThresholdMillis
+      providedOptions.eagerRefreshThresholdMillis,
     );
     assert.ok(options.transporter);
     assert.ok(typeof options.transporter.request === 'function');
+  });
+
+  it('should set iss from email if provided', () => {
+    const providedOptions: TokenOptions = {
+      email: 'test@example.com',
+    };
+    const token: GoogleToken = new GoogleToken(providedOptions);
+    const options: TokenOptions = token.googleTokenOptions;
+    assert.strictEqual(options.iss, 'test@example.com');
+  });
+
+  it('should not override iss with email if both are provided', () => {
+    const providedOptions: TokenOptions = {
+      email: 'test@example.com',
+      iss: 'original-issuer@example.com',
+    };
+    const token: GoogleToken = new GoogleToken(providedOptions);
+    const options: TokenOptions = token.googleTokenOptions;
+    assert.strictEqual(options.iss, 'original-issuer@example.com');
+  });
+
+  it('should convert array of scopes to a space-delimited string', () => {
+    const token = new GoogleToken({scope: ['scope1', 'scope2']});
+    assert.strictEqual(token.googleTokenOptions.scope, 'scope1 scope2');
   });
 
   it('should use a custom transporter if provided in options', () => {
@@ -103,7 +127,10 @@ describe('GoogleToken', () => {
   it('googleTokenOptions should return the internal tokenOptions object', () => {
     const providedOptions: TokenOptions = {email: 'getter@example.com'};
     const token: GoogleToken = new GoogleToken(providedOptions);
-    assert.deepStrictEqual(token.googleTokenOptions.email, providedOptions.email);
+    assert.deepStrictEqual(
+      token.googleTokenOptions.email,
+      providedOptions.email,
+    );
   });
 
   describe('Getters', () => {
@@ -188,14 +215,16 @@ describe('GoogleToken', () => {
       revokeTokenStub.resolves();
       const token = new GoogleToken();
       await token.revokeToken();
-      assert.ok(revokeTokenStub.calledOnceWith('token-to-revoke', sinon.match.object));
+      assert.ok(revokeTokenStub.calledOnceWith('token-to-revoke'));
       // Check that a new handler was created (initial creation + reset)
-      assert.ok((tokenHandler.TokenHandler as unknown as sinon.SinonStub).calledTwice);
+      assert.ok(
+        (tokenHandler.TokenHandler as unknown as sinon.SinonStub).calledTwice,
+      );
     });
 
     it('should reject if there is no token to revoke', async () => {
       const token = new GoogleToken();
-      await assert.rejects(token.revokeToken(), /No token to revoke/);
+      await assert.rejects(() => token.revokeToken(), /No token to revoke/);
     });
 
     it('should work with a callback on success', done => {
