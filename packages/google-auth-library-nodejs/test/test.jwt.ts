@@ -94,13 +94,19 @@ describe('jwt', () => {
       scope.done();
       assert.strictEqual(err, null);
       assert.notStrictEqual(creds, null);
-      assert.strictEqual('foo@serviceaccount.com', jwt.gtoken!.googleTokenOptions.iss);
+      assert.strictEqual(
+        'foo@serviceaccount.com',
+        jwt.gtoken!.googleTokenOptions.iss,
+      );
       assert.strictEqual(PEM_PATH, jwt.gtoken!.googleTokenOptions.keyFile);
       assert.strictEqual(
         ['http://bar', 'http://foo'].join(' '),
         jwt.gtoken!.googleTokenOptions.scope,
       );
-      assert.strictEqual('bar@subjectaccount.com', jwt.gtoken!.googleTokenOptions.sub);
+      assert.strictEqual(
+        'bar@subjectaccount.com',
+        jwt.gtoken!.googleTokenOptions.sub,
+      );
       assert.strictEqual('initial-access-token', jwt.credentials.access_token);
       assert.strictEqual(creds!.access_token, jwt.credentials.access_token);
       assert.strictEqual(creds!.refresh_token, jwt.credentials.refresh_token);

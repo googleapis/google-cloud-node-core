@@ -54,7 +54,7 @@ describe('index', () => {
     assert.ok(tokenData);
 
     const transporter: gal.Transporter = {
-      request: async () => ({} as any),
+      request: async () => ({}) as any,
     };
     assert.ok(transporter);
   });

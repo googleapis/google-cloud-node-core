@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {GoogleToken} from '../gtoken/googleToken';
-import { getCredentials } from '../gtoken/getCredentials';
+import {getCredentials} from '../gtoken/getCredentials';
 import * as stream from 'stream';
 
 import {CredentialBody, Credentials, JWTInput} from './credentials';

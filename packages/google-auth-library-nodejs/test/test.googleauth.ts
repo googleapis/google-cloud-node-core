@@ -2936,7 +2936,10 @@ describe('googleauth', () => {
       'Bearer initial-access-token',
     );
     scope.done();
-    assert.strictEqual('http://foo', (jwt as JWT).gtoken!.googleTokenOptions.scope);
+    assert.strictEqual(
+      'http://foo',
+      (jwt as JWT).gtoken!.googleTokenOptions.scope,
+    );
   });
 
   // Allows a client to be instantiated from a certificate,
@@ -2958,7 +2961,10 @@ describe('googleauth', () => {
       'Bearer initial-access-token',
     );
     scope.done();
-    assert.strictEqual('http://foo', (jwt as JWT).gtoken!.googleTokenOptions.scope);
+    assert.strictEqual(
+      'http://foo',
+      (jwt as JWT).gtoken!.googleTokenOptions.scope,
+    );
   });
 
   // Allows a client to be instantiated from a certificate,
@@ -2980,6 +2986,9 @@ describe('googleauth', () => {
       'Bearer initial-access-token',
     );
     scope.done();
-    assert.strictEqual('http://foo', (jwt as JWT).gtoken!.googleTokenOptions.scope);
+    assert.strictEqual(
+      'http://foo',
+      (jwt as JWT).gtoken!.googleTokenOptions.scope,
+    );
   });
 });
