@@ -402,6 +402,7 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
     if (this.key) {
       return {private_key: this.key, client_email: this.email};
     } else if (this.keyFile) {
+      const gtoken = this.createGToken();
       const creds = await getCredentials(this.keyFile);
       return {private_key: creds.privateKey, client_email: creds.clientEmail};
     }
