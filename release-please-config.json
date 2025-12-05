@@ -6,13 +6,14 @@
     "dev-packages/jsdoc-region-tag": {},
     "dev-packages/pack-n-play": {},
     "generator/gapic-generator-typescript": {},
-    "packages/google-auth-library-nodejs": {},
     "packages/gax": {},
     "packages/gaxios": {},
     "packages/gcp-metadata": {},
     "packages/logging-utils": {},
+    "packages/google-auth-library-nodejs": {},
     "packages/nodejs-googleapis-common": {},
     "packages/proto3-json-serializer-nodejs": {},
+    "packages/retry-request": {},
     "packages/tools": {}
   },
   "plugins": [
