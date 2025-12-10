@@ -1089,6 +1089,11 @@ export function augmentService(parameters: AugmentServiceParameters) {
   if (augmentedService.options?.['.google.api.apiVersion']) {
     augmentedService.apiVersion =
       augmentedService.options['.google.api.apiVersion'];
+    
+    // Include google.api.api_version breadcrumb in client documentation for reference in other API artifacts.
+    // Include a line break to make it stand out from the service description.
+    augmentedService.comments.push('')
+    augmentedService.comments.push(` This client uses ${augmentedService.name} version ${augmentedService.apiVersion}.`)
   }
 
   // Build a list of resources referenced by this service
