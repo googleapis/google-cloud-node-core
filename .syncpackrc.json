@@ -1,4 +1,5 @@
 {
+  "dependencyTypes": ["prod"],
   "versionGroups": [
     {
       "label": "Allow minor and patch version bumps",
