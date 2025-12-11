@@ -9,9 +9,10 @@
     "packages/gax": {},
     "packages/gaxios": {},
     "packages/gcp-metadata": {},
-    "packages/logging-utils": {},
     "packages/google-auth-library-nodejs": {},
+    "packages/logging-utils": {},
     "packages/nodejs-googleapis-common": {},
+    "packages/nodejs-proto-files": {},
     "packages/proto3-json-serializer-nodejs": {},
     "packages/retry-request": {},
     "packages/tools": {}
