@@ -4,7 +4,8 @@
       "label": "Allow minor and patch version bumps",
       "dependencies": ["**"],
       "packages": ["**"],
-      "sameMinorNew": true
+      "sameMinorNew": true,
+      "dependencyTypes": ["prod"]
     }
   ]
 }

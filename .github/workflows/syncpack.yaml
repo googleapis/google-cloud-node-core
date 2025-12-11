@@ -16,4 +16,4 @@ jobs:
           node-version: 18
       - run: npm install
       - run: npm install -g syncpack
-      - run: syncpack list-mismatches --prod
+      - run: syncpack list-mismatches
