@@ -1,0 +1,11 @@
+{
+  "versionGroups": [
+    {
+      "label": "Allow minor and patch version bumps",
+      "dependencies": ["**"],
+      "packages": ["**"],
+      "sameMinorNew": true,
+      "dependencyTypes": ["prod"]
+    }
+  ]
+}
