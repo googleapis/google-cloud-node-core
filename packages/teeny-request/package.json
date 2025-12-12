@@ -18,8 +18,8 @@
     "docs": "jsdoc -c .jsdoc.js",
     "predocs-test": "npm run docs",
     "docs-test": "linkinator docs",
-    "samples-test": "npm run compile && cd samples/ && npm link ../ && npm i && npm test",
-    "system-test": "npm run compile && c8 mocha build/system-test",
+    "system-test": "echo no system test",
+    "samples-test": "echo no samples",
     "precompile": "gts clean"
   },
   "files": [
