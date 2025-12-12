@@ -23,9 +23,16 @@ import * as sinon from 'sinon';
 import {getAgent, pool} from '../src/agents';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const HttpProxyAgent = require('http-proxy-agent');
+let HttpProxyAgent = require('http-proxy-agent');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const HttpsProxyAgent = require('https-proxy-agent');
+let HttpsProxyAgent = require('https-proxy-agent');
+
+if (HttpProxyAgent.HttpProxyAgent) {
+  HttpProxyAgent = HttpProxyAgent.HttpProxyAgent;
+}
+if (HttpsProxyAgent.HttpsProxyAgent) {
+  HttpsProxyAgent = HttpsProxyAgent.HttpsProxyAgent;
+}
 
 describe('agents', () => {
   const httpUri = 'http://example.com';
@@ -91,7 +98,7 @@ describe('agents', () => {
         const proxy = 'https://hello.there:8080';
         const proxyExpected = {
           hostname: 'hello.there',
-          port: 8080,
+          port: '8080',
           protocol: 'https:',
         };
 

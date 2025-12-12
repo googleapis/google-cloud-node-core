@@ -83,9 +83,15 @@ export function getAgent(
 
   if (proxy && shouldUseProxy) {
     // tslint:disable-next-line variable-name
-    const Agent = isHttp
+    let Agent = isHttp
       ? require('http-proxy-agent')
       : require('https-proxy-agent');
+
+    if (Agent.HttpsProxyAgent) {
+      Agent = Agent.HttpsProxyAgent;
+    } else if (Agent.HttpProxyAgent) {
+      Agent = Agent.HttpProxyAgent;
+    }
 
     const proxyOpts = {...parse(proxy), ...poolOptions};
     return new Agent(proxyOpts);
