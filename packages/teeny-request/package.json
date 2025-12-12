@@ -43,7 +43,7 @@
   "homepage": "https://github.com/googleapis/google-cloud-node-core/tree/main/packages/teeny-request",
   "dependencies": {
     "http-proxy-agent": "^5.0.0",
-    "https-proxy-agent": "^5.0.0",
+    "https-proxy-agent": "^7.0.1",
     "node-fetch": "^3.3.2",
     "stream-events": "^1.0.5"
   },
