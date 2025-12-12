@@ -15,6 +15,7 @@
     "packages/nodejs-proto-files": {},
     "packages/proto3-json-serializer-nodejs": {},
     "packages/retry-request": {},
+    "packages/teeny-request": {},
     "packages/tools": {}
   },
   "plugins": [

@@ -12,5 +12,6 @@
   "packages/nodejs-proto-files": "5.0.1",
   "packages/proto3-json-serializer-nodejs": "3.0.4",
   "packages/retry-request": "8.0.2",
+  "packages/teeny-request": "10.1.0",
   "packages/tools": "1.0.5"
 }
