@@ -19,9 +19,9 @@ import * as Arborist from '@npmcli/arborist';
 import * as packlist from 'npm-packlist';
 import * as path from 'path';
 import * as tar from 'tar';
-import {writeFile} from 'fs/promises';
+import * as fs from 'fs/promises';
 import * as tmp from 'tmp';
-import {rimraf} from 'rimraf';
+
 
 // The way the user defines what type of input they're using for their code
 // block is via a property name that reflects either the file extension or
@@ -118,7 +118,7 @@ export async function packNTest(options: TestOptions) {
     console.error(err);
     throw err;
   } finally {
-    await rimraf(installDir);
+    await fs.rm(installDir, {recursive: true});
   }
   return;
 
@@ -156,7 +156,7 @@ export async function packNTest(options: TestOptions) {
 
     // Populate test code.
     const {code, filename} = getSample(sample);
-    await writeFile(path.join(installDir, filename), code, 'utf-8');
+    await fs.writeFile(path.join(installDir, filename), code, 'utf-8');
 
     if (sample.ts) {
       const testConfig = {
@@ -170,7 +170,7 @@ export async function packNTest(options: TestOptions) {
       };
 
       // this is the config `tsc` will use for compilation locally.
-      await writeFile(
+      await fs.writeFile(
         path.join(installDir, 'tsconfig.json'),
         JSON.stringify(testConfig),
       );
