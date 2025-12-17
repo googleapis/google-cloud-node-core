@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.4](https://github.com/googleapis/google-cloud-node-core/compare/gaxios-v7.1.3...gaxios-v7.1.4) (2025-12-17)
+
+
+### Bug Fixes
+
+* Set rimraf as dev dependency ([#837](https://github.com/googleapis/google-cloud-node-core/issues/837)) ([0622b50](https://github.com/googleapis/google-cloud-node-core/commit/0622b50989a22a7352e9b6a30fd91110c0cdcfdd))
+
 ## [7.1.3](https://github.com/googleapis/google-cloud-node-core/compare/gaxios-v7.1.2...gaxios-v7.1.3) (2025-10-29)
 
 

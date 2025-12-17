@@ -1,5 +1,13 @@
 # Changelog
 
+## [10.1.1](https://github.com/googleapis/google-cloud-node-core/compare/teeny-request-v10.1.0...teeny-request-v10.1.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* Npm run syncpack-fix ([eba755e](https://github.com/googleapis/google-cloud-node-core/commit/eba755ed7581e69c56ce1a34e12044dd7363ff35))
+* TypeError: Agent is not a constructor. This happens in the tests due to new https-proxy-agent which changed its default export from a constructor to an object containing a named export ([8d8b1cb](https://github.com/googleapis/google-cloud-node-core/commit/8d8b1cba350bded2a2fbc6a3062730a6b925cbf5))
+
 ## [10.1.0](https://github.com/googleapis/teeny-request/compare/v10.0.0...v10.1.0) (2025-04-07)
 
 
