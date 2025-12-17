@@ -22,7 +22,6 @@ import * as tar from 'tar';
 import * as fs from 'fs/promises';
 import * as tmp from 'tmp';
 
-
 // The way the user defines what type of input they're using for their code
 // block is via a property name that reflects either the file extension or
 // the type of module system used.
