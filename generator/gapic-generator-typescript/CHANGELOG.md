@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.11.12](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.11...gapic-generator-v4.11.12) (2025-12-22)
+
+
+### Bug Fixes
+
+* Add api_version breadcrumb to client docs ([#862](https://github.com/googleapis/google-cloud-node-core/issues/862)) ([64de20e](https://github.com/googleapis/google-cloud-node-core/commit/64de20e5622df2a278af38ecce111cbb4e9ce4d6))
+
 ## [4.11.11](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.10...gapic-generator-v4.11.11) (2025-12-17)
 
 
