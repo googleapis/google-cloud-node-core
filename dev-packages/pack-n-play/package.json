@@ -22,6 +22,7 @@
     "clean": "gts clean",
     "compile": "tsc -p tsconfig.json",
     "docs": "echo no docs needed",
+    "docs-test": "echo no docs tests",
     "fix": "gts fix",
     "lint": "gts check",
     "prepare": "npm run compile",

@@ -7,7 +7,9 @@
         "prelint": "echo 'No prelint needed for script tests'",
         "lint": "echo 'No linting needed for script tests'",
         "samples-test": "echo 'no samples test!'",
-        "system-test": "echo 'no system test!'"
+        "system-test": "echo 'no system test!'",
+        "docs-test": "echo no docs tests",
+        "docs": "echo no docs needed"
     },
     "author": "Google Inc.",
     "license": "Apache-2.0",

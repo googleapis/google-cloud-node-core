@@ -46,7 +46,9 @@
     "test": "bazelisk test --test_output=errors //:unit_tests",
     "ts-test-application": "mocha bazel-bin/typescript/test/test-application/test-ts --timeout 600000",
     "system-test": "echo 'no system test'",
-    "samples-test": "echo 'no samples test'"
+    "samples-test": "echo 'no samples test'",
+    "docs": "echo no docs needed",
+    "docs-test": "echo no docs tests"
   },
   "dependencies": {
     "@types/js-yaml": "^4.0.9",
