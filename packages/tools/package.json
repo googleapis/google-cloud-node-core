@@ -17,7 +17,9 @@
     "prepare": "npm run compile",
     "precompile": "gts clean",
     "system-test": "echo 'no system-test'",
-    "samples-test": "echo 'no samples'"
+    "samples-test": "echo 'no samples'",
+    "docs": "echo no docs needed",
+    "docs-test": "echo no docs tests"
   },
   "bin": {
     "compileProtos": "./build/src/compileProtos.js",
