@@ -1,7 +1,7 @@
 {
   "name": "pack-n-play",
   "description": "Ensure your library installs and compiles",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "author": "Google LLC",
   "license": "Apache-2.0",
   "repository": {
@@ -22,6 +22,7 @@
     "clean": "gts clean",
     "compile": "tsc -p tsconfig.json",
     "docs": "echo no docs needed",
+    "docs-test": "echo no docs tests",
     "fix": "gts fix",
     "lint": "gts check",
     "prepare": "npm run compile",
@@ -49,7 +50,6 @@
     "execa": "^5.0.0",
     "npm-packlist": "^9.0.0",
     "once": "^1.4.0",
-    "rimraf": "^5.0.1",
     "tar": "^7.4.3",
     "tmp": "^0.2.3"
   },

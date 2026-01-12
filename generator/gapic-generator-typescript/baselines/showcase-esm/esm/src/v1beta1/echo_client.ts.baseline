@@ -55,6 +55,8 @@ const version = getJSON(
  *  to have the values echoed in the response trailers. Set the
  *  'x-goog-request-params' metadata key on any method to have the values
  *  echoed in the response headers.
+ *
+ *  This client uses Echo version v1_20240408.
  * @class
  * @memberof v1beta1
  */

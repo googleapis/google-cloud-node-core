@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/google-auth-library?activeTab=versions
 
+## [10.6.0](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.5.0...google-auth-library-v10.6.0) (2025-12-17)
+
+
+### Features
+
+* **auth:** Use gtoken from internal class instead of dependency ([#815](https://github.com/googleapis/google-cloud-node-core/issues/815)) ([a38857c](https://github.com/googleapis/google-cloud-node-core/commit/a38857c635080c833e32aabc15574b56572872a6))
+
 ## [10.5.0](https://github.com/googleapis/google-auth-library-nodejs/compare/v10.4.2...v10.5.0) (2025-10-30)
 
 

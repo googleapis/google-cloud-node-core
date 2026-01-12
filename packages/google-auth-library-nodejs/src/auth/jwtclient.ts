@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {GoogleToken} from 'gtoken';
+import {GoogleToken} from '../gtoken/googleToken';
+import {getCredentials} from '../gtoken/getCredentials';
 import * as stream from 'stream';
 
 import {CredentialBody, Credentials, JWTInput} from './credentials';
@@ -257,8 +258,8 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
     }
     this.credentials = result.tokens;
     this.credentials.refresh_token = 'jwt-placeholder';
-    this.key = this.gtoken!.key;
-    this.email = this.gtoken!.iss;
+    this.key = this.gtoken!.googleTokenOptions?.key;
+    this.email = this.gtoken!.googleTokenOptions?.iss;
     return result.tokens;
   }
 
@@ -402,7 +403,7 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
       return {private_key: this.key, client_email: this.email};
     } else if (this.keyFile) {
       const gtoken = this.createGToken();
-      const creds = await gtoken.getCredentials(this.keyFile);
+      const creds = await getCredentials(this.keyFile);
       return {private_key: creds.privateKey, client_email: creds.clientEmail};
     }
     throw new Error('A key or a keyFile must be provided to getCredentials.');

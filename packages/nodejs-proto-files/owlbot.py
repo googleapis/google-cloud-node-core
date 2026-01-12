@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-docker:
-  image: gcr.io/cloud-devrel-public-resources/owlbot-nodejs:latest
 
-begin-after-commit-hash: b06c9034cfcbce180ba732d03be6526e5c8ea1bc
+import synthtool.languages.node as node
 
+node.owlbot_main(templates_excludes=["CONTRIBUTING.md"])

@@ -27,7 +27,28 @@ nock.disableNetConnect();
 const url = 'http://example.com';
 
 function createGTokenMock(body: CredentialRequest) {
-  return nock('https://oauth2.googleapis.com').post('/token').reply(200, body);
+  return nock('https://oauth2.googleapis.com')
+    .post(
+      '/token',
+      (newBody: string) => {
+        const url = new URLSearchParams(newBody);
+        const grantType = url.get('grant_type');
+        const assertion = url.get('assertion');
+        return (
+          grantType === 'urn:ietf:params:oauth:grant-type:jwt-bearer' &&
+          !!assertion
+        );
+      },
+      {
+        reqheaders: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    )
+    .reply(200, {
+      access_token: body.access_token,
+      expires_in: 3600,
+    });
 }
 
 function createSampleJWTClient() {
