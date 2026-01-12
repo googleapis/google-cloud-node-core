@@ -15,7 +15,11 @@
 A comprehensive list of changes in each version may be found in
 [the CHANGELOG][homepage_changelog].
 
+{% if api.naming.namePath == 'google-storage-control' -%}
+* [{{ api.title or api.naming.productName }} Nodejs Client API Reference](https://cloud.google.com/nodejs/docs/reference/storage-control/latest)
+{% else -%}
 * [{{ api.title or api.naming.productName }} Nodejs Client API Reference](https://cloud.google.com/nodejs/docs/reference/{{ api.naming.nameNotCapitalized }}/latest)
+{% endif -%}
 {% if api.documentationUri %}* [{{ api.title or api.naming.productName }} Documentation]({{ api.documentationUri }}){% endif %}
 
 Read more about the client libraries for Cloud APIs, including the older
