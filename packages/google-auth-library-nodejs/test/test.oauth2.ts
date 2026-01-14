@@ -1787,5 +1787,61 @@ describe('oauth2', () => {
         token: credentials.access_token,
       });
     });
+
+    describe('regional access boundary recovery', () => {
+      const url = 'https://storage.googleapis.com/bucket/obj';
+      const RAB_DATA = {
+        locations: ['us-central1'],
+        encodedLocations: '0x123',
+      };
+
+      it('should clear cache and retry on stale RAB error', async () => {
+        const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+        client.credentials = {
+          access_token: 'abc',
+          expiry_date: Date.now() + 100000,
+        };
+        // Mocking the universe and experiment flag
+        process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
+        (client as any).regionalAccessBoundaryEnabled = true;
+
+        // Seed the cache
+        client.setRegionalAccessBoundary(RAB_DATA);
+
+        // 1. First attempt with RAB header, returns 400 Stale
+        const scope1 = nock('https://storage.googleapis.com')
+          .get('/bucket/obj')
+          .matchHeader('x-allowed-locations', RAB_DATA.encodedLocations)
+          .reply(400, {
+            error: {
+              message: 'stale regional access boundary',
+              status: 'INVALID_ARGUMENT',
+            },
+          });
+
+        // 2. Second attempt (retry) WITHOUT RAB header, returns 200 OK
+        const scope2 = nock('https://storage.googleapis.com')
+          .get('/bucket/obj')
+          .matchHeader('x-allowed-locations', val => val === undefined)
+          .reply(200, {data: 'success'});
+
+        // 3. Background RAB lookup (triggered by retry)
+        // We need to mock this because getRequestMetadataAsync calls maybeTriggerRegionalAccessBoundaryRefresh
+        const rabUrl =
+          'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/default/allowedLocations';
+        // Note: we don't have an email in this test client, so it might fail or use 'default' depending on client type.
+        // For OAuth2Client base, getRegionalAccessBoundaryUrl returns null.
+        // If it returns null, background refresh is skipped.
+
+        const res = await client.request({url});
+
+        assert.strictEqual((client as any).regionalAccessBoundary, null); // Cache cleared
+        assert.deepStrictEqual(res.data, {data: 'success'});
+
+        scope1.done();
+        scope2.done();
+        delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
+      });
+    });
   });
 });

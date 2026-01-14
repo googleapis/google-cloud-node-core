@@ -24,8 +24,8 @@ import {CredentialRequest, JWTInput} from '../src/auth/credentials';
 import * as jwtaccess from '../src/auth/jwtaccess';
 import {
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
-  TrustBoundaryData,
-} from '../src/auth/trustboundary';
+  RegionalAccessBoundaryData,
+} from '../src/auth/regionalaccessboundary';
 import {GoogleToken} from 'gtoken';
 
 function removeBearerFromAuthorizationHeader(headers: Headers): string {
@@ -1244,20 +1244,21 @@ describe('jwt', () => {
     });
   });
 
-  describe('trust boundaries', () => {
+  describe('regional access boundaries', () => {
     let sandbox: sinon.SinonSandbox;
     const SERVICE_ACCOUNT_EMAIL = 'service-account@example.com';
     const MOCK_ACCESS_TOKEN = 'abc123';
     const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
 
-    const EXPECTED_TB_DATA: TrustBoundaryData = {
+    const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
       locations: ['sadad', 'asdad'],
       encodedLocations: '000x9',
     };
 
-    function setupTrustBoundaryNock(
+    function setupRegionalAccessBoundaryNock(
       email: string,
-      trustBoundaryData: TrustBoundaryData = EXPECTED_TB_DATA,
+      regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
+      authHeader = MOCK_AUTH_HEADER,
     ): nock.Scope {
       const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
         '{universe_domain}',
@@ -1265,22 +1266,22 @@ describe('jwt', () => {
       ).replace('{service_account_email}', encodeURIComponent(email));
       return nock(new URL(lookupUrl).origin)
         .get(new URL(lookupUrl).pathname)
-        .matchHeader('authorization', MOCK_AUTH_HEADER)
-        .reply(200, trustBoundaryData);
+        .matchHeader('authorization', authHeader)
+        .reply(200, regionalAccessBoundaryData);
     }
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'] = 'true';
+      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
     });
 
     afterEach(() => {
-      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
+      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
       sandbox.restore();
       nock.cleanAll();
     });
 
-    it('should fetch trust boundaries successfully', async () => {
+    it('should trigger asynchronous regional access boundaries refresh', async () => {
       const jwt = new JWT({
         email: SERVICE_ACCOUNT_EMAIL,
         keyFile: PEM_PATH,
@@ -1289,19 +1290,84 @@ describe('jwt', () => {
       });
       jwt.credentials = {refresh_token: 'jwt-placeholder'};
 
-      const scopes = [
-        createGTokenMock({access_token: MOCK_ACCESS_TOKEN}),
-        setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL),
-      ];
-      const headers = await jwt.getRequestHeaders();
-      assert.deepStrictEqual(
-        headers.get('x-allowed-locations'),
-        EXPECTED_TB_DATA.encodedLocations,
+      const tokenScope = createGTokenMock({access_token: MOCK_ACCESS_TOKEN});
+
+      let rabLookupCalled = false;
+      const rabScope = setupRegionalAccessBoundaryNock(SERVICE_ACCOUNT_EMAIL);
+      rabScope.on('request', () => {
+        rabLookupCalled = true;
+      });
+
+      // Initial call - headers should NOT have the RAB yet
+      const headers = await jwt.getRequestHeaders(
+        'https://pubsub.googleapis.com',
       );
-      scopes.forEach(s => s.done());
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      // Wait for background lookup
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      // Give it a moment to update state
+      await new Promise(r => setTimeout(r, 50));
+      assert.deepStrictEqual(
+        (jwt as any).regionalAccessBoundary,
+        EXPECTED_RAB_DATA,
+      );
+
+      tokenScope.done();
+      rabScope.done();
     });
 
-    it('should fail getTrustBoundaryUrl if no email is passed', async () => {
+    it('should trigger RAB refresh for self-signed JWT', async () => {
+      // Self-signed JWT (no scopes)
+      const keys = keypair(512);
+      const jwt = new JWT({
+        email: SERVICE_ACCOUNT_EMAIL,
+        key: keys.private,
+      });
+      jwt.credentials = {refresh_token: 'jwt-placeholder'};
+
+      let rabLookupCalled = false;
+      // For self-signed JWT, the lookup uses the JWT itself as the token
+      const rabScope = nock('https://iamcredentials.googleapis.com')
+        .get(
+          `/v1/projects/-/serviceAccounts/${encodeURIComponent(SERVICE_ACCOUNT_EMAIL)}/allowedLocations`,
+        )
+        .reply(() => {
+          rabLookupCalled = true;
+          return [200, EXPECTED_RAB_DATA];
+        });
+
+      const url = 'https://pubsub.googleapis.com';
+      const headers = await jwt.getRequestHeaders(url);
+
+      // Verify headers contain the self-signed JWT
+      const authHeader = headers.get('authorization');
+      assert.ok(authHeader?.startsWith('Bearer '));
+
+      // Wait for background lookup
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      await new Promise(r => setTimeout(r, 50));
+      assert.deepStrictEqual(
+        (jwt as any).regionalAccessBoundary,
+        EXPECTED_RAB_DATA,
+      );
+
+      rabScope.done();
+    });
+
+    it('should fail getRegionalAccessBoundaryUrl if no email is passed', async () => {
       const jwt = new JWT({
         keyFile: PEM_PATH,
         scopes: ['http://bar', 'http://foo'],
@@ -1311,9 +1377,11 @@ describe('jwt', () => {
       jwt.credentials = {refresh_token: 'jwt-placeholder'};
 
       const scopes = [createGTokenMock({access_token: MOCK_ACCESS_TOKEN})];
+      // Note: error happens in background, so getRequestHeaders won't reject.
+      // But we can manually call getRegionalAccessBoundaryUrl to verify it throws.
       await assert.rejects(
-        jwt.getRequestHeaders(),
-        /TrustBoundary: An email address is required for trust boundary lookups but was not provided in the JwtClient options./,
+        (jwt as any).getRegionalAccessBoundaryUrl(),
+        /RegionalAccessBoundary: An email address is required for regional access boundary lookups but was not provided in the JwtClient options./,
       );
       scopes.forEach(s => s.done());
     });

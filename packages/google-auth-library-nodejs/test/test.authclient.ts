@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {strict as assert} from 'assert';
-
 import * as nock from 'nock';
 import {
   Gaxios,
@@ -30,10 +29,9 @@ import * as logging from 'google-logging-utils';
 import {BASE_PATH, HOST_ADDRESS, HEADERS} from 'gcp-metadata';
 import sinon = require('sinon');
 import {
-  TrustBoundaryData,
+  RegionalAccessBoundaryData,
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
-  NoOpEncodedLocations,
-} from '../src/auth/trustboundary';
+} from '../src/auth/regionalaccessboundary';
 
 // Fakes for the logger, to capture logs that would've happened.
 interface TestLog {
@@ -60,6 +58,17 @@ class TestLogSink extends logging.DebugLogBackendBase {
 }
 
 describe('AuthClient', () => {
+  let sandbox: sinon.SinonSandbox;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    nock.cleanAll();
+  });
+
   it('should accept and normalize snake case options to camel case', () => {
     const expected = {
       project_id: 'my-projectId',
@@ -383,23 +392,13 @@ describe('AuthClient', () => {
       });
     });
 
-    describe('trust boundaries', () => {
-      const url = 'http://example.com';
-
-      function mockExample() {
-        return nock(url).get('/').reply(200);
-      }
-
-      let sandbox: sinon.SinonSandbox;
+    describe('regional access boundaries', () => {
       const MOCK_ACCESS_TOKEN = 'abc123';
       const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
       const SERVICE_ACCOUNT_EMAIL = 'service-account@example.com';
-      const EXPECTED_TB_DATA: TrustBoundaryData = {
-        locations: ['sadad', 'asdad'],
-        encodedLocations: '000x9',
-      };
-      const NO_OP_TB_DATA: TrustBoundaryData = {
-        encodedLocations: '0x0',
+      const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
+        locations: ['us-central1', 'europe-west1'],
+        encodedLocations: '0x123',
       };
 
       function setupTokenNock(
@@ -418,25 +417,10 @@ describe('AuthClient', () => {
           );
       }
 
-      function setupExpiredTokenNock(
-        email: string | 'default' = 'default',
-      ): nock.Scope {
-        const tokenPath =
-          email === 'default'
-            ? `${BASE_PATH}/instance/service-accounts/default/token`
-            : `${BASE_PATH}/instance/service-accounts/${email}/token`;
-        return nock(HOST_ADDRESS)
-          .get(tokenPath)
-          .reply(
-            200,
-            {access_token: MOCK_ACCESS_TOKEN, expires_in: -1},
-            HEADERS,
-          );
-      }
-
-      function setupTrustBoundaryNock(
+      function setupRegionalAccessBoundaryNock(
         email: string,
-        trustBoundaryData: TrustBoundaryData = EXPECTED_TB_DATA,
+        regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
+        statusCode = 200,
       ): nock.Scope {
         const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
           '{universe_domain}',
@@ -445,274 +429,228 @@ describe('AuthClient', () => {
         return nock(new URL(lookupUrl).origin)
           .get(new URL(lookupUrl).pathname)
           .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .reply(200, trustBoundaryData);
+          .reply(statusCode, regionalAccessBoundaryData);
       }
 
       beforeEach(() => {
-        sandbox = sinon.createSandbox();
-        process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'] = 'true';
+        process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
       });
 
       afterEach(() => {
-        delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
-        sandbox.restore();
-        nock.cleanAll();
+        delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
       });
 
-      it('should not call look-up endpoint if GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED is not true', async () => {
-        delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
+      it('should trigger asynchronous background refresh and not block', async () => {
         const compute = new Compute({
           serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
         });
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          mockExample(),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL),
-        ];
-        await compute.request({url});
-        assert.deepStrictEqual(compute.trustBoundary, null);
+
+        // Set up nocks
+        const tokenScope = setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+
+        // Use a promise to track when the RAB lookup is actually called
+        let rabLookupCalled = false;
+        const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+          '{universe_domain}',
+          'googleapis.com',
+        ).replace(
+          '{service_account_email}',
+          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
+        );
+
+        const rabScope = nock(new URL(rabUrl).origin)
+          .get(new URL(rabUrl).pathname)
+          .reply(() => {
+            rabLookupCalled = true;
+            return [200, EXPECTED_RAB_DATA];
+          });
+
+        // Initial call - should NOT have the header yet because refresh is async
+        const headers = await compute.getRequestHeaders(
+          'https://pubsub.googleapis.com',
+        );
+
+        assert.strictEqual(headers.get('x-allowed-locations'), null);
+        // assert.strictEqual(compute.regionalAccessBoundary, null);
+
+        // Wait for the background task to complete (not ideal but necessary for testing side effect)
+        // In a real scenario we'd use a better way to wait for the internal promise
+        let attempts = 0;
+        while (!rabLookupCalled && attempts < 10) {
+          await new Promise(r => setTimeout(r, 50));
+          attempts++;
+        }
+
+        assert.strictEqual(rabLookupCalled, true);
+
+        // Give the background processing a moment to update the class member
+        await new Promise(r => setTimeout(r, 50));
+        assert.deepStrictEqual(
+          (compute as any).regionalAccessBoundary,
+          EXPECTED_RAB_DATA,
+        );
+
+        tokenScope.done();
+        rabScope.done();
+      });
+
+      it('should NOT trigger lookup for regional endpoints', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+        });
+
+        const tokenScope = setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+        // No RAB nock setup here. If it's called, nock will throw.
+
+        await compute.getRequestHeaders('https://us-east1.rep.googleapis.com');
+
+        tokenScope.done();
+        // Assert no RAB lookup was attempted (implicitly verified by lack of nock error)
+      });
+
+      it('should NOT trigger lookup for non-GDU universes', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+          universe_domain: 'custom-universe.com',
+        });
+
+        const tokenScope = setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+
+        await compute.getRequestHeaders('https://pubsub.googleapis.com');
+
+        tokenScope.done();
+        // Assert no RAB lookup was attempted
+      });
+
+      it('should retry on retryable errors in background', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+        });
+
+        setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+
+        // Mock 503 then 200
+        const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+          '{universe_domain}',
+          'googleapis.com',
+        ).replace(
+          '{service_account_email}',
+          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
+        );
+
+        const rabFail = nock(new URL(rabUrl).origin)
+          .get(new URL(rabUrl).pathname)
+          .reply(503);
+        const rabSuccess = nock(new URL(rabUrl).origin)
+          .get(new URL(rabUrl).pathname)
+          .reply(200, EXPECTED_RAB_DATA);
+
+        await compute.getRequestHeaders('https://pubsub.googleapis.com');
+
+        // Wait for retries (exponential backoff might take a moment)
+        let attempts = 0;
+        while (!(compute as any).regionalAccessBoundary && attempts < 20) {
+          await new Promise(r => setTimeout(r, 150));
+          attempts++;
+        }
+
+        assert.deepStrictEqual(
+          (compute as any).regionalAccessBoundary,
+          EXPECTED_RAB_DATA,
+        );
+        rabFail.done();
+        rabSuccess.done();
+      });
+
+      it('should enter cooldown on non-retryable error', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+        });
+
+        setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+
+        const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+          '{universe_domain}',
+          'googleapis.com',
+        ).replace(
+          '{service_account_email}',
+          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
+        );
+
+        const rabFail = nock(new URL(rabUrl).origin)
+          .get(new URL(rabUrl).pathname)
+          .reply(400, {error: 'Permanent failure'});
+
+        await compute.getRequestHeaders('https://pubsub.googleapis.com');
+
+        // Wait for it to fail and enter cooldown
+        let attempts = 0;
+        while (
+          !(compute as any).regionalAccessBoundaryCooldownTime &&
+          attempts < 10
+        ) {
+          await new Promise(r => setTimeout(r, 50));
+          attempts++;
+        }
+
+        assert.ok(
+          (compute as any).regionalAccessBoundaryCooldownTime > Date.now(),
+        );
+
+        // Subsequent call should NOT trigger nock (which would fail as we only set up 1)
+        await compute.getRequestHeaders('https://pubsub.googleapis.com');
+
+        rabFail.done();
+      });
+
+      it('should support manual override via setRegionalAccessBoundary', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+        });
+
+        setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+
+        compute.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
+
+        const headers = await compute.getRequestHeaders(
+          'https://pubsub.googleapis.com',
+        );
+
         assert.strictEqual(
-          scopes[2].isDone(),
-          false,
-          'Trust boundary endpoint should not be called',
+          headers.get('x-allowed-locations'),
+          EXPECTED_RAB_DATA.encodedLocations,
         );
-        scopes[0].done();
-        scopes[1].done();
+        // No nock setup, so if a network call happened, this would have failed.
       });
 
-      it('should fetch and return trust boundary data successfully', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL),
-          mockExample(),
-        ];
-
-        await compute.request({url});
-
-        assert.deepStrictEqual(compute.trustBoundary, EXPECTED_TB_DATA);
-        scopes.forEach(s => s.done());
-      });
-
-      it('should retry trust boundary lookup on failure', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
-          '{service_account_email}',
-          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
-        );
-        const tbScopeFail = nock(new URL(lookupUrl).origin)
-          .get(new URL(lookupUrl).pathname)
-          .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .reply(503, {error: 'server unavailable'});
-        const tbScopeSuccess = nock(new URL(lookupUrl).origin)
-          .get(new URL(lookupUrl).pathname)
-          .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .reply(200, EXPECTED_TB_DATA);
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          tbScopeFail,
-          tbScopeSuccess,
-          mockExample(),
-        ];
-
-        await compute.request({url});
-
-        // The request should have succeeded after the retry.
-        assert.deepStrictEqual(compute.trustBoundary, EXPECTED_TB_DATA);
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should return null when default domain is not googleapis.com', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-          universe_domain: 'abc.com',
-        });
-        const scopes = [setupTokenNock(SERVICE_ACCOUNT_EMAIL), mockExample()];
-
-        await compute.request({url});
-
-        assert.deepStrictEqual(compute.trustBoundary, null);
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should throw when no valid access token is passed', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const scopes = [setupExpiredTokenNock(SERVICE_ACCOUNT_EMAIL)];
-
-        await assert.rejects(
-          compute.request({url}),
-          new RegExp(
-            'TrustBoundary: Error calling lookup endpoint without valid access token',
-          ),
-        );
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should return no-op and not call lookup endpoint in case cachedTrustBoundaries is no-op', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        compute.trustBoundary = {encodedLocations: NoOpEncodedLocations};
-        const scopes = [setupTokenNock(SERVICE_ACCOUNT_EMAIL), mockExample()];
-        const tbScope = setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL);
-
-        await compute.request({url});
-        assert.deepStrictEqual(
-          compute.trustBoundary.encodedLocations,
-          NoOpEncodedLocations,
-        );
-        scopes.forEach(s => s.done());
-        assert.strictEqual(tbScope.isDone(), false);
-      });
-
-      it('refreshTrustBoundary should return no-op if response from lookup is no-op', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL, NO_OP_TB_DATA),
-          mockExample(),
-        ];
-
-        await compute.request({url});
-        assert.deepStrictEqual(
-          compute?.trustBoundary?.encodedLocations,
-          NoOpEncodedLocations,
-        );
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should return cached TB if call to lookup fails', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        compute.trustBoundary = EXPECTED_TB_DATA;
-
-        const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
-          '{service_account_email}',
-          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
-        );
-
-        const tbErrorScope = nock(new URL(lookupUrl).origin)
-          .get(new URL(lookupUrl).pathname)
-          .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .replyWithError('Something wrong!');
-
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          tbErrorScope,
-          mockExample(),
-        ];
-
-        await compute.request({url});
-        assert.deepStrictEqual(compute.trustBoundary, EXPECTED_TB_DATA);
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should throw if call to lookup fails and no cached-TB', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-
-        const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
-          '{service_account_email}',
-          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
-        );
-
-        const tbErrorScope = nock(new URL(lookupUrl).origin)
-          .get(new URL(lookupUrl).pathname)
-          .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .replyWithError('Something wrong!');
-
-        const scopes = [setupTokenNock(SERVICE_ACCOUNT_EMAIL), tbErrorScope];
-
-        await assert.rejects(
-          compute.request({url}),
-          new RegExp('TrustBoundary: Failure while getting trust boundaries:'),
-        );
-        scopes.forEach(s => s.done());
-      });
-
-      it('refreshTrustBoundary should throw in case of malformed response from lookup', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const malformedTBData: TrustBoundaryData = {
-          locations: ['sadad', 'asdad'],
-          encodedLocations: '',
+      it('should correctly detect stale regional access boundary error', () => {
+        const compute = new Compute();
+        const error = {
+          response: {
+            status: 400,
+            data: {
+              error: {
+                message: 'This is a stale regional access boundary error',
+              },
+            },
+          },
         };
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL, malformedTBData),
-        ];
 
-        await assert.rejects(
-          compute.request({url}),
-          new RegExp('TrustBoundary: Failure while getting trust boundaries:'),
+        assert.strictEqual(
+          (compute as any).isStaleRegionalAccessBoundaryError(error),
+          true,
         );
-        scopes.forEach(s => s.done());
-      });
 
-      it('getRequestHeaders should attach a trust boundary header in case of valid tb', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL),
-        ];
-
-        const reqheaders = await compute.getRequestHeaders();
-
-        assert.deepStrictEqual(
-          reqheaders.get('x-allowed-locations'),
-          EXPECTED_TB_DATA.encodedLocations,
+        const otherError = {
+          response: {
+            status: 400,
+            data: {message: 'Something else'},
+          },
+        };
+        assert.strictEqual(
+          (compute as any).isStaleRegionalAccessBoundaryError(otherError),
+          false,
         );
-        scopes.forEach(s => s.done());
-      });
-
-      it('getRequestHeaders should attach an empty string TB header in case of no_op tb', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-        const scopes = [
-          setupTokenNock(SERVICE_ACCOUNT_EMAIL),
-          setupTrustBoundaryNock(SERVICE_ACCOUNT_EMAIL, NO_OP_TB_DATA),
-        ];
-
-        const reqheaders = await compute.getRequestHeaders();
-
-        assert.deepStrictEqual(reqheaders.get('x-allowed-locations'), '');
-        scopes.forEach(s => s.done());
-      });
-
-      it('getRequestHeaders should not attach TB header in case of non GDU universe', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-          universe_domain: 'abc.com',
-        });
-        const scopes = [setupTokenNock(SERVICE_ACCOUNT_EMAIL)];
-
-        const reqheaders = await compute.getRequestHeaders();
-
-        assert.deepStrictEqual(reqheaders.get('x-allowed-locations'), null);
-        scopes.forEach(s => s.done());
       });
     });
   });

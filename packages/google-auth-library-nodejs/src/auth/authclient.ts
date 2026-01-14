@@ -21,10 +21,9 @@ import {log as makeLog} from 'google-logging-utils';
 
 import {PRODUCT_NAME, USER_AGENT} from '../shared.cjs';
 import {
-  isTrustBoundaryEnabled,
-  NoOpEncodedLocations,
-  TrustBoundaryData,
-} from './trustboundary';
+  isRegionalAccessBoundaryEnabled,
+  RegionalAccessBoundaryData,
+} from './regionalaccessboundary';
 
 /**
  * An interface for enforcing `fetch`-type compliance.
@@ -161,6 +160,21 @@ export const DEFAULT_UNIVERSE = 'googleapis.com';
 export const DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
 
 /**
+ * RAB is considered valid for 6 hours.
+ */
+const RAB_TTL_MILLIS = 6 * 60 * 60 * 1000;
+
+/**
+ * Initial cooldown period for RAB lookup failures (15 minutes).
+ */
+const RAB_INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000;
+
+/**
+ * Maximum cooldown period for RAB lookup failures.
+ */
+const RAB_MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000;
+
+/**
  * Defines the root interface for all clients that generate credentials
  * for calling Google APIs. All clients should implement this interface.
  */
@@ -237,8 +251,12 @@ export abstract class AuthClient
   eagerRefreshThresholdMillis = DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS;
   forceRefreshOnFailure = false;
   universeDomain = DEFAULT_UNIVERSE;
-  trustBoundaryEnabled: boolean;
-  trustBoundary?: TrustBoundaryData | null;
+  regionalAccessBoundaryEnabled: boolean;
+  protected regionalAccessBoundary?: RegionalAccessBoundaryData | null;
+  private regionalAccessBoundaryExpiry = 0;
+  private regionalAccessBoundaryRefreshPromise: Promise<void> | null = null;
+  private regionalAccessBoundaryCooldownTime = 0;
+  private regionalAccessBoundaryCooldownBackoff = RAB_INITIAL_COOLDOWN_MILLIS;
 
   /**
    * Symbols that can be added to GaxiosOptions to specify the method name that is
@@ -261,8 +279,8 @@ export abstract class AuthClient
     this.quotaProjectId = options.get('quota_project_id');
     this.credentials = options.get('credentials') ?? {};
     this.universeDomain = options.get('universe_domain') ?? DEFAULT_UNIVERSE;
-    this.trustBoundaryEnabled = isTrustBoundaryEnabled();
-    this.trustBoundary = null;
+    this.regionalAccessBoundaryEnabled = isRegionalAccessBoundaryEnabled();
+    this.regionalAccessBoundary = null;
 
     // Shared client options
     this.transporter = opts.transporter ?? new Gaxios(opts.transporterOptions);
@@ -371,14 +389,14 @@ export abstract class AuthClient
   }>;
 
   /**
-   * Constructs the trust boundary lookup URL for the client.
+   * Constructs the regional access boundary lookup URL for the client.
    *
-   * @return The trust boundary URL string, or `null` if the client type
-   * does not support trust boundaries.
+   * @return The regional access boundary URL string, or `null` if the client type
+   * does not support regional access boundaries.
    * @throws {Error} If the URL cannot be constructed for a compatible client,
    * for instance, if a required property like a service account email is missing.
    */
-  protected async getTrustBoundaryUrl(): Promise<string | null> {
+  protected async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     return null;
   }
 
@@ -387,6 +405,16 @@ export abstract class AuthClient
    */
   setCredentials(credentials: Credentials) {
     this.credentials = credentials;
+  }
+
+  /**
+   * Manually sets the regional access boundary data.
+   * Treating this as a standard cache entry with a 6-hour TTL.
+   * @param data The regional access boundary data to set.
+   */
+  setRegionalAccessBoundary(data: RegionalAccessBoundaryData) {
+    this.regionalAccessBoundary = data;
+    this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
   }
 
   /**
@@ -408,13 +436,14 @@ export abstract class AuthClient
       headers.set('x-goog-user-project', this.quotaProjectId);
     }
 
-    if (this.trustBoundaryEnabled && this.trustBoundary) {
-      //Empty header sent in case trust-boundary has no-op encoded location.
+    if (
+      this.regionalAccessBoundaryEnabled &&
+      this.regionalAccessBoundary &&
+      this.regionalAccessBoundary.encodedLocations
+    ) {
       headers.set(
         'x-allowed-locations',
-        this.trustBoundary.encodedLocations === NoOpEncodedLocations
-          ? ''
-          : this.trustBoundary.encodedLocations,
+        this.regionalAccessBoundary.encodedLocations,
       );
     }
 
@@ -589,48 +618,134 @@ export abstract class AuthClient
   }
 
   /**
-   * Refreshes trust boundary data for an authenticated client.
-   * Handles caching checks and potential fallbacks.
-   * @param tokens The refreshed credentials containing access token to call the trust boundary endpoint.
-   * @returns A Promise resolving to TrustBoundaryData or empty-string for no-op trust boundaries.
-   * @throws {Error} If the request fails and there is no cache available.
+   * Checks if the given URL is a global endpoint (not regional).
+   * @param url The URL to check.
    */
-  protected async refreshTrustBoundary(
-    tokens: Credentials,
-  ): Promise<TrustBoundaryData | null> {
-    if (!this.trustBoundaryEnabled) {
+  private isGlobalEndpoint(url?: string | URL): boolean {
+    if (!url) {
+      return true;
+    }
+    const hostname = url instanceof URL ? url.hostname : new URL(url).hostname;
+    return (
+      !hostname.endsWith('.rep.googleapis.com') &&
+      !hostname.endsWith('.rep.sandbox.googleapis.com')
+    );
+  }
+
+  /**
+   * Triggers an asynchronous regional access boundary refresh if needed.
+   * @param url The endpoint URL being accessed.
+   */
+  protected maybeTriggerRegionalAccessBoundaryRefresh(url?: string | URL) {
+    if (
+      !this.regionalAccessBoundaryEnabled ||
+      this.universeDomain !== DEFAULT_UNIVERSE ||
+      !this.isGlobalEndpoint(url) ||
+      this.regionalAccessBoundaryRefreshPromise
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+
+    // Check if in cooldown
+    if (now < this.regionalAccessBoundaryCooldownTime) {
+      return;
+    }
+
+    // Check if expired or never fetched
+    if (
+      !this.regionalAccessBoundary ||
+      now >= this.regionalAccessBoundaryExpiry
+    ) {
+      this.regionalAccessBoundaryRefreshPromise =
+        this.backgroundRefreshRegionalAccessBoundary();
+    }
+  }
+
+  /**
+   * Performs the background refresh of the regional access boundary.
+   */
+  private async backgroundRefreshRegionalAccessBoundary(): Promise<void> {
+    try {
+      // Get tokens without triggering a recursive RAB lookup if possible.
+      // Most clients will have cached tokens or refresh them.
+      const tokens = await this.getAccessToken();
+
+      // Implement retry with exponential backoff for up to 1 minute.
+      let attempt = 0;
+      const startTime = Date.now();
+      const maxRetryTime = 60 * 1000;
+
+      while (true) {
+        try {
+          const data = await this.fetchRegionalAccessBoundary(tokens);
+          if (data) {
+            this.regionalAccessBoundary = data;
+            this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
+            // Reset cooldown on success
+            this.regionalAccessBoundaryCooldownTime = 0;
+            this.regionalAccessBoundaryCooldownBackoff =
+              RAB_INITIAL_COOLDOWN_MILLIS;
+          }
+          break;
+        } catch (error) {
+          const status =
+            (error as any).status || (error as any).response?.status;
+          const isRetryable = status >= 500 || status === 403 || status === 404;
+
+          if (isRetryable && Date.now() - startTime < maxRetryTime) {
+            attempt++;
+            const delay = Math.min(Math.pow(2, attempt) * 100, 10000);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // Non-retryable or timeout: enter cooldown
+          this.regionalAccessBoundaryCooldownTime =
+            Date.now() + this.regionalAccessBoundaryCooldownBackoff;
+          this.regionalAccessBoundaryCooldownBackoff = Math.min(
+            this.regionalAccessBoundaryCooldownBackoff * 2,
+            RAB_MAX_COOLDOWN_MILLIS,
+          );
+          AuthClient.log.error(
+            'RegionalAccessBoundary: Lookup failed. Entering cooldown.',
+            error,
+          );
+          break;
+        }
+      }
+    } catch (error) {
+      AuthClient.log.error(
+        'RegionalAccessBoundary: Background refresh failed:',
+        error,
+      );
+    } finally {
+      this.regionalAccessBoundaryRefreshPromise = null;
+    }
+  }
+
+  /**
+   * Internal method to fetch RAB data.
+   */
+  private async fetchRegionalAccessBoundary(
+    tokens: any,
+  ): Promise<RegionalAccessBoundaryData | null> {
+    const regionalAccessBoundaryUrl = await this.getRegionalAccessBoundaryUrl();
+    if (!regionalAccessBoundaryUrl) {
       return null;
     }
 
-    if (this.universeDomain !== DEFAULT_UNIVERSE) {
-      // Skipping check for non-default universe domain as this feature is only supported in GDU
-      return null;
-    }
-
-    const cachedTB = this.trustBoundary;
-    if (cachedTB && cachedTB.encodedLocations === NoOpEncodedLocations) {
-      return cachedTB;
-    }
-
-    const trustBoundaryUrl = await this.getTrustBoundaryUrl();
-    if (!trustBoundaryUrl) {
-      return null;
-    }
-
-    const accessToken = tokens.access_token;
-
-    if (!accessToken || this.isExpired(tokens)) {
+    const accessToken = tokens.token || tokens.access_token;
+    if (!accessToken) {
       throw new Error(
-        'TrustBoundary: Error calling lookup endpoint without valid access token',
+        'RegionalAccessBoundary: Error calling lookup endpoint without valid access token',
       );
     }
 
-    const headers = this.addSharedMetadataHeaders(
-      new Headers({
-        //we can directly pass the access_token as the trust boundaries are always fetched after token refresh
-        authorization: 'Bearer ' + accessToken,
-      }),
-    );
+    const headers = new Headers({
+      authorization: 'Bearer ' + accessToken,
+    });
 
     const opts: GaxiosOptions = {
       ...{
@@ -640,33 +755,33 @@ export abstract class AuthClient
         },
       },
       headers,
-      url: trustBoundaryUrl,
+      url: regionalAccessBoundaryUrl,
     };
 
-    try {
-      const {data: trustBoundaryData} =
-        // Use the transporter directly here. A standard `client.request` would
-        // re-trigger a token refresh, creating an infinite loop.
-        await this.transporter.request<TrustBoundaryData>(opts);
+    const {data: regionalAccessBoundaryData} =
+      await this.transporter.request<RegionalAccessBoundaryData>(opts);
 
-      if (!trustBoundaryData.encodedLocations) {
-        throw new Error(
-          'TrustBoundary: Malformed response from lookup endpoint.',
-        );
-      }
-
-      return trustBoundaryData;
-    } catch (error) {
-      if (this.trustBoundary) {
-        return this.trustBoundary; // return cached tb if call to lookup fails
-      }
+    if (!regionalAccessBoundaryData.encodedLocations) {
       throw new Error(
-        'TrustBoundary: Failure while getting trust boundaries:',
-        {
-          cause: error,
-        },
+        'RegionalAccessBoundary: Malformed response from lookup endpoint.',
       );
     }
+
+    return regionalAccessBoundaryData;
+  }
+
+  /**
+   * Refreshes regional access boundary data for an authenticated client.
+   * @deprecated Use maybeTriggerRegionalAccessBoundaryRefresh instead.
+   * @param tokens The refreshed credentials containing access token to call the regional access boundary endpoint.
+   * @returns A Promise resolving to RegionalAccessBoundaryData.
+   */
+  protected async refreshRegionalAccessBoundary(
+    tokens: Credentials,
+  ): Promise<RegionalAccessBoundaryData | null> {
+    // This is now handled asynchronously in backgroundRefreshRegionalAccessBoundary.
+    // Keeping it for backward compatibility but it just calls the internal fetch.
+    return this.fetchRegionalAccessBoundary(tokens);
   }
 
   /**
@@ -681,6 +796,29 @@ export abstract class AuthClient
     return credentials.expiry_date
       ? now >= credentials.expiry_date - this.eagerRefreshThresholdMillis
       : false;
+  }
+
+  /**
+   * Checks if the error is a "stale regional access boundary" error.
+   * @param error The error to check.
+   */
+  protected isStaleRegionalAccessBoundaryError(error: any): boolean {
+    const res = error.response;
+    if (res && res.status === 400) {
+      const data = res.data;
+      const message =
+        data?.error?.message || data?.message || error.message || '';
+      return message.toLowerCase().includes('stale regional access boundary');
+    }
+    return false;
+  }
+
+  /**
+   * Clears the regional access boundary cache.
+   */
+  protected clearRegionalAccessBoundaryCache() {
+    this.regionalAccessBoundary = null;
+    this.regionalAccessBoundaryExpiry = 0;
   }
 }
 

@@ -12,11 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * value indicating no trust boundaries enforced
- **/
-export const NoOpEncodedLocations = '0x0';
-
 // googleapis.com
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
   'https://iamcredentials.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
@@ -28,36 +23,32 @@ export const WORKFORCE_LOOKUP_ENDPOINT =
   'https://iamcredentials.{universe_domain}/v1/locations/global/workforcePools/{pool_id}/allowedLocations';
 
 /**
- * Holds trust boundary related information like locations
+ * Holds regional access boundary related information like locations
  * where the credentials can be used.
  */
-export interface TrustBoundaryData {
+export interface RegionalAccessBoundaryData {
   /**
-   * The readable text format of the allowed trust boundary locations.
-   * This is optional, as it might not be present if no trust boundary is enforced.
+   * The readable text format of the allowed regional access boundary locations.
+   * This is optional, as it might not be present if no regional access boundary is enforced.
    */
   locations?: string[];
 
   /**
-   * The encoded text format of allowed trust boundary locations.
+   * The encoded text format of allowed regional access boundary locations.
    * Expected to always be present in valid responses.
    */
   encodedLocations: string;
 }
 
-export function isTrustBoundaryEnabled() {
-  const tbEnabled = process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
-  if (tbEnabled === undefined || tbEnabled === null) {
+export function isRegionalAccessBoundaryEnabled() {
+  const rabEnabled =
+    process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
+  if (rabEnabled === undefined || rabEnabled === null) {
     return false;
   }
-  const lowercasedTbEnabled = tbEnabled.toLowerCase();
-  if (lowercasedTbEnabled === 'true' || tbEnabled === '1') {
+  const lowercasedRabEnabled = rabEnabled.toLowerCase();
+  if (lowercasedRabEnabled === 'true' || rabEnabled === '1') {
     return true;
   }
-  if (lowercasedTbEnabled === 'false' || tbEnabled === '0') {
-    return false;
-  }
-  throw new Error(
-    `Invalid value for GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED environment variable: "${tbEnabled}". Supported values are 'true', '1', 'false', or '0'.`,
-  );
+  return false;
 }

@@ -25,7 +25,7 @@ import {
   RequestMetadataResponse,
 } from './oauth2client';
 import {DEFAULT_UNIVERSE} from './authclient';
-import {SERVICE_ACCOUNT_LOOKUP_ENDPOINT} from './trustboundary';
+import {SERVICE_ACCOUNT_LOOKUP_ENDPOINT} from './regionalaccessboundary';
 
 export interface JWTOptions extends OAuth2ClientOptions {
   /**
@@ -141,6 +141,7 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
         ).target_audience
       ) {
         const {tokens} = await this.refreshToken();
+        this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
         return {
           headers: this.addSharedMetadataHeaders(
             new Headers({
@@ -180,6 +181,7 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
           useScopes ? scopes : undefined,
         );
 
+        this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
         return {headers: this.addSharedMetadataHeaders(headers)};
       }
     } else if (this.hasAnyScopes() || this.apiKey) {
@@ -279,7 +281,6 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
       expiry_date: gtoken.expiresAt,
       id_token: gtoken.idToken,
     };
-    this.trustBoundary = await this.refreshTrustBoundary(tokens);
     this.emit('tokens', tokens);
     return {res: null, tokens};
   }
@@ -410,16 +411,16 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
     throw new Error('A key or a keyFile must be provided to getCredentials.');
   }
 
-  protected async getTrustBoundaryUrl(): Promise<string> {
+  protected async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (!this.email) {
       throw new Error(
-        'TrustBoundary: An email address is required for trust boundary lookups but was not provided in the JwtClient options.',
+        'RegionalAccessBoundary: An email address is required for regional access boundary lookups but was not provided in the JwtClient options.',
       );
     }
-    const trustBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+    const regionalAccessBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
       '{universe_domain}',
       this.universeDomain,
     ).replace('{service_account_email}', encodeURIComponent(this.email));
-    return trustBoundaryUrl;
+    return regionalAccessBoundaryUrl;
   }
 }

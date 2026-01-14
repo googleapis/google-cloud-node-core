@@ -21,7 +21,7 @@ import {
   OAuth2Client,
   OAuth2ClientOptions,
 } from './oauth2client';
-import {SERVICE_ACCOUNT_LOOKUP_ENDPOINT} from './trustboundary';
+import {SERVICE_ACCOUNT_LOOKUP_ENDPOINT} from './regionalaccessboundary';
 
 export interface ComputeOptions extends OAuth2ClientOptions {
   /**
@@ -90,7 +90,6 @@ export class Compute extends OAuth2Client {
       tokens.expiry_date = new Date().getTime() + data.expires_in * 1000;
       delete (tokens as CredentialRequest).expires_in;
     }
-    this.trustBoundary = await this.refreshTrustBoundary(data);
     this.emit('tokens', tokens);
     return {tokens, res: null};
   }
@@ -140,13 +139,13 @@ export class Compute extends OAuth2Client {
     }
   }
 
-  protected async getTrustBoundaryUrl(): Promise<string> {
+  protected async getRegionalAccessBoundaryUrl(): Promise<string> {
     const email = await this.resolveServiceAccountEmail();
-    const trustBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+    const regionalAccessBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
       '{universe_domain}',
       this.universeDomain,
     ).replace('{service_account_email}', encodeURIComponent(email));
-    return trustBoundaryUrl;
+    return regionalAccessBoundaryUrl;
   }
 
   /**
@@ -165,7 +164,7 @@ export class Compute extends OAuth2Client {
       return await gcpMetadata.instance('service-accounts/default/email');
     } catch (e) {
       throw new Error(
-        'TrustBoundary: Failed to retrieve default service account email from metadata server.',
+        'RegionalAccessBoundary: Failed to retrieve default service account email from metadata server.',
         {
           cause: e,
         },

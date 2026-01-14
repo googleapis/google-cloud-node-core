@@ -957,6 +957,8 @@ export class OAuth2Client extends AuthClient {
       );
     }
 
+    this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
+
     if (thisCreds.access_token && !this.isTokenExpiring()) {
       thisCreds.token_type = thisCreds.token_type || 'Bearer';
       const headers = new Headers({
@@ -1129,6 +1131,11 @@ export class OAuth2Client extends AuthClient {
 
       return await this.transporter.request<T>(opts);
     } catch (e) {
+      if (this.isStaleRegionalAccessBoundaryError(e) && !reAuthRetried) {
+        this.clearRegionalAccessBoundaryCache();
+        // Background refresh is triggered by getRequestMetadataAsync in the retry
+        return await this.requestAsync<T>(opts, true);
+      }
       const res = (e as GaxiosError).response;
       if (res) {
         const statusCode = res.status;

@@ -42,6 +42,11 @@ import {
 } from '../src/auth/certificatesubjecttokensupplier';
 import * as sinon from 'sinon';
 import * as util from '../src/util';
+import {
+  RegionalAccessBoundaryData,
+  WORKFORCE_LOOKUP_ENDPOINT,
+  WORKLOAD_LOOKUP_ENDPOINT,
+} from '../src/auth/regionalaccessboundary';
 
 nock.disableNetConnect();
 
@@ -1831,8 +1836,6 @@ describe('IdentityPoolClient', () => {
 
       it('should throw when one or more certs in trust chain is malformed', async () => {
         const certConfigPath =
-          './test/fixtures/external-account-cert/cert_config.json';
-        const trustChainPath =
           './test/fixtures/external-account-cert/chain_with_malformed_cert.pem';
         const certificateSourcedOptions: IdentityPoolClientOptions = {
           type: 'external_account',
@@ -1841,8 +1844,9 @@ describe('IdentityPoolClient', () => {
           token_url: getMtlsTokenUrl(),
           credential_source: {
             certificate: {
-              certificate_config_location: certConfigPath,
-              trust_chain_path: trustChainPath,
+              certificate_config_location:
+                './test/fixtures/external-account-cert/cert_config.json',
+              trust_chain_path: certConfigPath,
             },
           },
         };
@@ -1852,11 +1856,194 @@ describe('IdentityPoolClient', () => {
           client.retrieveSubjectToken(),
           new RegExp(
             `Failed to parse certificate at index 0 in trust chain file ${
-              trustChainPath
+              certConfigPath
             }`,
           ),
         );
       });
+    });
+  });
+
+  describe('regional access boundaries', () => {
+    const MOCK_ACCESS_TOKEN = 'ACCESS_TOKEN';
+    const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
+    const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
+      locations: ['some-locations'],
+      encodedLocations: '0xdeadbeef',
+    };
+
+    beforeEach(() => {
+      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
+    });
+
+    afterEach(() => {
+      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
+      nock.cleanAll();
+    });
+
+    it('should trigger asynchronous RAB refresh for workload identity', async () => {
+      const projectNumber = '12345';
+      const workloadPoolId = 'my-pool';
+      const workloadAudience = `//iam.googleapis.com/projects/${projectNumber}/locations/global/workloadIdentityPools/${workloadPoolId}/providers/my-provider`;
+      const workloadOptions = {
+        ...fileSourcedOptions,
+        audience: workloadAudience,
+      };
+      const client = new IdentityPoolClient(workloadOptions);
+
+      const stsScope = mockStsTokenExchange([
+        {
+          statusCode: 200,
+          response: {...stsSuccessfulResponse, access_token: MOCK_ACCESS_TOKEN},
+          request: {
+            grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+            audience: workloadAudience,
+            scope: 'https://www.googleapis.com/auth/cloud-platform',
+            requested_token_type:
+              'urn:ietf:params:oauth:token-type:access_token',
+            subject_token: fileSubjectToken,
+            subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+          },
+        },
+      ]);
+
+      const lookupUrl = WORKLOAD_LOOKUP_ENDPOINT.replace(
+        '{universe_domain}',
+        'googleapis.com',
+      )
+        .replace('{project_number}', projectNumber)
+        .replace('{workload_identity_pool_id}', workloadPoolId);
+
+      let rabLookupCalled = false;
+      const rabScope = nock(new URL(lookupUrl).origin)
+        .get(new URL(lookupUrl).pathname)
+        .matchHeader('authorization', MOCK_AUTH_HEADER)
+        .reply(() => {
+          rabLookupCalled = true;
+          return [200, EXPECTED_RAB_DATA];
+        });
+
+      // Initial call - should NOT have the header yet
+      const headers = await client.getRequestHeaders();
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      // Wait for background lookup
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      await new Promise(r => setTimeout(r, 50));
+      assert.deepStrictEqual(
+        (client as any).regionalAccessBoundary,
+        EXPECTED_RAB_DATA,
+      );
+
+      stsScope.done();
+      rabScope.done();
+    });
+
+    it('should trigger asynchronous RAB refresh for workforce identity', async () => {
+      const workforcePoolId = 'my-workforce-pool';
+      const location = 'global';
+      const workforceAudience = `//iam.googleapis.com/locations/${location}/workforcePools/${workforcePoolId}/providers/my-provider`;
+      const workforceOptions = {
+        ...fileSourcedOptions,
+        audience: workforceAudience,
+      };
+      const client = new IdentityPoolClient(workforceOptions);
+
+      const stsScope = mockStsTokenExchange([
+        {
+          statusCode: 200,
+          response: {...stsSuccessfulResponse, access_token: MOCK_ACCESS_TOKEN},
+          request: {
+            grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+            audience: workforceAudience,
+            scope: 'https://www.googleapis.com/auth/cloud-platform',
+            requested_token_type:
+              'urn:ietf:params:oauth:token-type:access_token',
+            subject_token: fileSubjectToken,
+            subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
+          },
+        },
+      ]);
+
+      const lookupUrl = WORKFORCE_LOOKUP_ENDPOINT.replace(
+        '{universe_domain}',
+        'googleapis.com',
+      )
+        .replace('{location}', location)
+        .replace('{workforce_pool_id}', workforcePoolId);
+
+      let rabLookupCalled = false;
+      const rabScope = nock(new URL(lookupUrl).origin)
+        .get(new URL(lookupUrl).pathname)
+        .matchHeader('authorization', MOCK_AUTH_HEADER)
+        .reply(() => {
+          rabLookupCalled = true;
+          return [200, EXPECTED_RAB_DATA];
+        });
+
+      const headers = await client.getRequestHeaders();
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      await new Promise(r => setTimeout(r, 50));
+      assert.deepStrictEqual(
+        (client as any).regionalAccessBoundary,
+        EXPECTED_RAB_DATA,
+      );
+
+      stsScope.done();
+      rabScope.done();
+    });
+
+    it('should clear cache and retry on stale RAB error', async () => {
+      const client = new IdentityPoolClient(fileSourcedOptions);
+      // Seed with credentials
+      (client as any).credentials = {
+        access_token: MOCK_ACCESS_TOKEN,
+        expiry_date: Date.now() + 100000,
+      };
+
+      // Seed the RAB cache
+      client.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
+
+      // 1. First attempt with RAB header, returns 400 Stale
+      const scope1 = nock('https://storage.googleapis.com')
+        .get('/bucket/obj')
+        .matchHeader('x-allowed-locations', EXPECTED_RAB_DATA.encodedLocations)
+        .reply(400, {
+          error: {
+            message: 'stale regional access boundary',
+            status: 'INVALID_ARGUMENT',
+          },
+        });
+
+      // 2. Second attempt (retry) WITHOUT RAB header, returns 200 OK
+      const scope2 = nock('https://storage.googleapis.com')
+        .get('/bucket/obj')
+        .matchHeader('x-allowed-locations', val => val === undefined)
+        .reply(200, {data: 'success'});
+
+      const res = await client.request({
+        url: 'https://storage.googleapis.com/bucket/obj',
+      });
+
+      assert.strictEqual((client as any).regionalAccessBoundary, null); // Cache cleared
+      assert.deepStrictEqual(res.data, {data: 'success'});
+
+      scope1.done();
+      scope2.done();
     });
   });
 });
