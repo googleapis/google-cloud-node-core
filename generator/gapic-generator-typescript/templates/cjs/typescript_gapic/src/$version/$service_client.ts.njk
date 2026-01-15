@@ -438,10 +438,7 @@ export class {{ service.name }}Client {
           (this._protos as any).{{api.naming.protoPackage}}.{{ service.name }},
         this._opts, this._providedCustomServicePath) as Promise<{[method: string]: Function}>;
 
-    // Iterate over each of the methods that the service provides
-    // and create an API call method for each.
-    const {{ service.name.toCamelCase() }}StubMethods =
-        [
+    {%- set stubMethodsContent %}
 {%- set stubMethodsJoiner = joiner(', ') -%}
 {%- for method in service.method -%}
       {%- if not method.ignoreMapPagingMethod %}
@@ -449,7 +446,13 @@ export class {{ service.name }}Client {
       '{{ method.name.toCamelCase(true) }}'
       {%- endif %}
 {%- endfor -%}
-    ];
+{% endset -%}
+{%- if stubMethodsContent | trim %}
+
+    // Iterate over each of the methods that the service provides
+    // and create an API call method for each.
+    const {{ service.name.toCamelCase() }}StubMethods =
+        [{{ stubMethodsContent | safe }}];
     for (const methodName of {{ service.name.toCamelCase() }}StubMethods) {
       const callPromise = this.{{ service.name.toCamelCase() }}Stub.then(
         stub => (...args: Array<{}>) => {
@@ -495,6 +498,7 @@ export class {{ service.name }}Client {
 
       this.innerApiCalls[methodName] = apiCall;
     }
+{%- endif -%}
     {%- if service.options and service.options.deprecated %}
     this.warn('DEP${{service.name}}', '{{service.name}} is deprecated and may be removed in a future version.', 'DeprecationWarning');
     {%- endif %}
