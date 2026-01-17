@@ -33,7 +33,7 @@ import {
   EXPIRATION_TIME_OFFSET,
   SharedExternalAccountClientOptions,
 } from './baseexternalclient';
-import {WORKFORCE_LOOKUP_ENDPOINT} from './trustboundary';
+import {WORKFORCE_LOOKUP_ENDPOINT} from './regionalaccessboundary';
 import {getWorkforcePoolIdFromAudience} from '../util';
 
 /**
@@ -221,11 +221,15 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     };
   }
 
-  async getRequestHeaders(): Promise<Headers> {
+  async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const accessTokenResponse = await this.getAccessToken();
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
+    this.maybeTriggerRegionalAccessBoundaryRefresh(
+      url,
+      accessTokenResponse.token!,
+    );
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -259,14 +263,22 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     reAuthRetried = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
+    const requestOpts = {...opts};
     try {
       const requestHeaders = await this.getRequestHeaders();
-      opts.headers = Gaxios.mergeHeaders(opts.headers);
+      requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
-      this.applyHeadersFromSource(opts.headers, requestHeaders);
+      this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      response = await this.transporter.request<T>(opts);
+      response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
+      if (
+        this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
+        !reAuthRetried
+      ) {
+        this.clearRegionalAccessBoundaryCache();
+        return await this.requestAsync<T>(opts, true);
+      }
       const res = (e as GaxiosError).response;
       if (res) {
         const statusCode = res.status;
@@ -312,27 +324,26 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     if (refreshResponse.refresh_token !== undefined) {
       this.refreshToken = refreshResponse.refresh_token;
 
-      // Set credentials and refresh trust boundary data.
+      // Set credentials.
       this.credentials = {...this.cachedAccessToken};
       delete (this.credentials as CredentialsWithResponse).res;
-      this.trustBoundary = await this.refreshTrustBoundary(this.credentials);
     }
 
     return this.cachedAccessToken;
   }
 
   /**
-   * Constructs the trust boundary lookup URL for the client.
+   * Constructs the regional access boundary lookup URL for the client.
    *
-   * @return The trust boundary URL string, or `null` if the client type
-   * does not support trust boundaries.
+   * @return The regional access boundary URL string, or `null` if the client type
+   * does not support regional access boundaries.
    * @throws {Error} If the URL cannot be constructed for a compatible client.
    */
-  protected async getTrustBoundaryUrl(): Promise<string | null> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     const poolId = getWorkforcePoolIdFromAudience(this.audience);
     if (!poolId) {
       throw new Error(
-        `TrustBoundary: A workforce pool ID is required for trust boundary lookups but could not be determined from the audience: ${this.audience}.`,
+        `RegionalAccessBoundary: A workforce pool ID is required for regional access boundary lookups but could not be determined from the audience: ${this.audience}.`,
       );
     }
     return WORKFORCE_LOOKUP_ENDPOINT.replace(

@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import {EventEmitter} from 'events';
-import {Gaxios, GaxiosOptions, GaxiosPromise, GaxiosResponse} from 'gaxios';
+import {
+  Gaxios,
+  GaxiosError,
+  GaxiosOptions,
+  GaxiosPromise,
+  GaxiosResponse,
+} from 'gaxios';
 
 import {Credentials} from './credentials';
 import {OriginalAndCamel, originalOrCamelOptions} from '../util';
@@ -21,10 +27,10 @@ import {log as makeLog} from 'google-logging-utils';
 
 import {PRODUCT_NAME, USER_AGENT} from '../shared.cjs';
 import {
-  isTrustBoundaryEnabled,
-  NoOpEncodedLocations,
-  TrustBoundaryData,
-} from './trustboundary';
+  isRegionalAccessBoundaryEnabled,
+  RegionalAccessBoundaryData,
+  RegionalAccessBoundaryManager,
+} from './regionalaccessboundary';
 
 /**
  * An interface for enforcing `fetch`-type compliance.
@@ -237,8 +243,8 @@ export abstract class AuthClient
   eagerRefreshThresholdMillis = DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS;
   forceRefreshOnFailure = false;
   universeDomain = DEFAULT_UNIVERSE;
-  trustBoundaryEnabled: boolean;
-  trustBoundary?: TrustBoundaryData | null;
+  regionalAccessBoundaryEnabled: boolean;
+  protected regionalAccessBoundaryManager: RegionalAccessBoundaryManager;
 
   /**
    * Symbols that can be added to GaxiosOptions to specify the method name that is
@@ -261,11 +267,16 @@ export abstract class AuthClient
     this.quotaProjectId = options.get('quota_project_id');
     this.credentials = options.get('credentials') ?? {};
     this.universeDomain = options.get('universe_domain') ?? DEFAULT_UNIVERSE;
-    this.trustBoundaryEnabled = isTrustBoundaryEnabled();
-    this.trustBoundary = null;
+    this.regionalAccessBoundaryEnabled = isRegionalAccessBoundaryEnabled();
 
     // Shared client options
     this.transporter = opts.transporter ?? new Gaxios(opts.transporterOptions);
+
+    this.regionalAccessBoundaryManager = new RegionalAccessBoundaryManager({
+      transporter: this.transporter,
+      getLookupUrl: async () => this.getRegionalAccessBoundaryUrl(),
+      isUniverseDomainDefault: () => this.universeDomain === DEFAULT_UNIVERSE,
+    });
 
     if (options.get('useAuthRequestParameters') !== false) {
       this.transporter.interceptors.request.add(
@@ -371,14 +382,15 @@ export abstract class AuthClient
   }>;
 
   /**
-   * Constructs the trust boundary lookup URL for the client.
+   * Constructs the regional access boundary lookup URL for the client.
    *
-   * @return The trust boundary URL string, or `null` if the client type
-   * does not support trust boundaries.
+   * @return The regional access boundary URL string, or `null` if the client type
+   * does not support regional access boundaries.
    * @throws {Error} If the URL cannot be constructed for a compatible client,
    * for instance, if a required property like a service account email is missing.
+   * @internal
    */
-  protected async getTrustBoundaryUrl(): Promise<string | null> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     return null;
   }
 
@@ -387,6 +399,30 @@ export abstract class AuthClient
    */
   setCredentials(credentials: Credentials) {
     this.credentials = credentials;
+  }
+
+  /**
+   * Manually sets the regional access boundary data.
+   * Treating this as a standard cache entry with a 6-hour TTL.
+   * @param data The regional access boundary data to set.
+   */
+  setRegionalAccessBoundary(data: RegionalAccessBoundaryData) {
+    this.regionalAccessBoundaryManager.setRegionalAccessBoundary(data);
+  }
+
+  /**
+   * Returns the current regional access boundary data.
+   */
+  getRegionalAccessBoundary(): RegionalAccessBoundaryData | null {
+    return this.regionalAccessBoundaryManager.data;
+  }
+
+  /**
+   * Returns the current regional access boundary cooldown time in milliseconds.
+   * @internal
+   */
+  getRegionalAccessBoundaryCooldownTime(): number {
+    return this.regionalAccessBoundaryManager.cooldownTime;
   }
 
   /**
@@ -408,14 +444,10 @@ export abstract class AuthClient
       headers.set('x-goog-user-project', this.quotaProjectId);
     }
 
-    if (this.trustBoundaryEnabled && this.trustBoundary) {
-      //Empty header sent in case trust-boundary has no-op encoded location.
-      headers.set(
-        'x-allowed-locations',
-        this.trustBoundary.encodedLocations === NoOpEncodedLocations
-          ? ''
-          : this.trustBoundary.encodedLocations,
-      );
+    const rabHeader =
+      this.regionalAccessBoundaryManager.getRegionalAccessBoundaryHeader();
+    if (rabHeader) {
+      headers.set('x-allowed-locations', rabHeader);
     }
 
     return headers;
@@ -589,84 +621,18 @@ export abstract class AuthClient
   }
 
   /**
-   * Refreshes trust boundary data for an authenticated client.
-   * Handles caching checks and potential fallbacks.
-   * @param tokens The refreshed credentials containing access token to call the trust boundary endpoint.
-   * @returns A Promise resolving to TrustBoundaryData or empty-string for no-op trust boundaries.
-   * @throws {Error} If the request fails and there is no cache available.
+   * Triggers an asynchronous regional access boundary refresh if needed.
+   * @param url The endpoint URL being accessed.
+   * @param accessToken The access token to use for the lookup.
    */
-  protected async refreshTrustBoundary(
-    tokens: Credentials,
-  ): Promise<TrustBoundaryData | null> {
-    if (!this.trustBoundaryEnabled) {
-      return null;
-    }
-
-    if (this.universeDomain !== DEFAULT_UNIVERSE) {
-      // Skipping check for non-default universe domain as this feature is only supported in GDU
-      return null;
-    }
-
-    const cachedTB = this.trustBoundary;
-    if (cachedTB && cachedTB.encodedLocations === NoOpEncodedLocations) {
-      return cachedTB;
-    }
-
-    const trustBoundaryUrl = await this.getTrustBoundaryUrl();
-    if (!trustBoundaryUrl) {
-      return null;
-    }
-
-    const accessToken = tokens.access_token;
-
-    if (!accessToken || this.isExpired(tokens)) {
-      throw new Error(
-        'TrustBoundary: Error calling lookup endpoint without valid access token',
-      );
-    }
-
-    const headers = this.addSharedMetadataHeaders(
-      new Headers({
-        //we can directly pass the access_token as the trust boundaries are always fetched after token refresh
-        authorization: 'Bearer ' + accessToken,
-      }),
+  protected maybeTriggerRegionalAccessBoundaryRefresh(
+    url: string | URL | undefined,
+    accessToken: string,
+  ) {
+    this.regionalAccessBoundaryManager.maybeTriggerRegionalAccessBoundaryRefresh(
+      url,
+      accessToken,
     );
-
-    const opts: GaxiosOptions = {
-      ...{
-        retry: true,
-        retryConfig: {
-          httpMethodsToRetry: ['GET'],
-        },
-      },
-      headers,
-      url: trustBoundaryUrl,
-    };
-
-    try {
-      const {data: trustBoundaryData} =
-        // Use the transporter directly here. A standard `client.request` would
-        // re-trigger a token refresh, creating an infinite loop.
-        await this.transporter.request<TrustBoundaryData>(opts);
-
-      if (!trustBoundaryData.encodedLocations) {
-        throw new Error(
-          'TrustBoundary: Malformed response from lookup endpoint.',
-        );
-      }
-
-      return trustBoundaryData;
-    } catch (error) {
-      if (this.trustBoundary) {
-        return this.trustBoundary; // return cached tb if call to lookup fails
-      }
-      throw new Error(
-        'TrustBoundary: Failure while getting trust boundaries:',
-        {
-          cause: error,
-        },
-      );
-    }
   }
 
   /**
@@ -681,6 +647,28 @@ export abstract class AuthClient
     return credentials.expiry_date
       ? now >= credentials.expiry_date - this.eagerRefreshThresholdMillis
       : false;
+  }
+
+  /**
+   * Checks if the error is a "stale regional access boundary" error.
+   * @param error The error to check.
+   */
+  public isStaleRegionalAccessBoundaryError(error: GaxiosError): boolean {
+    const res = error.response;
+    if (res && res.status === 400) {
+      const data = res.data as {error?: {message?: string}; message?: string};
+      const message =
+        data?.error?.message || data?.message || error.message || '';
+      return message.toLowerCase().includes('stale regional access boundary');
+    }
+    return false;
+  }
+
+  /**
+   * Clears the regional access boundary cache.
+   */
+  protected clearRegionalAccessBoundaryCache() {
+    this.regionalAccessBoundaryManager.clearRegionalAccessBoundaryCache();
   }
 }
 
