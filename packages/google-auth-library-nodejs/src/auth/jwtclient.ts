@@ -141,7 +141,10 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
         ).target_audience
       ) {
         const {tokens} = await this.refreshToken();
-        this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
+        this.maybeTriggerRegionalAccessBoundaryRefresh(
+          url ?? undefined,
+          (tokens.access_token ?? tokens.id_token)!,
+        );
         return {
           headers: this.addSharedMetadataHeaders(
             new Headers({
@@ -181,7 +184,13 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
           useScopes ? scopes : undefined,
         );
 
-        this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
+        const authHeader = headers.get('authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          this.maybeTriggerRegionalAccessBoundaryRefresh(
+            url ?? undefined,
+            authHeader.substring(7),
+          );
+        }
         return {headers: this.addSharedMetadataHeaders(headers)};
       }
     } else if (this.hasAnyScopes() || this.apiKey) {

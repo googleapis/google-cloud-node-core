@@ -881,6 +881,7 @@ describe('ExternalAccountAuthorizedUserClient', () => {
     };
 
     beforeEach(() => {
+      clock.restore();
       process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
     });
 
@@ -909,9 +910,7 @@ describe('ExternalAccountAuthorizedUserClient', () => {
       const lookupUrl = WORKFORCE_LOOKUP_ENDPOINT.replace(
         '{universe_domain}',
         'googleapis.com',
-      )
-        .replace('{location}', 'global')
-        .replace('{workforce_pool_id}', encodeURIComponent(workforcePoolId));
+      ).replace('{pool_id}', encodeURIComponent(workforcePoolId));
 
       let rabLookupCalled = false;
       const rabScope = nock(new URL(lookupUrl).origin)
@@ -928,15 +927,15 @@ describe('ExternalAccountAuthorizedUserClient', () => {
 
       // Wait for background lookup
       let attempts = 0;
-      while (!rabLookupCalled && attempts < 10) {
-        await new Promise(r => setTimeout(r, 50));
+      while (!rabLookupCalled && attempts < 20) {
+        await new Promise(r => setTimeout(r, 100));
         attempts++;
       }
       assert.strictEqual(rabLookupCalled, true);
 
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 100));
       assert.deepStrictEqual(
-        (client as any).regionalAccessBoundary,
+        client.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -952,28 +951,12 @@ describe('ExternalAccountAuthorizedUserClient', () => {
       };
       const client = new ExternalAccountAuthorizedUserClient(options);
 
-      const stsScope = mockStsTokenRefresh(BASE_URL, REFRESH_PATH, [
-        {
-          statusCode: 200,
-          response: {
-            ...successfulRefreshResponse,
-            access_token: MOCK_ACCESS_TOKEN,
-          },
-          request: {
-            grant_type: 'refresh_token',
-            refresh_token: 'refreshToken',
-          },
-        },
-      ]);
-
       // Note: background refresh fails silently in terms of getRequestHeaders resolving.
       // But we can manually trigger getRegionalAccessBoundaryUrl to verify it throws.
       await assert.rejects(
-        (client as any).getRegionalAccessBoundaryUrl(),
+        client.getRegionalAccessBoundaryUrl(),
         /RegionalAccessBoundary: A workforce pool ID is required for regional access boundary lookups but could not be determined from the audience/,
       );
-
-      stsScope.done();
     });
 
     it('should clear cache and retry on stale RAB error', async () => {
@@ -981,13 +964,24 @@ describe('ExternalAccountAuthorizedUserClient', () => {
         externalAccountAuthorizedUserCredentialOptions,
       );
       // Seed with credentials
-      (client as any).credentials = {
+      client.setCredentials({
         access_token: MOCK_ACCESS_TOKEN,
         expiry_date: Date.now() + 100000,
-      };
+      });
 
       // Seed the RAB cache
       client.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
+
+      const stsScope = mockStsTokenRefresh(BASE_URL, REFRESH_PATH, [
+        {
+          statusCode: 200,
+          response: successfulRefreshResponse,
+          request: {
+            grant_type: 'refresh_token',
+            refresh_token: 'refreshToken',
+          },
+        },
+      ]);
 
       // 1. First attempt with RAB header, returns 400 Stale
       const scope1 = nock('https://storage.googleapis.com')
@@ -1010,11 +1004,12 @@ describe('ExternalAccountAuthorizedUserClient', () => {
         url: 'https://storage.googleapis.com/bucket/obj',
       });
 
-      assert.strictEqual((client as any).regionalAccessBoundary, null); // Cache cleared
+      assert.strictEqual(client.getRegionalAccessBoundary(), null); // Cache cleared
       assert.deepStrictEqual(res.data, {data: 'success'});
 
       scope1.done();
       scope2.done();
+      stsScope.done();
     });
   });
 });

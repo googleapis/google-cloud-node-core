@@ -2656,8 +2656,8 @@ describe('BaseExternalAccountClient', () => {
         '{universe_domain}',
         'googleapis.com',
       )
-        .replace('{project_number}', projectNumber)
-        .replace('{workload_identity_pool_id}', workloadPoolId);
+        .replace('{project_id}', projectNumber)
+        .replace('{pool_id}', workloadPoolId);
 
       let rabLookupCalled = false;
       const rabScope = nock(new URL(lookupUrl).origin)
@@ -2682,7 +2682,7 @@ describe('BaseExternalAccountClient', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (client as any).regionalAccessBoundary,
+        client.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -2721,7 +2721,7 @@ describe('BaseExternalAccountClient', () => {
         'googleapis.com',
       )
         .replace('{location}', location)
-        .replace('{workforce_pool_id}', workforcePoolId);
+        .replace('{pool_id}', workforcePoolId);
 
       let rabLookupCalled = false;
       const rabScope = nock(new URL(lookupUrl).origin)
@@ -2744,7 +2744,7 @@ describe('BaseExternalAccountClient', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (client as any).regionalAccessBoundary,
+        client.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -2760,30 +2760,12 @@ describe('BaseExternalAccountClient', () => {
       };
       const client = new TestExternalAccountClient(invalidOptions);
 
-      const stsScope = mockStsTokenExchange([
-        {
-          statusCode: 200,
-          response: {...stsSuccessfulResponse, access_token: MOCK_ACCESS_TOKEN},
-          request: {
-            grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
-            audience: invalidAudience,
-            scope: 'https://www.googleapis.com/auth/cloud-platform',
-            requested_token_type:
-              'urn:ietf:params:oauth:token-type:access_token',
-            subject_token: 'subject_token_0',
-            subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
-          },
-        },
-      ]);
-
       // Note: background refresh fails silently in terms of getRequestHeaders resolving.
       // But we can manually trigger getRegionalAccessBoundaryUrl to verify it throws.
       await assert.rejects(
-        (client as any).getRegionalAccessBoundaryUrl(),
+        client.getRegionalAccessBoundaryUrl(),
         /RegionalAccessBoundary: Invalid audience provided/,
       );
-
-      stsScope.done();
     });
 
     it('should trigger asynchronous RAB refresh for impersonated service account', async () => {
@@ -2849,7 +2831,7 @@ describe('BaseExternalAccountClient', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (client as any).regionalAccessBoundary,
+        client.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -2860,10 +2842,26 @@ describe('BaseExternalAccountClient', () => {
 
     it('should clear cache and retry on stale RAB error', async () => {
       const client = new TestExternalAccountClient(externalAccountOptions);
-      client.credentials = {
+      client.setCredentials({
         access_token: 'abc',
         expiry_date: Date.now() + 100000,
-      };
+      });
+
+      const stsScope = mockStsTokenExchange([
+        {
+          statusCode: 200,
+          response: {...stsSuccessfulResponse, access_token: MOCK_ACCESS_TOKEN},
+          request: {
+            grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+            audience: audience,
+            scope: 'https://www.googleapis.com/auth/cloud-platform',
+            requested_token_type:
+              'urn:ietf:params:oauth:token-type:access_token',
+            subject_token: 'subject_token_0',
+            subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+          },
+        },
+      ]);
 
       // Seed the cache
       client.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
@@ -2889,11 +2887,12 @@ describe('BaseExternalAccountClient', () => {
         url: 'https://storage.googleapis.com/bucket/obj',
       });
 
-      assert.strictEqual((client as any).regionalAccessBoundary, null); // Cache cleared
+      assert.strictEqual(client.getRegionalAccessBoundary(), null); // Cache cleared
       assert.deepStrictEqual(res.data, {data: 'success'});
 
       scope1.done();
       scope2.done();
+      stsScope.done();
     });
   });
 });

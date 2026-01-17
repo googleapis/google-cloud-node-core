@@ -957,13 +957,15 @@ export class OAuth2Client extends AuthClient {
       );
     }
 
-    this.maybeTriggerRegionalAccessBoundaryRefresh(url ?? undefined);
-
     if (thisCreds.access_token && !this.isTokenExpiring()) {
       thisCreds.token_type = thisCreds.token_type || 'Bearer';
       const headers = new Headers({
         authorization: thisCreds.token_type + ' ' + thisCreds.access_token,
       });
+      this.maybeTriggerRegionalAccessBoundaryRefresh(
+        url ?? undefined,
+        thisCreds.access_token,
+      );
       return {headers: this.addSharedMetadataHeaders(headers)};
     }
 
@@ -976,6 +978,10 @@ export class OAuth2Client extends AuthClient {
         const headers = new Headers({
           authorization: 'Bearer ' + this.credentials.access_token,
         });
+        this.maybeTriggerRegionalAccessBoundaryRefresh(
+          url ?? undefined,
+          this.credentials.access_token!,
+        );
         return {headers: this.addSharedMetadataHeaders(headers)};
       }
     }
@@ -1006,6 +1012,10 @@ export class OAuth2Client extends AuthClient {
     const headers = new Headers({
       authorization: credentials.token_type + ' ' + tokens.access_token,
     });
+    this.maybeTriggerRegionalAccessBoundaryRefresh(
+      url ?? undefined,
+      tokens.access_token!,
+    );
     return {headers: this.addSharedMetadataHeaders(headers), res: r.res};
   }
 
@@ -1119,19 +1129,23 @@ export class OAuth2Client extends AuthClient {
     opts: GaxiosOptions,
     reAuthRetried = false,
   ): Promise<GaxiosResponse<T>> {
+    const requestOpts = {...opts};
     try {
       const r = await this.getRequestMetadataAsync();
-      opts.headers = Gaxios.mergeHeaders(opts.headers);
+      requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
-      this.applyHeadersFromSource(opts.headers, r.headers);
+      this.applyHeadersFromSource(requestOpts.headers, r.headers);
 
       if (this.apiKey) {
-        opts.headers.set('X-Goog-Api-Key', this.apiKey);
+        requestOpts.headers.set('X-Goog-Api-Key', this.apiKey);
       }
 
-      return await this.transporter.request<T>(opts);
+      return await this.transporter.request<T>(requestOpts);
     } catch (e) {
-      if (this.isStaleRegionalAccessBoundaryError(e) && !reAuthRetried) {
+      if (
+        this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
+        !reAuthRetried
+      ) {
         this.clearRegionalAccessBoundaryCache();
         // Background refresh is triggered by getRequestMetadataAsync in the retry
         return await this.requestAsync<T>(opts, true);

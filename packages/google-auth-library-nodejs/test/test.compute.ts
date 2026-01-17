@@ -346,7 +346,7 @@ describe('compute', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (compute as any).regionalAccessBoundary,
+        compute.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -366,7 +366,7 @@ describe('compute', () => {
       // Error happens in background, so getRequestHeaders resolves fine.
       // We manually call getRegionalAccessBoundaryUrl to verify the failure logic.
       await assert.rejects(
-        (compute as any).getRegionalAccessBoundaryUrl(),
+        compute.getRegionalAccessBoundaryUrl(),
         /RegionalAccessBoundary: Failed to retrieve default service account email from metadata server./,
       );
     });

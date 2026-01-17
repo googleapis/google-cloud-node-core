@@ -576,7 +576,6 @@ describe('impersonated', () => {
 
   describe('regional access boundaries', () => {
     let sandbox: sinon.SinonSandbox;
-    const SOURCE_EMAIL = 'foo@serviceaccount.com';
     const TARGET_PRINCIPAL_EMAIL = 'target@project.iam.gserviceaccount.com';
     const MOCK_ACCESS_TOKEN = 'abc123';
     const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
@@ -654,7 +653,7 @@ describe('impersonated', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (impersonated as any).regionalAccessBoundary,
+        impersonated.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -674,7 +673,7 @@ describe('impersonated', () => {
 
       // Error happens in background.
       await assert.rejects(
-        (impersonated as any).getRegionalAccessBoundaryUrl(),
+        impersonated.getRegionalAccessBoundaryUrl(),
         /RegionalAccessBoundary: A targetPrincipal is required for regional access boundary lookups but was not provided in the ImpersonatedClient options./,
       );
     });
@@ -690,10 +689,10 @@ describe('impersonated', () => {
         targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
       // Seed with credentials
-      (impersonated as any).credentials = {
+      impersonated.setCredentials({
         access_token: MOCK_ACCESS_TOKEN,
         expiry_date: tomorrow.getTime(),
-      };
+      });
 
       // Seed the RAB cache
       impersonated.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
@@ -719,7 +718,7 @@ describe('impersonated', () => {
         url: 'https://storage.googleapis.com/bucket/obj',
       });
 
-      assert.strictEqual((impersonated as any).regionalAccessBoundary, null); // Cache cleared
+      assert.strictEqual(impersonated.getRegionalAccessBoundary(), null); // Cache cleared
       assert.deepStrictEqual(res.data, {data: 'success'});
 
       scope1.done();

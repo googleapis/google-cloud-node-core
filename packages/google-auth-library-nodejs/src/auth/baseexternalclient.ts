@@ -76,7 +76,7 @@ export const CLOUD_RESOURCE_MANAGER =
   'https://cloudresourcemanager.googleapis.com/v1/projects/';
 /** The workforce audience pattern. */
 const WORKFORCE_AUDIENCE_PATTERN =
-  '//iam.googleapis.com/locations/[^/]+/workforcePools/[^/]+/providers/.+';
+  '//iam\\.googleapis\\.com/locations/[^/]+/workforcePools/[^/]+/providers/.+';
 const DEFAULT_TOKEN_URL = 'https://sts.{universeDomain}/v1/token';
 
 /**
@@ -424,12 +424,15 @@ export abstract class BaseExternalAccountClient extends AuthClient {
    * The result has the form:
    * { authorization: 'Bearer <access_token_value>' }
    */
-  async getRequestHeaders(): Promise<Headers> {
+  async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const accessTokenResponse = await this.getAccessToken();
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
-    this.maybeTriggerRegionalAccessBoundaryRefresh();
+    this.maybeTriggerRegionalAccessBoundaryRefresh(
+      url,
+      accessTokenResponse.token!,
+    );
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -508,15 +511,19 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     reAuthRetried = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
+    const requestOpts = {...opts};
     try {
       const requestHeaders = await this.getRequestHeaders();
-      opts.headers = Gaxios.mergeHeaders(opts.headers);
+      requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
-      this.applyHeadersFromSource(opts.headers, requestHeaders);
+      this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      response = await this.transporter.request<T>(opts);
+      response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
-      if (this.isStaleRegionalAccessBoundaryError(e) && !reAuthRetried) {
+      if (
+        this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
+        !reAuthRetried
+      ) {
         this.clearRegionalAccessBoundaryCache();
         return await this.requestAsync<T>(opts, true);
       }
@@ -722,7 +729,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     return this.tokenUrl;
   }
 
-  protected async getRegionalAccessBoundaryUrl(): Promise<string> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (this.serviceAccountImpersonationUrl) {
       // When impersonating a service account, the trust boundary is determined
       // by the security policies of the target service account.

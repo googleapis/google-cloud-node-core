@@ -26,7 +26,6 @@ import {
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
   RegionalAccessBoundaryData,
 } from '../src/auth/regionalaccessboundary';
-import {GoogleToken} from 'gtoken';
 
 function removeBearerFromAuthorizationHeader(headers: Headers): string {
   return (headers.get('authorization') || '').replace('Bearer ', '');
@@ -1315,7 +1314,7 @@ describe('jwt', () => {
       // Give it a moment to update state
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (jwt as any).regionalAccessBoundary,
+        jwt.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -1360,7 +1359,7 @@ describe('jwt', () => {
 
       await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        (jwt as any).regionalAccessBoundary,
+        jwt.getRegionalAccessBoundary(),
         EXPECTED_RAB_DATA,
       );
 
@@ -1373,17 +1372,15 @@ describe('jwt', () => {
         scopes: ['http://bar', 'http://foo'],
         subject: 'bar@subjectaccount.com',
       });
-      jwt.gtoken = new GoogleToken({email: 'adas@GA.com', keyFile: PEM_PATH});
-      jwt.credentials = {refresh_token: 'jwt-placeholder'};
+      // Ensure email is explicitly undefined
+      jwt.email = undefined;
 
-      const scopes = [createGTokenMock({access_token: MOCK_ACCESS_TOKEN})];
-      // Note: error happens in background, so getRequestHeaders won't reject.
-      // But we can manually call getRegionalAccessBoundaryUrl to verify it throws.
+      // Note: error happens in background during getRequestHeaders,
+      // but we can manually call getRegionalAccessBoundaryUrl to verify it throws.
       await assert.rejects(
-        (jwt as any).getRegionalAccessBoundaryUrl(),
+        jwt.getRegionalAccessBoundaryUrl(),
         /RegionalAccessBoundary: An email address is required for regional access boundary lookups but was not provided in the JwtClient options./,
       );
-      scopes.forEach(s => s.done());
     });
   });
 });

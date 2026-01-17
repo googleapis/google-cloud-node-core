@@ -394,7 +394,6 @@ describe('AuthClient', () => {
 
     describe('regional access boundaries', () => {
       const MOCK_ACCESS_TOKEN = 'abc123';
-      const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
       const SERVICE_ACCOUNT_EMAIL = 'service-account@example.com';
       const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
         locations: ['us-central1', 'europe-west1'],
@@ -417,21 +416,6 @@ describe('AuthClient', () => {
           );
       }
 
-      function setupRegionalAccessBoundaryNock(
-        email: string,
-        regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
-        statusCode = 200,
-      ): nock.Scope {
-        const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace('{service_account_email}', encodeURIComponent(email));
-        return nock(new URL(lookupUrl).origin)
-          .get(new URL(lookupUrl).pathname)
-          .matchHeader('authorization', MOCK_AUTH_HEADER)
-          .reply(statusCode, regionalAccessBoundaryData);
-      }
-
       beforeEach(() => {
         process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
       });
@@ -444,10 +428,8 @@ describe('AuthClient', () => {
         const compute = new Compute({
           serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
         });
-
         // Set up nocks
         const tokenScope = setupTokenNock(SERVICE_ACCOUNT_EMAIL);
-
         // Use a promise to track when the RAB lookup is actually called
         let rabLookupCalled = false;
         const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
@@ -471,7 +453,6 @@ describe('AuthClient', () => {
         );
 
         assert.strictEqual(headers.get('x-allowed-locations'), null);
-        // assert.strictEqual(compute.regionalAccessBoundary, null);
 
         // Wait for the background task to complete (not ideal but necessary for testing side effect)
         // In a real scenario we'd use a better way to wait for the internal promise
@@ -486,7 +467,7 @@ describe('AuthClient', () => {
         // Give the background processing a moment to update the class member
         await new Promise(r => setTimeout(r, 50));
         assert.deepStrictEqual(
-          (compute as any).regionalAccessBoundary,
+          compute.getRegionalAccessBoundary(),
           EXPECTED_RAB_DATA,
         );
 
@@ -549,13 +530,13 @@ describe('AuthClient', () => {
 
         // Wait for retries (exponential backoff might take a moment)
         let attempts = 0;
-        while (!(compute as any).regionalAccessBoundary && attempts < 20) {
+        while (!compute.getRegionalAccessBoundary() && attempts < 20) {
           await new Promise(r => setTimeout(r, 150));
           attempts++;
         }
 
         assert.deepStrictEqual(
-          (compute as any).regionalAccessBoundary,
+          compute.getRegionalAccessBoundary(),
           EXPECTED_RAB_DATA,
         );
         rabFail.done();
@@ -586,16 +567,14 @@ describe('AuthClient', () => {
         // Wait for it to fail and enter cooldown
         let attempts = 0;
         while (
-          !(compute as any).regionalAccessBoundaryCooldownTime &&
+          !compute.getRegionalAccessBoundaryCooldownTime() &&
           attempts < 10
         ) {
           await new Promise(r => setTimeout(r, 50));
           attempts++;
         }
 
-        assert.ok(
-          (compute as any).regionalAccessBoundaryCooldownTime > Date.now(),
-        );
+        assert.ok(compute.getRegionalAccessBoundaryCooldownTime() > Date.now());
 
         // Subsequent call should NOT trigger nock (which would fail as we only set up 1)
         await compute.getRequestHeaders('https://pubsub.googleapis.com');
@@ -634,10 +613,10 @@ describe('AuthClient', () => {
               },
             },
           },
-        };
+        } as GaxiosError;
 
         assert.strictEqual(
-          (compute as any).isStaleRegionalAccessBoundaryError(error),
+          compute.isStaleRegionalAccessBoundaryError(error),
           true,
         );
 
@@ -646,9 +625,9 @@ describe('AuthClient', () => {
             status: 400,
             data: {message: 'Something else'},
           },
-        };
+        } as GaxiosError;
         assert.strictEqual(
-          (compute as any).isStaleRegionalAccessBoundaryError(otherError),
+          compute.isStaleRegionalAccessBoundaryError(otherError),
           false,
         );
       });
