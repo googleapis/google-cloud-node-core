@@ -139,7 +139,7 @@ export class Compute extends OAuth2Client {
     }
   }
 
-  protected async getRegionalAccessBoundaryUrl(): Promise<string> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string> {
     const email = await this.resolveServiceAccountEmail();
     const regionalAccessBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
       '{universe_domain}',

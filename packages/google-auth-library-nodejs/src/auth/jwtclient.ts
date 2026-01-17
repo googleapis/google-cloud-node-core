@@ -420,7 +420,7 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
     throw new Error('A key or a keyFile must be provided to getCredentials.');
   }
 
-  protected async getRegionalAccessBoundaryUrl(): Promise<string> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (!this.email) {
       throw new Error(
         'RegionalAccessBoundary: An email address is required for regional access boundary lookups but was not provided in the JwtClient options.',

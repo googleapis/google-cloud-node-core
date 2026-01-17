@@ -1331,12 +1331,18 @@ describe('jwt', () => {
       });
       jwt.credentials = {refresh_token: 'jwt-placeholder'};
 
+      const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+        '{universe_domain}',
+        'googleapis.com',
+      ).replace(
+        '{service_account_email}',
+        encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
+      );
+
       let rabLookupCalled = false;
       // For self-signed JWT, the lookup uses the JWT itself as the token
-      const rabScope = nock('https://iamcredentials.googleapis.com')
-        .get(
-          `/v1/projects/-/serviceAccounts/${encodeURIComponent(SERVICE_ACCOUNT_EMAIL)}/allowedLocations`,
-        )
+      const rabScope = nock(new URL(lookupUrl).origin)
+        .get(new URL(lookupUrl).pathname)
         .reply(() => {
           rabLookupCalled = true;
           return [200, EXPECTED_RAB_DATA];
