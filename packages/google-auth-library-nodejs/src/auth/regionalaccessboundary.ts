@@ -19,8 +19,7 @@ const log = makeLog('auth');
 
 // googleapis.com
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
-  // 'https://iamcredentials.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
-  'https://staging-iamcredentials.sandbox.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
+  'https://iamcredentials.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
 
 export const WORKLOAD_LOOKUP_ENDPOINT =
   'https://iamcredentials.{universe_domain}/v1/projects/{project_id}/locations/global/workloadIdentityPools/{pool_id}/allowedLocations';
