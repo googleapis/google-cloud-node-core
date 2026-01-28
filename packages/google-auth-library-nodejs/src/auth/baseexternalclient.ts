@@ -731,7 +731,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
 
   public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (this.serviceAccountImpersonationUrl) {
-      // When impersonating a service account, the trust boundary is determined
+      // When impersonating a service account, the regional access boundary is determined
       // by the security policies of the target service account.
       const email = this.getServiceAccountEmail();
       if (!email) {

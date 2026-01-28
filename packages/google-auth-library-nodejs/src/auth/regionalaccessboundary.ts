@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ import {log as makeLog} from 'google-logging-utils';
 
 const log = makeLog('auth');
 
-// googleapis.com
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
   'https://iamcredentials.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
 
