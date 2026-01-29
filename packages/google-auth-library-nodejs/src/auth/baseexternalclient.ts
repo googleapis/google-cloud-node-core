@@ -429,10 +429,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
-    this.maybeTriggerRegionalAccessBoundaryRefresh(
-      url,
-      accessTokenResponse.token!,
-    );
+    this.applyRegionalAccessBoundary(headers, url);
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -504,28 +501,32 @@ export abstract class BaseExternalAccountClient extends AuthClient {
    * returned response.
    * @param opts The HTTP request options.
    * @param reAuthRetried Whether the current attempt is a retry after a failed attempt due to an auth failure.
+   * @param retryWithoutRAB Whether the current attempt is a retry after a failed attempt due to a stale regional access boundary.
    * @return A promise that resolves with the successful response.
    */
   protected async requestAsync<T>(
     opts: GaxiosOptions,
     reAuthRetried = false,
+    retryWithoutRAB = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
     const requestOpts = {...opts};
     try {
-      const requestHeaders = await this.getRequestHeaders();
+      const requestHeaders = await this.getRequestHeaders(opts.url);
       requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
       this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
+
+      this.applyRegionalAccessBoundary(requestOpts.headers, opts.url);
 
       response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
       if (
         this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
-        !reAuthRetried
+        !retryWithoutRAB
       ) {
         this.clearRegionalAccessBoundaryCache();
-        return await this.requestAsync<T>(opts, true);
+        return await this.requestAsync<T>(opts, reAuthRetried, true);
       }
       const res = (e as GaxiosError).response;
       if (res) {
@@ -544,7 +545,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
           this.forceRefreshOnFailure
         ) {
           await this.refreshAccessTokenAsync();
-          return await this.requestAsync<T>(opts, true);
+          return await this.requestAsync<T>(opts, true, retryWithoutRAB);
         }
       }
       throw e;
@@ -740,27 +741,28 @@ export abstract class BaseExternalAccountClient extends AuthClient {
         );
       }
       return SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        this.universeDomain,
-      ).replace('{service_account_email}', encodeURIComponent(email));
+        '{service_account_email}',
+        encodeURIComponent(email),
+      );
     }
 
     // Check if the audience corresponds to a workload identity pool.
     const wfPoolId = getWorkforcePoolIdFromAudience(this.audience);
     if (wfPoolId) {
       return WORKFORCE_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        this.universeDomain,
-      ).replace('{pool_id}', encodeURIComponent(wfPoolId));
+        '{pool_id}',
+        encodeURIComponent(wfPoolId),
+      );
     }
 
     // Check if the audience corresponds to a workforce identity pool.
     const wlPoolId = getWorkloadPoolIdFromAudience(this.audience);
     const projectNumber = this.getProjectNumber(this.audience);
     if (wlPoolId && projectNumber) {
-      return WORKLOAD_LOOKUP_ENDPOINT.replace('{project_id}', projectNumber)
-        .replace('{pool_id}', wlPoolId)
-        .replace('{universe_domain}', this.universeDomain);
+      return WORKLOAD_LOOKUP_ENDPOINT.replace(
+        '{project_id}',
+        projectNumber,
+      ).replace('{pool_id}', wlPoolId);
     }
 
     throw new RangeError(

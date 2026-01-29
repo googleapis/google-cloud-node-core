@@ -271,9 +271,9 @@ export class Impersonated extends OAuth2Client implements IdTokenProvider {
       );
     }
     const regionalAccessBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-      '{universe_domain}',
-      this.universeDomain,
-    ).replace('{service_account_email}', encodeURIComponent(targetPrincipal));
+      '{service_account_email}',
+      encodeURIComponent(targetPrincipal),
+    );
     return regionalAccessBoundaryUrl;
   }
 }

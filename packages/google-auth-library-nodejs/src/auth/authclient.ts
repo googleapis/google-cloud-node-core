@@ -444,13 +444,28 @@ export abstract class AuthClient
       headers.set('x-goog-user-project', this.quotaProjectId);
     }
 
+    return headers;
+  }
+
+  /**
+   * Applies regional access boundary rules to the provided headers.
+   * This includes adding the x-allowed-locations header and triggering
+   * a background refresh if needed.
+   * @param headers The headers to update.
+   * @param url Optional destination URL of the request. If missing, assumed global.
+   */
+  protected applyRegionalAccessBoundary(
+    headers: Headers,
+    url?: string | URL,
+  ): void {
     const rabHeader =
-      this.regionalAccessBoundaryManager.getRegionalAccessBoundaryHeader();
+      this.regionalAccessBoundaryManager.getRegionalAccessBoundaryHeader(
+        url,
+        headers,
+      );
     if (rabHeader) {
       headers.set('x-allowed-locations', rabHeader);
     }
-
-    return headers;
   }
 
   /**
@@ -478,7 +493,7 @@ export abstract class AuthClient
       target.set('authorization', authorizationHeader);
     }
 
-    if (xGoogAllowedLocs || xGoogAllowedLocs === '') {
+    if (xGoogAllowedLocs) {
       target.set('x-allowed-locations', xGoogAllowedLocs);
     }
 
@@ -618,21 +633,6 @@ export abstract class AuthClient
         httpMethodsToRetry: ['GET', 'PUT', 'POST', 'HEAD', 'OPTIONS', 'DELETE'],
       },
     };
-  }
-
-  /**
-   * Triggers an asynchronous regional access boundary refresh if needed.
-   * @param url The endpoint URL being accessed.
-   * @param accessToken The access token to use for the lookup.
-   */
-  protected maybeTriggerRegionalAccessBoundaryRefresh(
-    url: string | URL | undefined,
-    accessToken: string,
-  ) {
-    this.regionalAccessBoundaryManager.maybeTriggerRegionalAccessBoundaryRefresh(
-      url,
-      accessToken,
-    );
   }
 
   /**

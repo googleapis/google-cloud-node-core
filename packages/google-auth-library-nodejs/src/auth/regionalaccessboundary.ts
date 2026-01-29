@@ -17,14 +17,15 @@ import {log as makeLog} from 'google-logging-utils';
 
 const log = makeLog('auth');
 
+// googleapis.com
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
-  'https://iamcredentials.{universe_domain}/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
+  'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
 
 export const WORKLOAD_LOOKUP_ENDPOINT =
-  'https://iamcredentials.{universe_domain}/v1/projects/{project_id}/locations/global/workloadIdentityPools/{pool_id}/allowedLocations';
+  'https://iamcredentials.googleapis.com/v1/projects/{project_id}/locations/global/workloadIdentityPools/{pool_id}/allowedLocations';
 
 export const WORKFORCE_LOOKUP_ENDPOINT =
-  'https://iamcredentials.{universe_domain}/v1/locations/global/workforcePools/{pool_id}/allowedLocations';
+  'https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/{pool_id}/allowedLocations';
 
 /**
  * RAB is considered valid for 6 hours.
@@ -48,13 +49,11 @@ const RAB_MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000;
 export interface RegionalAccessBoundaryData {
   /**
    * The readable text format of the allowed regional access boundary locations.
-   * This is optional, as it might not be present if no regional access boundary is enforced.
    */
   locations?: string[];
 
   /**
    * The encoded text format of allowed regional access boundary locations.
-   * Expected to always be present in valid responses.
    */
   encodedLocations: string;
 }
@@ -128,12 +127,36 @@ export class RegionalAccessBoundaryManager {
 
   /**
    * Returns the encoded locations string if the RAB is active and valid.
+   * Also triggers a background refresh if needed.
+   * @param url Optional endpoint URL being accessed. If missing, assumed global.
+   * @param headers The headers of the current request.
    */
-  getRegionalAccessBoundaryHeader(): string | null {
+  getRegionalAccessBoundaryHeader(
+    url: string | URL | undefined,
+    headers: Headers,
+  ): string | null {
+    if (!this.enabled || !this.options.isUniverseDomainDefault()) {
+      return null;
+    }
+
+    // Only attach/refresh for global endpoints
+    if (url && !this.isGlobalEndpoint(url)) {
+      return null;
+    }
+
+    // Attempt to trigger refresh if we have a token
+    const authHeader = headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      this.maybeTriggerRegionalAccessBoundaryRefresh(
+        url,
+        authHeader.substring(7),
+      );
+    }
+
     if (
-      this.enabled &&
       this.regionalAccessBoundary &&
-      this.regionalAccessBoundary.encodedLocations
+      this.regionalAccessBoundary.encodedLocations &&
+      Date.now() < this.regionalAccessBoundaryExpiry
     ) {
       return this.regionalAccessBoundary.encodedLocations;
     }
@@ -144,10 +167,7 @@ export class RegionalAccessBoundaryManager {
    * Checks if the given URL is a global endpoint (not regional).
    * @param url The URL to check.
    */
-  private isGlobalEndpoint(url?: string | URL): boolean {
-    if (!url) {
-      return true;
-    }
+  private isGlobalEndpoint(url: string | URL): boolean {
     const hostname = url instanceof URL ? url.hostname : new URL(url).hostname;
     return (
       !hostname.endsWith('.rep.googleapis.com') &&
@@ -160,16 +180,11 @@ export class RegionalAccessBoundaryManager {
    * @param url The endpoint URL being accessed.
    * @param accessToken The access token to use for the lookup.
    */
-  maybeTriggerRegionalAccessBoundaryRefresh(
+  public maybeTriggerRegionalAccessBoundaryRefresh(
     url: string | URL | undefined,
     accessToken: string,
   ) {
-    if (
-      !this.enabled ||
-      !this.options.isUniverseDomainDefault() ||
-      !this.isGlobalEndpoint(url) ||
-      this.regionalAccessBoundaryRefreshPromise
-    ) {
+    if (this.regionalAccessBoundaryRefreshPromise) {
       return;
     }
 
@@ -198,57 +213,27 @@ export class RegionalAccessBoundaryManager {
     accessToken: string,
   ): Promise<void> {
     try {
-      // Implement retry with exponential backoff for up to 1 minute.
-      let attempt = 0;
-      const startTime = Date.now();
-      const maxRetryTime = 60 * 1000;
-      let shouldContinue = true;
-
-      while (shouldContinue) {
-        try {
-          const data = await this.fetchRegionalAccessBoundary(accessToken);
-          if (data) {
-            this.regionalAccessBoundary = data;
-            this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
-            // Reset cooldown on success
-            this.regionalAccessBoundaryCooldownTime = 0;
-            this.regionalAccessBoundaryCooldownBackoff =
-              RAB_INITIAL_COOLDOWN_MILLIS;
-          }
-          shouldContinue = false;
-        } catch (error) {
-          const gaxiosError = error as {
-            status?: number;
-            response?: {status?: number};
-          };
-          const status = gaxiosError.status || gaxiosError.response?.status;
-          const isRetryable =
-            status !== undefined &&
-            (status >= 500 || status === 403 || status === 404);
-
-          if (isRetryable && Date.now() - startTime < maxRetryTime) {
-            attempt++;
-            const delay = Math.min(Math.pow(2, attempt) * 100, 10000);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-
-          // Non-retryable or timeout: enter cooldown
-          this.regionalAccessBoundaryCooldownTime =
-            Date.now() + this.regionalAccessBoundaryCooldownBackoff;
-          this.regionalAccessBoundaryCooldownBackoff = Math.min(
-            this.regionalAccessBoundaryCooldownBackoff * 2,
-            RAB_MAX_COOLDOWN_MILLIS,
-          );
-          log.error(
-            'RegionalAccessBoundary: Lookup failed. Entering cooldown.',
-            error,
-          );
-          shouldContinue = false;
-        }
+      const data = await this.fetchRegionalAccessBoundary(accessToken);
+      if (data) {
+        this.regionalAccessBoundary = data;
+        this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
+        // Reset cooldown on success
+        this.regionalAccessBoundaryCooldownTime = 0;
+        this.regionalAccessBoundaryCooldownBackoff =
+          RAB_INITIAL_COOLDOWN_MILLIS;
       }
     } catch (error) {
-      log.error('RegionalAccessBoundary: Background refresh failed:', error);
+      // Non-retryable or all retries failed: enter cooldown
+      this.regionalAccessBoundaryCooldownTime =
+        Date.now() + this.regionalAccessBoundaryCooldownBackoff;
+      this.regionalAccessBoundaryCooldownBackoff = Math.min(
+        this.regionalAccessBoundaryCooldownBackoff * 2,
+        RAB_MAX_COOLDOWN_MILLIS,
+      );
+      log.error(
+        'RegionalAccessBoundary: Lookup failed. Entering cooldown.',
+        error,
+      );
     } finally {
       this.regionalAccessBoundaryRefreshPromise = null;
     }
@@ -276,11 +261,14 @@ export class RegionalAccessBoundaryManager {
     });
 
     const opts: GaxiosOptions = {
-      ...{
-        retry: true,
-        retryConfig: {
-          httpMethodsToRetry: ['GET'],
-        },
+      retry: true,
+      retryConfig: {
+        retry: 9, // Approximately 1 minute with default exponential backoff
+        httpMethodsToRetry: ['GET'],
+        statusCodesToRetry: [
+          [403, 404],
+          [500, 599],
+        ],
       },
       headers,
       url: regionalAccessBoundaryUrl,

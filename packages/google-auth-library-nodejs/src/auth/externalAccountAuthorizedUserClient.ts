@@ -221,15 +221,20 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     };
   }
 
+  /**
+   * The main authentication interface. It takes an optional url which when
+   * present is the endpoint being accessed, and returns a Promise which
+   * resolves with authorization header fields.
+   *
+   * @param url The URI being authorized.
+   * @returns A promise that resolves with authorization header fields.
+   */
   async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const accessTokenResponse = await this.getAccessToken();
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
-    this.maybeTriggerRegionalAccessBoundaryRefresh(
-      url,
-      accessTokenResponse.token!,
-    );
+    this.applyRegionalAccessBoundary(headers, url);
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -256,28 +261,32 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
    * returned response.
    * @param opts The HTTP request options.
    * @param reAuthRetried Whether the current attempt is a retry after a failed attempt due to an auth failure.
+   * @param retryWithoutRAB Whether the current attempt is a retry after a failed attempt due to a stale regional access boundary.
    * @return A promise that resolves with the successful response.
    */
   protected async requestAsync<T>(
     opts: GaxiosOptions,
     reAuthRetried = false,
+    retryWithoutRAB = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
     const requestOpts = {...opts};
     try {
-      const requestHeaders = await this.getRequestHeaders();
+      const requestHeaders = await this.getRequestHeaders(opts.url);
       requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
       this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
+
+      this.applyRegionalAccessBoundary(requestOpts.headers, opts.url);
 
       response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
       if (
         this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
-        !reAuthRetried
+        !retryWithoutRAB
       ) {
         this.clearRegionalAccessBoundaryCache();
-        return await this.requestAsync<T>(opts, true);
+        return await this.requestAsync<T>(opts, reAuthRetried, true);
       }
       const res = (e as GaxiosError).response;
       if (res) {
@@ -296,7 +305,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
           this.forceRefreshOnFailure
         ) {
           await this.refreshAccessTokenAsync();
-          return await this.requestAsync<T>(opts, true);
+          return await this.requestAsync<T>(opts, true, retryWithoutRAB);
         }
       }
       throw e;
@@ -347,8 +356,8 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
       );
     }
     return WORKFORCE_LOOKUP_ENDPOINT.replace(
-      '{universe_domain}',
-      this.universeDomain,
-    ).replace('{pool_id}', encodeURIComponent(poolId));
+      '{pool_id}',
+      encodeURIComponent(poolId),
+    );
   }
 }

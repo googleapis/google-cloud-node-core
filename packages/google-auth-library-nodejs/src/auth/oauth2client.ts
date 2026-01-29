@@ -938,6 +938,7 @@ export class OAuth2Client extends AuthClient {
    */
   async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const headers = (await this.getRequestMetadataAsync(url)).headers;
+    this.applyRegionalAccessBoundary(headers, url);
     return headers;
   }
 
@@ -962,10 +963,6 @@ export class OAuth2Client extends AuthClient {
       const headers = new Headers({
         authorization: thisCreds.token_type + ' ' + thisCreds.access_token,
       });
-      this.maybeTriggerRegionalAccessBoundaryRefresh(
-        url ?? undefined,
-        thisCreds.access_token,
-      );
       return {headers: this.addSharedMetadataHeaders(headers)};
     }
 
@@ -978,10 +975,6 @@ export class OAuth2Client extends AuthClient {
         const headers = new Headers({
           authorization: 'Bearer ' + this.credentials.access_token,
         });
-        this.maybeTriggerRegionalAccessBoundaryRefresh(
-          url ?? undefined,
-          this.credentials.access_token!,
-        );
         return {headers: this.addSharedMetadataHeaders(headers)};
       }
     }
@@ -1012,10 +1005,6 @@ export class OAuth2Client extends AuthClient {
     const headers = new Headers({
       authorization: credentials.token_type + ' ' + tokens.access_token,
     });
-    this.maybeTriggerRegionalAccessBoundaryRefresh(
-      url ?? undefined,
-      tokens.access_token!,
-    );
     return {headers: this.addSharedMetadataHeaders(headers), res: r.res};
   }
 
@@ -1128,6 +1117,7 @@ export class OAuth2Client extends AuthClient {
   protected async requestAsync<T>(
     opts: GaxiosOptions,
     reAuthRetried = false,
+    retryWithoutRAB = false,
   ): Promise<GaxiosResponse<T>> {
     const requestOpts = {...opts};
     try {
@@ -1140,15 +1130,17 @@ export class OAuth2Client extends AuthClient {
         requestOpts.headers.set('X-Goog-Api-Key', this.apiKey);
       }
 
+      this.applyRegionalAccessBoundary(requestOpts.headers, opts.url);
+
       return await this.transporter.request<T>(requestOpts);
     } catch (e) {
       if (
         this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
-        !reAuthRetried
+        !retryWithoutRAB
       ) {
         this.clearRegionalAccessBoundaryCache();
         // Background refresh is triggered by getRequestMetadataAsync in the retry
-        return await this.requestAsync<T>(opts, true);
+        return await this.requestAsync<T>(opts, reAuthRetried, true);
       }
       const res = (e as GaxiosError).response;
       if (res) {
@@ -1194,7 +1186,7 @@ export class OAuth2Client extends AuthClient {
           mayRequireRefresh
         ) {
           await this.refreshAccessTokenAsync();
-          return this.requestAsync<T>(opts, true);
+          return this.requestAsync<T>(opts, true, retryWithoutRAB);
         } else if (
           !reAuthRetried &&
           isAuthErr &&
@@ -1206,7 +1198,7 @@ export class OAuth2Client extends AuthClient {
           if (refreshedAccessToken?.access_token) {
             this.setCredentials(refreshedAccessToken);
           }
-          return this.requestAsync<T>(opts, true);
+          return this.requestAsync<T>(opts, true, retryWithoutRAB);
         }
       }
       throw e;
