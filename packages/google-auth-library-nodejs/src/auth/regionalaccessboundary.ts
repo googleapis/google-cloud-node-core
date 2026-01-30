@@ -257,10 +257,11 @@ export class RegionalAccessBoundaryManager {
       retry: true,
       retryConfig: {
         retry: 9, // Approximately 1 minute with default exponential backoff
+        retryDelay: 100,
         httpMethodsToRetry: ['GET'],
         statusCodesToRetry: [
-          [403, 404],
-          [500, 599],
+          [500, 500],
+          [502, 504],
         ],
       },
       headers,
