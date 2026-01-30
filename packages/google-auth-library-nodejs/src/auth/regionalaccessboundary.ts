@@ -17,7 +17,6 @@ import {log as makeLog} from 'google-logging-utils';
 
 const log = makeLog('auth');
 
-// googleapis.com
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
   'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
 
