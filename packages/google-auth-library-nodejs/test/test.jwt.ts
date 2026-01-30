@@ -1372,6 +1372,26 @@ describe('jwt', () => {
       rabScope.done();
     });
 
+    it('should NOT add RAB headers for ID tokens', async () => {
+      const jwt = new JWT({
+        email: SERVICE_ACCOUNT_EMAIL,
+        key: PEM_CONTENTS,
+        additionalClaims: {target_audience: 'some-audience'},
+      });
+      // Pre-set a RAB to verify it's NOT used even if available
+      jwt.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
+
+      const scope = createGTokenMock({id_token: 'id-token-abc'});
+      const headers = await jwt.getRequestHeaders(
+        'https://pubsub.googleapis.com',
+      );
+
+      assert.strictEqual(headers.get('authorization'), 'Bearer id-token-abc');
+      // Should NOT have the RAB header because it's an ID token
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+      scope.done();
+    });
+
     it('should fail getRegionalAccessBoundaryUrl if no email is passed', async () => {
       const jwt = new JWT({
         keyFile: PEM_PATH,

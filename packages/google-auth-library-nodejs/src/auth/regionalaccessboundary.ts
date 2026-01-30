@@ -144,13 +144,11 @@ export class RegionalAccessBoundaryManager {
       return null;
     }
 
-    // Attempt to trigger refresh if we have a token
+    // Attempt to trigger refresh if we have a token.
     const authHeader = headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      this.maybeTriggerRegionalAccessBoundaryRefresh(
-        url,
-        authHeader.substring(7),
-      );
+      // authHeader.substring(7) as auth header is of type 'Bearer XYZ...'
+      this.maybeTriggerRegionalAccessBoundaryRefresh(authHeader.substring(7));
     }
 
     if (
@@ -177,13 +175,9 @@ export class RegionalAccessBoundaryManager {
 
   /**
    * Triggers an asynchronous regional access boundary refresh if needed.
-   * @param url The endpoint URL being accessed.
    * @param accessToken The access token to use for the lookup.
    */
-  public maybeTriggerRegionalAccessBoundaryRefresh(
-    url: string | URL | undefined,
-    accessToken: string,
-  ) {
+  private maybeTriggerRegionalAccessBoundaryRefresh(accessToken: string) {
     if (this.regionalAccessBoundaryRefreshPromise) {
       return;
     }

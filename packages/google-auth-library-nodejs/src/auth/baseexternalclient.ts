@@ -517,7 +517,9 @@ export abstract class BaseExternalAccountClient extends AuthClient {
 
       this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      this.applyRegionalAccessBoundary(requestOpts.headers, opts.url);
+      if (retryWithoutRAB) {
+        requestOpts.headers.delete('x-allowed-locations');
+      }
 
       response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
