@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.11.12](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.11...gapic-generator-v4.11.12) (2026-01-15)
+
+
+### Bug Fixes
+
+* Add api_version breadcrumb to client docs ([#862](https://github.com/googleapis/google-cloud-node-core/issues/862)) ([64de20e](https://github.com/googleapis/google-cloud-node-core/commit/64de20e5622df2a278af38ecce111cbb4e9ce4d6))
+* Do not generate stubMethodsContent if there are no methods ([#889](https://github.com/googleapis/google-cloud-node-core/issues/889)) ([99c7bf3](https://github.com/googleapis/google-cloud-node-core/commit/99c7bf31c5b1618bb0597d3dab01e034544484c5))
+* Update README templates to use correct API reference link for st… ([#885](https://github.com/googleapis/google-cloud-node-core/issues/885)) ([4583189](https://github.com/googleapis/google-cloud-node-core/commit/458318903330d2ac766f53deffb93a49c2a80ace))
+
 ## [4.11.11](https://github.com/googleapis/google-cloud-node-core/compare/gapic-generator-v4.11.10...gapic-generator-v4.11.11) (2025-12-17)
 
 
