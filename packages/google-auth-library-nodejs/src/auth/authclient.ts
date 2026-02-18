@@ -13,13 +13,7 @@
 // limitations under the License.
 
 import {EventEmitter} from 'events';
-import {
-  Gaxios,
-  GaxiosError,
-  GaxiosOptions,
-  GaxiosPromise,
-  GaxiosResponse,
-} from 'gaxios';
+import {Gaxios, GaxiosOptions, GaxiosPromise, GaxiosResponse} from 'gaxios';
 
 import {Credentials} from './credentials';
 import {OriginalAndCamel, originalOrCamelOptions} from '../util';
@@ -402,15 +396,6 @@ export abstract class AuthClient
   }
 
   /**
-   * Manually sets the regional access boundary data.
-   * Treating this as a standard cache entry with a 6-hour TTL.
-   * @param data The regional access boundary data to set.
-   */
-  setRegionalAccessBoundary(data: RegionalAccessBoundaryData) {
-    this.regionalAccessBoundaryManager.setRegionalAccessBoundary(data);
-  }
-
-  /**
    * Returns the current regional access boundary data.
    */
   getRegionalAccessBoundary(): RegionalAccessBoundaryData | null {
@@ -647,28 +632,6 @@ export abstract class AuthClient
     return credentials.expiry_date
       ? now >= credentials.expiry_date - this.eagerRefreshThresholdMillis
       : false;
-  }
-
-  /**
-   * Checks if the error is a "stale regional access boundary" error.
-   * @param error The error to check.
-   */
-  public isStaleRegionalAccessBoundaryError(error: GaxiosError): boolean {
-    const res = error.response;
-    if (res && res.status === 400) {
-      const data = res.data as {error?: {message?: string}; message?: string};
-      const message =
-        data?.error?.message || data?.message || error.message || '';
-      return message.toLowerCase().includes('stale regional access boundary');
-    }
-    return false;
-  }
-
-  /**
-   * Clears the regional access boundary cache.
-   */
-  protected clearRegionalAccessBoundaryCache() {
-    this.regionalAccessBoundaryManager.clearRegionalAccessBoundaryCache();
   }
 }
 

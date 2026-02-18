@@ -107,16 +107,6 @@ export class RegionalAccessBoundaryManager {
   }
 
   /**
-   * Manually sets the regional access boundary data.
-   * Treating this as a standard cache entry with a 6-hour TTL.
-   * @param data The regional access boundary data to set.
-   */
-  setRegionalAccessBoundary(data: RegionalAccessBoundaryData) {
-    this.regionalAccessBoundary = data;
-    this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
-  }
-
-  /**
    * Clears the regional access boundary cache.
    */
   clearRegionalAccessBoundaryCache() {

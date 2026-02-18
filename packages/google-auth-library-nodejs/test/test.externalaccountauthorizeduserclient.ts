@@ -958,58 +958,5 @@ describe('ExternalAccountAuthorizedUserClient', () => {
         /RegionalAccessBoundary: A workforce pool ID is required for regional access boundary lookups but could not be determined from the audience/,
       );
     });
-
-    it('should clear cache and retry on stale RAB error', async () => {
-      const client = new ExternalAccountAuthorizedUserClient(
-        externalAccountAuthorizedUserCredentialOptions,
-      );
-      // Seed with credentials
-      client.setCredentials({
-        access_token: MOCK_ACCESS_TOKEN,
-        expiry_date: Date.now() + 100000,
-      });
-
-      // Seed the RAB cache
-      client.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
-
-      const stsScope = mockStsTokenRefresh(BASE_URL, REFRESH_PATH, [
-        {
-          statusCode: 200,
-          response: successfulRefreshResponse,
-          request: {
-            grant_type: 'refresh_token',
-            refresh_token: 'refreshToken',
-          },
-        },
-      ]);
-
-      // 1. First attempt with RAB header, returns 400 Stale
-      const scope1 = nock('https://storage.googleapis.com')
-        .get('/bucket/obj')
-        .matchHeader('x-allowed-locations', EXPECTED_RAB_DATA.encodedLocations)
-        .reply(400, {
-          error: {
-            message: 'stale regional access boundary',
-            status: 'INVALID_ARGUMENT',
-          },
-        });
-
-      // 2. Second attempt (retry) WITHOUT RAB header, returns 200 OK
-      const scope2 = nock('https://storage.googleapis.com')
-        .get('/bucket/obj')
-        .matchHeader('x-allowed-locations', val => val === undefined)
-        .reply(200, {data: 'success'});
-
-      const res = await client.request({
-        url: 'https://storage.googleapis.com/bucket/obj',
-      });
-
-      assert.strictEqual(client.getRegionalAccessBoundary(), null); // Cache cleared
-      assert.deepStrictEqual(res.data, {data: 'success'});
-
-      scope1.done();
-      scope2.done();
-      stsScope.done();
-    });
   });
 });

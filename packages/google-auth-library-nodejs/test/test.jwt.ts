@@ -1378,8 +1378,9 @@ describe('jwt', () => {
         key: PEM_CONTENTS,
         additionalClaims: {target_audience: 'some-audience'},
       });
-      // Pre-set a RAB to verify it's NOT used even if available
-      jwt.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
+
+      // Setup a RAB lookup mock that should NOT be hit
+      const rabScope = setupRegionalAccessBoundaryNock(SERVICE_ACCOUNT_EMAIL);
 
       const scope = createGTokenMock({id_token: 'id-token-abc'});
       const headers = await jwt.getRequestHeaders(
@@ -1389,6 +1390,10 @@ describe('jwt', () => {
       assert.strictEqual(headers.get('authorization'), 'Bearer id-token-abc');
       // Should NOT have the RAB header because it's an ID token
       assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      // Ensure RAB lookup was NOT called
+      assert.strictEqual(rabScope.isDone(), false);
+
       scope.done();
     });
 

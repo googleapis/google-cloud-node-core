@@ -677,52 +677,5 @@ describe('impersonated', () => {
         /RegionalAccessBoundary: A targetPrincipal is required for regional access boundary lookups but was not provided in the ImpersonatedClient options./,
       );
     });
-
-    it('should clear cache and retry on stale RAB error', async () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const impersonated = new Impersonated({
-        sourceClient: createSampleJWTClient(),
-        targetPrincipal: TARGET_PRINCIPAL_EMAIL,
-        lifetime: 30,
-        delegates: [],
-        targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
-      });
-      // Seed with credentials
-      impersonated.setCredentials({
-        access_token: MOCK_ACCESS_TOKEN,
-        expiry_date: tomorrow.getTime(),
-      });
-
-      // Seed the RAB cache
-      impersonated.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
-
-      // 1. First attempt with RAB header, returns 400 Stale
-      const scope1 = nock('https://storage.googleapis.com')
-        .get('/bucket/obj')
-        .matchHeader('x-allowed-locations', EXPECTED_RAB_DATA.encodedLocations)
-        .reply(400, {
-          error: {
-            message: 'stale regional access boundary',
-            status: 'INVALID_ARGUMENT',
-          },
-        });
-
-      // 2. Second attempt (retry) WITHOUT RAB header, returns 200 OK
-      const scope2 = nock('https://storage.googleapis.com')
-        .get('/bucket/obj')
-        .matchHeader('x-allowed-locations', val => val === undefined)
-        .reply(200, {data: 'success'});
-
-      const res = await impersonated.request({
-        url: 'https://storage.googleapis.com/bucket/obj',
-      });
-
-      assert.strictEqual(impersonated.getRegionalAccessBoundary(), null); // Cache cleared
-      assert.deepStrictEqual(res.data, {data: 'success'});
-
-      scope1.done();
-      scope2.done();
-    });
   });
 });

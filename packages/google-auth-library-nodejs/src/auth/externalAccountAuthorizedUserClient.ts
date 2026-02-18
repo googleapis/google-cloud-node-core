@@ -267,7 +267,6 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
   protected async requestAsync<T>(
     opts: GaxiosOptions,
     reAuthRetried = false,
-    retryWithoutRAB = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
     const requestOpts = {...opts};
@@ -277,19 +276,8 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
 
       this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      if (retryWithoutRAB) {
-        requestOpts.headers.delete('x-allowed-locations');
-      }
-
       response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
-      if (
-        this.isStaleRegionalAccessBoundaryError(e as GaxiosError) &&
-        !retryWithoutRAB
-      ) {
-        this.clearRegionalAccessBoundaryCache();
-        return await this.requestAsync<T>(opts, reAuthRetried, true);
-      }
       const res = (e as GaxiosError).response;
       if (res) {
         const statusCode = res.status;
@@ -307,7 +295,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
           this.forceRefreshOnFailure
         ) {
           await this.refreshAccessTokenAsync();
-          return await this.requestAsync<T>(opts, true, retryWithoutRAB);
+          return await this.requestAsync<T>(opts, true);
         }
       }
       throw e;

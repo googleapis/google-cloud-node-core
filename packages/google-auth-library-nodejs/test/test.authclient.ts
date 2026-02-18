@@ -581,56 +581,6 @@ describe('AuthClient', () => {
 
         rabFail.done();
       });
-
-      it('should support manual override via setRegionalAccessBoundary', async () => {
-        const compute = new Compute({
-          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
-        });
-
-        setupTokenNock(SERVICE_ACCOUNT_EMAIL);
-
-        compute.setRegionalAccessBoundary(EXPECTED_RAB_DATA);
-
-        const headers = await compute.getRequestHeaders(
-          'https://pubsub.googleapis.com',
-        );
-
-        assert.strictEqual(
-          headers.get('x-allowed-locations'),
-          EXPECTED_RAB_DATA.encodedLocations,
-        );
-        // No nock setup, so if a network call happened, this would have failed.
-      });
-
-      it('should correctly detect stale regional access boundary error', () => {
-        const compute = new Compute();
-        const error = {
-          response: {
-            status: 400,
-            data: {
-              error: {
-                message: 'This is a stale regional access boundary error',
-              },
-            },
-          },
-        } as GaxiosError;
-
-        assert.strictEqual(
-          compute.isStaleRegionalAccessBoundaryError(error),
-          true,
-        );
-
-        const otherError = {
-          response: {
-            status: 400,
-            data: {message: 'Something else'},
-          },
-        } as GaxiosError;
-        assert.strictEqual(
-          compute.isStaleRegionalAccessBoundaryError(otherError),
-          false,
-        );
-      });
     });
   });
 });
