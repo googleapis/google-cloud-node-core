@@ -243,6 +243,7 @@ export class DefaultAwsSecurityCredentialsSupplier
       ...this.additionalGaxiosOptions,
       url: `${this.securityCredentialsUrl}/${roleName}`,
       headers: headers,
+      responseType: 'json',
     } as GaxiosOptions;
     AuthClient.setMethodName(opts, '#retrieveAwsSecurityCredentials');
     const response =
