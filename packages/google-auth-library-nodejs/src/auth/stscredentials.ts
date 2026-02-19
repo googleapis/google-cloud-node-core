@@ -213,6 +213,7 @@ export class StsCredentials extends OAuthClientAuthHandler {
       data: new URLSearchParams(
         removeUndefinedValuesInObject(values) as Record<string, string>,
       ),
+      responseType: 'json',
     };
     AuthClient.setMethodName(opts, 'exchangeToken');
 

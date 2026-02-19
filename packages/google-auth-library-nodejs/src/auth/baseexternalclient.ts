@@ -477,6 +477,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
         ...BaseExternalAccountClient.RETRY_CONFIG,
         headers,
         url: `${this.cloudResourceManagerURL.toString()}${projectNumber}`,
+        responseType: 'json',
       };
       AuthClient.setMethodName(opts, 'getProjectId');
       const response = await this.transporter.request<ProjectInfo>(opts);
@@ -669,6 +670,7 @@ export abstract class BaseExternalAccountClient extends AuthClient {
         scope: this.getScopesArray(),
         lifetime: this.serviceAccountImpersonationLifetime + 's',
       },
+      responseType: 'json',
     };
     AuthClient.setMethodName(opts, 'getImpersonatedAccessToken');
     const response =

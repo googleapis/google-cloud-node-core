@@ -127,6 +127,7 @@ export class DefaultAwsSecurityCredentialsSupplier
       ...this.additionalGaxiosOptions,
       url: this.regionUrl,
       method: 'GET',
+      responseType: 'text',
       headers: metadataHeaders,
     };
     AuthClient.setMethodName(opts, 'getAwsRegion');
@@ -191,6 +192,7 @@ export class DefaultAwsSecurityCredentialsSupplier
       ...this.additionalGaxiosOptions,
       url: this.imdsV2SessionTokenUrl,
       method: 'PUT',
+      responseType: 'text',
       headers: {'x-aws-ec2-metadata-token-ttl-seconds': '300'},
     };
     AuthClient.setMethodName(opts, '#getImdsV2SessionToken');
@@ -218,6 +220,7 @@ export class DefaultAwsSecurityCredentialsSupplier
       ...this.additionalGaxiosOptions,
       url: this.securityCredentialsUrl,
       method: 'GET',
+      responseType: 'text',
       headers: headers,
     };
     AuthClient.setMethodName(opts, '#getAwsRoleName');

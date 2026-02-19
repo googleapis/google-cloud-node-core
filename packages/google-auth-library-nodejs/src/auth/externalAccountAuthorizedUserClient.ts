@@ -120,6 +120,7 @@ class ExternalAccountAuthorizedUserHandler extends OAuthClientAuthHandler {
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
       }),
+      responseType: 'json',
     };
     AuthClient.setMethodName(opts, 'refreshToken');
 
