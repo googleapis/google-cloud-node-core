@@ -15,6 +15,7 @@
 import * as assert from 'assert';
 import {describe, it, afterEach} from 'mocha';
 import * as nock from 'nock';
+import * as sinon from 'sinon';
 import {createCrypto} from '../src/crypto/crypto';
 import {
   StsCredentials,
@@ -152,6 +153,30 @@ describe('StsCredentials', () => {
     );
 
     describe('without client authentication', () => {
+      it('should use responseType: json', async () => {
+        const scope = mockStsTokenExchange(
+          200,
+          stsSuccessfulResponse,
+          expectedRequest,
+          additionalHeaders,
+        );
+        const stsCredentials = new StsCredentials(tokenExchangeEndpoint);
+        const requestSpy = sinon.spy(
+          (stsCredentials as any).transporter,
+          'request',
+        );
+
+        await stsCredentials.exchangeToken(
+          stsCredentialsOptions,
+          additionalHeaders,
+          options,
+        );
+
+        const call = requestSpy.getCall(0);
+        assert.strictEqual(call.args[0]!.responseType, 'json');
+        scope.done();
+      });
+
       it('should handle successful full request', async () => {
         const scope = mockStsTokenExchange(
           200,

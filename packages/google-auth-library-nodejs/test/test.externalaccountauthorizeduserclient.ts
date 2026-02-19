@@ -219,6 +219,33 @@ describe('ExternalAccountAuthorizedUserClient', () => {
   });
 
   describe('getAccessToken()', () => {
+    it('should use responseType: json', async () => {
+      const scope = mockStsTokenRefresh(BASE_URL, REFRESH_PATH, [
+        {
+          statusCode: 200,
+          response: successfulRefreshResponse,
+          request: {
+            grant_type: 'refresh_token',
+            refresh_token: 'refreshToken',
+          },
+        },
+      ]);
+
+      const client = new ExternalAccountAuthorizedUserClient(
+        externalAccountAuthorizedUserCredentialOptions,
+      );
+      const requestSpy = sinon.spy(
+        (client as any).externalAccountAuthorizedUserHandler.transporter,
+        'request',
+      );
+
+      await client.getAccessToken();
+
+      const call = requestSpy.getCall(0);
+      assert.strictEqual(call.args[0]!.responseType, 'json');
+      scope.done();
+    });
+
     it('should resolve with the expected response', async () => {
       const scope = mockStsTokenRefresh(BASE_URL, REFRESH_PATH, [
         {
