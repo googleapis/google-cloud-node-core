@@ -21,10 +21,10 @@ import {log as makeLog} from 'google-logging-utils';
 
 import {PRODUCT_NAME, USER_AGENT} from '../shared.cjs';
 import {
-  isTrustBoundaryEnabled,
-  NoOpEncodedLocations,
-  TrustBoundaryData,
-} from './trustboundary';
+  isRegionalAccessBoundaryEnabled,
+  RegionalAccessBoundaryData,
+  RegionalAccessBoundaryManager,
+} from './regionalaccessboundary';
 
 /**
  * An interface for enforcing `fetch`-type compliance.
@@ -237,8 +237,8 @@ export abstract class AuthClient
   eagerRefreshThresholdMillis = DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS;
   forceRefreshOnFailure = false;
   universeDomain = DEFAULT_UNIVERSE;
-  trustBoundaryEnabled: boolean;
-  trustBoundary?: TrustBoundaryData | null;
+  regionalAccessBoundaryEnabled: boolean;
+  protected regionalAccessBoundaryManager: RegionalAccessBoundaryManager;
 
   /**
    * Symbols that can be added to GaxiosOptions to specify the method name that is
@@ -261,11 +261,16 @@ export abstract class AuthClient
     this.quotaProjectId = options.get('quota_project_id');
     this.credentials = options.get('credentials') ?? {};
     this.universeDomain = options.get('universe_domain') ?? DEFAULT_UNIVERSE;
-    this.trustBoundaryEnabled = isTrustBoundaryEnabled();
-    this.trustBoundary = null;
+    this.regionalAccessBoundaryEnabled = isRegionalAccessBoundaryEnabled();
 
     // Shared client options
     this.transporter = opts.transporter ?? new Gaxios(opts.transporterOptions);
+
+    this.regionalAccessBoundaryManager = new RegionalAccessBoundaryManager({
+      transporter: this.transporter,
+      getLookupUrl: async () => this.getRegionalAccessBoundaryUrl(),
+      isUniverseDomainDefault: () => this.universeDomain === DEFAULT_UNIVERSE,
+    });
 
     if (options.get('useAuthRequestParameters') !== false) {
       this.transporter.interceptors.request.add(
@@ -371,14 +376,15 @@ export abstract class AuthClient
   }>;
 
   /**
-   * Constructs the trust boundary lookup URL for the client.
+   * Constructs the regional access boundary lookup URL for the client.
    *
-   * @return The trust boundary URL string, or `null` if the client type
-   * does not support trust boundaries.
+   * @return The regional access boundary URL string, or `null` if the client type
+   * does not support regional access boundaries.
    * @throws {Error} If the URL cannot be constructed for a compatible client,
    * for instance, if a required property like a service account email is missing.
+   * @internal
    */
-  protected async getTrustBoundaryUrl(): Promise<string | null> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     return null;
   }
 
@@ -387,6 +393,22 @@ export abstract class AuthClient
    */
   setCredentials(credentials: Credentials) {
     this.credentials = credentials;
+  }
+
+  /**
+   * Returns the current regional access boundary data.
+   * @internal
+   */
+  getRegionalAccessBoundary(): RegionalAccessBoundaryData | null {
+    return this.regionalAccessBoundaryManager.data;
+  }
+
+  /**
+   * Returns the current regional access boundary cooldown time in milliseconds.
+   * @internal
+   */
+  getRegionalAccessBoundaryCooldownTime(): number {
+    return this.regionalAccessBoundaryManager.cooldownTime;
   }
 
   /**
@@ -408,17 +430,28 @@ export abstract class AuthClient
       headers.set('x-goog-user-project', this.quotaProjectId);
     }
 
-    if (this.trustBoundaryEnabled && this.trustBoundary) {
-      //Empty header sent in case trust-boundary has no-op encoded location.
-      headers.set(
-        'x-allowed-locations',
-        this.trustBoundary.encodedLocations === NoOpEncodedLocations
-          ? ''
-          : this.trustBoundary.encodedLocations,
-      );
-    }
-
     return headers;
+  }
+
+  /**
+   * Applies regional access boundary rules to the provided headers.
+   * This includes adding the x-allowed-locations header and triggering
+   * a background refresh if needed.
+   * @param headers The headers to update.
+   * @param url Optional destination URL of the request. If missing, assumed global.
+   */
+  protected applyRegionalAccessBoundary(
+    headers: Headers,
+    url?: string | URL,
+  ): void {
+    const rabHeader =
+      this.regionalAccessBoundaryManager.getRegionalAccessBoundaryHeader(
+        url,
+        headers,
+      );
+    if (rabHeader) {
+      headers.set('x-allowed-locations', rabHeader);
+    }
   }
 
   /**
@@ -446,7 +479,7 @@ export abstract class AuthClient
       target.set('authorization', authorizationHeader);
     }
 
-    if (xGoogAllowedLocs || xGoogAllowedLocs === '') {
+    if (xGoogAllowedLocs) {
       target.set('x-allowed-locations', xGoogAllowedLocs);
     }
 
@@ -586,87 +619,6 @@ export abstract class AuthClient
         httpMethodsToRetry: ['GET', 'PUT', 'POST', 'HEAD', 'OPTIONS', 'DELETE'],
       },
     };
-  }
-
-  /**
-   * Refreshes trust boundary data for an authenticated client.
-   * Handles caching checks and potential fallbacks.
-   * @param tokens The refreshed credentials containing access token to call the trust boundary endpoint.
-   * @returns A Promise resolving to TrustBoundaryData or empty-string for no-op trust boundaries.
-   * @throws {Error} If the request fails and there is no cache available.
-   */
-  protected async refreshTrustBoundary(
-    tokens: Credentials,
-  ): Promise<TrustBoundaryData | null> {
-    if (!this.trustBoundaryEnabled) {
-      return null;
-    }
-
-    if (this.universeDomain !== DEFAULT_UNIVERSE) {
-      // Skipping check for non-default universe domain as this feature is only supported in GDU
-      return null;
-    }
-
-    const cachedTB = this.trustBoundary;
-    if (cachedTB && cachedTB.encodedLocations === NoOpEncodedLocations) {
-      return cachedTB;
-    }
-
-    const trustBoundaryUrl = await this.getTrustBoundaryUrl();
-    if (!trustBoundaryUrl) {
-      return null;
-    }
-
-    const accessToken = tokens.access_token;
-
-    if (!accessToken || this.isExpired(tokens)) {
-      throw new Error(
-        'TrustBoundary: Error calling lookup endpoint without valid access token',
-      );
-    }
-
-    const headers = this.addSharedMetadataHeaders(
-      new Headers({
-        //we can directly pass the access_token as the trust boundaries are always fetched after token refresh
-        authorization: 'Bearer ' + accessToken,
-      }),
-    );
-
-    const opts: GaxiosOptions = {
-      ...{
-        retry: true,
-        retryConfig: {
-          httpMethodsToRetry: ['GET'],
-        },
-      },
-      headers,
-      url: trustBoundaryUrl,
-    };
-
-    try {
-      const {data: trustBoundaryData} =
-        // Use the transporter directly here. A standard `client.request` would
-        // re-trigger a token refresh, creating an infinite loop.
-        await this.transporter.request<TrustBoundaryData>(opts);
-
-      if (!trustBoundaryData.encodedLocations) {
-        throw new Error(
-          'TrustBoundary: Malformed response from lookup endpoint.',
-        );
-      }
-
-      return trustBoundaryData;
-    } catch (error) {
-      if (this.trustBoundary) {
-        return this.trustBoundary; // return cached tb if call to lookup fails
-      }
-      throw new Error(
-        'TrustBoundary: Failure while getting trust boundaries:',
-        {
-          cause: error,
-        },
-      );
-    }
   }
 
   /**

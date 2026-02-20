@@ -1831,8 +1831,6 @@ describe('IdentityPoolClient', () => {
 
       it('should throw when one or more certs in trust chain is malformed', async () => {
         const certConfigPath =
-          './test/fixtures/external-account-cert/cert_config.json';
-        const trustChainPath =
           './test/fixtures/external-account-cert/chain_with_malformed_cert.pem';
         const certificateSourcedOptions: IdentityPoolClientOptions = {
           type: 'external_account',
@@ -1841,8 +1839,9 @@ describe('IdentityPoolClient', () => {
           token_url: getMtlsTokenUrl(),
           credential_source: {
             certificate: {
-              certificate_config_location: certConfigPath,
-              trust_chain_path: trustChainPath,
+              certificate_config_location:
+                './test/fixtures/external-account-cert/cert_config.json',
+              trust_chain_path: certConfigPath,
             },
           },
         };
@@ -1852,7 +1851,7 @@ describe('IdentityPoolClient', () => {
           client.retrieveSubjectToken(),
           new RegExp(
             `Failed to parse certificate at index 0 in trust chain file ${
-              trustChainPath
+              certConfigPath
             }`,
           ),
         );

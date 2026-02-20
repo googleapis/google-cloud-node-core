@@ -33,7 +33,7 @@ import {
   EXPIRATION_TIME_OFFSET,
   SharedExternalAccountClientOptions,
 } from './baseexternalclient';
-import {WORKFORCE_LOOKUP_ENDPOINT} from './trustboundary';
+import {WORKFORCE_LOOKUP_ENDPOINT} from './regionalaccessboundary';
 import {getWorkforcePoolIdFromAudience} from '../util';
 
 /**
@@ -221,11 +221,20 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     };
   }
 
-  async getRequestHeaders(): Promise<Headers> {
+  /**
+   * The main authentication interface. It takes an optional url which when
+   * present is the endpoint being accessed, and returns a Promise which
+   * resolves with authorization header fields.
+   *
+   * @param url The URI being authorized.
+   * @returns A promise that resolves with authorization header fields.
+   */
+  async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const accessTokenResponse = await this.getAccessToken();
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
+    this.applyRegionalAccessBoundary(headers, url);
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -252,6 +261,7 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
    * returned response.
    * @param opts The HTTP request options.
    * @param reAuthRetried Whether the current attempt is a retry after a failed attempt due to an auth failure.
+   * @param retryWithoutRAB Whether the current attempt is a retry after a failed attempt due to a stale regional access boundary.
    * @return A promise that resolves with the successful response.
    */
   protected async requestAsync<T>(
@@ -259,13 +269,14 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     reAuthRetried = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
+    const requestOpts = {...opts};
     try {
-      const requestHeaders = await this.getRequestHeaders();
-      opts.headers = Gaxios.mergeHeaders(opts.headers);
+      const requestHeaders = await this.getRequestHeaders(opts.url);
+      requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
-      this.applyHeadersFromSource(opts.headers, requestHeaders);
+      this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      response = await this.transporter.request<T>(opts);
+      response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
       const res = (e as GaxiosError).response;
       if (res) {
@@ -312,32 +323,31 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
     if (refreshResponse.refresh_token !== undefined) {
       this.refreshToken = refreshResponse.refresh_token;
 
-      // Set credentials and refresh trust boundary data.
+      // Set credentials.
       this.credentials = {...this.cachedAccessToken};
       delete (this.credentials as CredentialsWithResponse).res;
-      this.trustBoundary = await this.refreshTrustBoundary(this.credentials);
     }
 
     return this.cachedAccessToken;
   }
 
   /**
-   * Constructs the trust boundary lookup URL for the client.
+   * Constructs the regional access boundary lookup URL for the client.
    *
-   * @return The trust boundary URL string, or `null` if the client type
-   * does not support trust boundaries.
+   * @return The regional access boundary URL string, or `null` if the client type
+   * does not support regional access boundaries.
    * @throws {Error} If the URL cannot be constructed for a compatible client.
    */
-  protected async getTrustBoundaryUrl(): Promise<string | null> {
+  public async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     const poolId = getWorkforcePoolIdFromAudience(this.audience);
     if (!poolId) {
       throw new Error(
-        `TrustBoundary: A workforce pool ID is required for trust boundary lookups but could not be determined from the audience: ${this.audience}.`,
+        `RegionalAccessBoundary: A workforce pool ID is required for regional access boundary lookups but could not be determined from the audience: ${this.audience}.`,
       );
     }
     return WORKFORCE_LOOKUP_ENDPOINT.replace(
-      '{universe_domain}',
-      this.universeDomain,
-    ).replace('{pool_id}', encodeURIComponent(poolId));
+      '{pool_id}',
+      encodeURIComponent(poolId),
+    );
   }
 }

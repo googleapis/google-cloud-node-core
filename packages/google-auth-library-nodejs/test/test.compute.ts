@@ -20,8 +20,8 @@ import * as sinon from 'sinon';
 import {Compute, gcpMetadata} from '../src';
 import {
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
-  TrustBoundaryData,
-} from '../src/auth/trustboundary';
+  RegionalAccessBoundaryData,
+} from '../src/auth/regionalaccessboundary';
 
 nock.disableNetConnect();
 
@@ -265,12 +265,12 @@ describe('compute', () => {
 
     assert.fail('failed to throw');
   });
-  describe('trust boundaries', () => {
+  describe('regional access boundaries', () => {
     let sandbox: sinon.SinonSandbox;
 
     const MOCK_ACCESS_TOKEN = 'abc123';
     const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
-    const EXPECTED_TB_DATA: TrustBoundaryData = {
+    const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
       locations: ['sadad', 'asdad'],
       encodedLocations: '000x9',
     };
@@ -289,9 +289,9 @@ describe('compute', () => {
         );
     }
 
-    function setupTrustBoundaryNock(
+    function setupRegionalAccessBoundaryNock(
       email: string,
-      trustBoundaryData: TrustBoundaryData = EXPECTED_TB_DATA,
+      regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
     ): nock.Scope {
       const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
         '{universe_domain}',
@@ -300,21 +300,21 @@ describe('compute', () => {
       return nock(new URL(lookupUrl).origin)
         .get(new URL(lookupUrl).pathname)
         .matchHeader('authorization', MOCK_AUTH_HEADER)
-        .reply(200, trustBoundaryData);
+        .reply(200, regionalAccessBoundaryData);
     }
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'] = 'true';
+      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
     });
 
     afterEach(() => {
-      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
+      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
       sandbox.restore();
       nock.cleanAll();
     });
 
-    it('refreshTrustBoundary should use the email from metadataServer if no serviceAccountEmail passed', async () => {
+    it('should trigger asynchronous RAB refresh using email from metadata server', async () => {
       const compute = new Compute();
       const fakeEmail = 'fake-default-sa@developer.gserviceaccount.com';
       const metadataStub = sandbox.stub(gcpMetadata, 'instance');
@@ -323,36 +323,52 @@ describe('compute', () => {
         .withArgs('service-accounts/default/email')
         .resolves(fakeEmail);
 
-      const scopes = [
-        setupTokenNock('default'),
-        setupTrustBoundaryNock(fakeEmail),
-        mockExample(),
-      ];
+      const tokenScope = setupTokenNock('default');
+      const rabScope = setupRegionalAccessBoundaryNock(fakeEmail);
+      let rabLookupCalled = false;
+      rabScope.on('request', () => {
+        rabLookupCalled = true;
+      });
 
-      await compute.request({url});
+      const url = 'https://pubsub.googleapis.com';
+      const headers = await compute.getRequestHeaders(url);
 
-      assert.deepStrictEqual(compute.trustBoundary, EXPECTED_TB_DATA);
-      scopes.forEach(s => s.done());
+      // Initial headers should NOT have RAB
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      // Wait for background tasks (email resolution + RAB lookup)
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      await new Promise(r => setTimeout(r, 50));
+      assert.deepStrictEqual(
+        compute.getRegionalAccessBoundary(),
+        EXPECTED_RAB_DATA,
+      );
+
+      tokenScope.done();
+      rabScope.done();
     });
 
-    it('refreshTrustBoundary should throw when gcpMetadata call fails', async () => {
+    it('should fail getRegionalAccessBoundaryUrl in background if metadata call fails', async () => {
       const compute = new Compute();
-      const scopes = [setupTokenNock()];
 
       const metadataStub = sandbox.stub(gcpMetadata, 'instance');
       metadataStub.callThrough();
       metadataStub
         .withArgs('service-accounts/default/email')
-        .throws(new Error('sdfs'));
+        .rejects(new Error('metadata failure'));
 
+      // Error happens in background, so getRequestHeaders resolves fine.
+      // We manually call getRegionalAccessBoundaryUrl to verify the failure logic.
       await assert.rejects(
-        compute.request({url}),
-        new RegExp(
-          'TrustBoundary: Failed to retrieve default service account email from metadata server.',
-        ),
+        compute.getRegionalAccessBoundaryUrl(),
+        /RegionalAccessBoundary: Failed to retrieve default service account email from metadata server./,
       );
-
-      scopes.forEach(s => s.done());
     });
   });
 });

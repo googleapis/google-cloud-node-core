@@ -21,8 +21,8 @@ import {Impersonated, JWT, UserRefreshClient} from '../src';
 import {CredentialRequest} from '../src/auth/credentials';
 import {
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
-  TrustBoundaryData,
-} from '../src/auth/trustboundary';
+  RegionalAccessBoundaryData,
+} from '../src/auth/regionalaccessboundary';
 import sinon = require('sinon');
 
 const PEM_PATH = './test/fixtures/private.pem';
@@ -574,21 +574,20 @@ describe('impersonated', () => {
     scopes.forEach(s => s.done());
   });
 
-  describe('trust boundaries', () => {
+  describe('regional access boundaries', () => {
     let sandbox: sinon.SinonSandbox;
-    const SOURCE_EMAIL = 'foo@serviceaccount.com';
     const TARGET_PRINCIPAL_EMAIL = 'target@project.iam.gserviceaccount.com';
     const MOCK_ACCESS_TOKEN = 'abc123';
     const MOCK_AUTH_HEADER = `Bearer ${MOCK_ACCESS_TOKEN}`;
 
-    const EXPECTED_TB_DATA: TrustBoundaryData = {
+    const EXPECTED_RAB_DATA: RegionalAccessBoundaryData = {
       locations: ['sadad', 'asdad'],
       encodedLocations: '000x9',
     };
 
-    function setupTrustBoundaryNock(
+    function setupRegionalAccessBoundaryNock(
       email: string,
-      trustBoundaryData: TrustBoundaryData = EXPECTED_TB_DATA,
+      regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
     ): nock.Scope {
       const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
         '{universe_domain}',
@@ -597,21 +596,21 @@ describe('impersonated', () => {
       return nock(new URL(lookupUrl).origin)
         .get(new URL(lookupUrl).pathname)
         .matchHeader('authorization', MOCK_AUTH_HEADER)
-        .reply(200, trustBoundaryData);
+        .reply(200, regionalAccessBoundaryData);
     }
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
-      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'] = 'true';
+      process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'] = 'true';
     });
 
     afterEach(() => {
-      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLED'];
+      delete process.env['GOOGLE_AUTH_TRUST_BOUNDARY_ENABLE_EXPERIMENT'];
       sandbox.restore();
       nock.cleanAll();
     });
 
-    it('should fetch trust boundaries successfully', async () => {
+    it('should trigger asynchronous RAB refresh', async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const impersonated = new Impersonated({
@@ -622,75 +621,61 @@ describe('impersonated', () => {
         targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
 
-      const scopes = [
-        createGTokenMock({
-          access_token: MOCK_ACCESS_TOKEN,
-        }),
-        nock('https://iamcredentials.googleapis.com')
-          .post(
-            '/v1/projects/-/serviceAccounts/target@project.iam.gserviceaccount.com:generateAccessToken',
-            (body: ImpersonatedCredentialRequest) => {
-              assert.strictEqual(body.lifetime, '30s');
-              assert.deepStrictEqual(body.delegates, []);
-              assert.deepStrictEqual(body.scope, [
-                'https://www.googleapis.com/auth/cloud-platform',
-              ]);
-              return true;
-            },
-          )
-          .reply(200, {
-            accessToken: MOCK_ACCESS_TOKEN,
-            expireTime: tomorrow.toISOString(),
-          }),
-        setupTrustBoundaryNock(SOURCE_EMAIL),
-        setupTrustBoundaryNock(TARGET_PRINCIPAL_EMAIL),
-      ];
-      const headers = await impersonated.getRequestHeaders();
+      const tokenScope = createGTokenMock({access_token: MOCK_ACCESS_TOKEN});
+      const saScope = nock('https://iamcredentials.googleapis.com')
+        .post(
+          `/v1/projects/-/serviceAccounts/${TARGET_PRINCIPAL_EMAIL}:generateAccessToken`,
+        )
+        .reply(200, {
+          accessToken: MOCK_ACCESS_TOKEN,
+          expireTime: tomorrow.toISOString(),
+        });
+
+      let rabLookupCalled = false;
+      const rabScope = setupRegionalAccessBoundaryNock(TARGET_PRINCIPAL_EMAIL);
+      rabScope.on('request', () => {
+        rabLookupCalled = true;
+      });
+
+      const url = 'https://pubsub.googleapis.com';
+      const headers = await impersonated.getRequestHeaders(url);
+
+      // Initial headers should NOT have RAB
+      assert.strictEqual(headers.get('x-allowed-locations'), null);
+
+      // Wait for background lookup
+      let attempts = 0;
+      while (!rabLookupCalled && attempts < 10) {
+        await new Promise(r => setTimeout(r, 50));
+        attempts++;
+      }
+      assert.strictEqual(rabLookupCalled, true);
+
+      await new Promise(r => setTimeout(r, 50));
       assert.deepStrictEqual(
-        headers.get('x-allowed-locations'),
-        EXPECTED_TB_DATA.encodedLocations,
+        impersonated.getRegionalAccessBoundary(),
+        EXPECTED_RAB_DATA,
       );
-      scopes.forEach(s => s.done());
+
+      tokenScope.done();
+      saScope.done();
+      rabScope.done();
     });
 
-    it('should fail when no target principal is specified', async () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+    it('should fail getRegionalAccessBoundaryUrl in background if no target principal is specified', async () => {
       const impersonated = new Impersonated({
         sourceClient: createSampleJWTClient(),
-        // targetPrincipal: TARGET_PRINCIPAL_EMAIL,
+        // targetPrincipal missing
         lifetime: 30,
         delegates: [],
         targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
 
-      const scopes = [
-        createGTokenMock({
-          access_token: MOCK_ACCESS_TOKEN,
-        }),
-        nock('https://iamcredentials.googleapis.com')
-          .post(
-            '/v1/projects/-/serviceAccounts/:generateAccessToken',
-            (body: ImpersonatedCredentialRequest) => {
-              assert.strictEqual(body.lifetime, '30s');
-              assert.deepStrictEqual(body.delegates, []);
-              assert.deepStrictEqual(body.scope, [
-                'https://www.googleapis.com/auth/cloud-platform',
-              ]);
-              return true;
-            },
-          )
-          .reply(200, {
-            accessToken: MOCK_ACCESS_TOKEN,
-            expireTime: tomorrow.toISOString(),
-          }),
-        setupTrustBoundaryNock(SOURCE_EMAIL),
-      ];
+      // Error happens in background.
       await assert.rejects(
-        impersonated.getRequestHeaders(),
-        /TrustBoundary: A targetPrincipal is required for trust boundary lookups but was not provided in the ImpersonatedClient options./,
+        impersonated.getRegionalAccessBoundaryUrl(),
+        /RegionalAccessBoundary: A targetPrincipal is required for regional access boundary lookups but was not provided in the ImpersonatedClient options./,
       );
-      scopes.forEach(s => s.done());
     });
   });
 });
