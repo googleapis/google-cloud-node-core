@@ -319,6 +319,98 @@ describe('AwsClient', () => {
         scope.done();
       });
 
+      it('should use correct responseType for metadata requests', async () => {
+        const scope = nock(metadataBaseUrl)
+          .get('/latest/meta-data/placement/availability-zone')
+          .reply(200, `${awsRegion}b`)
+          .get('/latest/meta-data/iam/security-credentials')
+          .reply(200, awsRole)
+          .get(`/latest/meta-data/iam/security-credentials/${awsRole}`)
+          .reply(200, awsSecurityCredentials);
+
+        const client = new AwsClient(awsOptions);
+        const requestSpy = sinon.spy(client.transporter, 'request');
+
+        await client.retrieveSubjectToken();
+
+        // 1. GET /latest/meta-data/placement/availability-zone (Region)
+        assert.strictEqual(
+          requestSpy.getCall(0)!.args[0]!.responseType,
+          'text',
+        );
+        // 2. GET /latest/meta-data/iam/security-credentials (Role)
+        assert.strictEqual(
+          requestSpy.getCall(1)!.args[0]!.responseType,
+          'text',
+        );
+        // 3. GET /latest/meta-data/iam/security-credentials/{role} (Credentials)
+        assert.strictEqual(
+          requestSpy.getCall(2)!.args[0]!.responseType,
+          'json',
+        );
+
+        scope.done();
+        requestSpy.restore();
+      });
+
+      it('should use responseType: text for IMDSv2 session token', async () => {
+        const scopes: nock.Scope[] = [];
+        scopes.push(
+          nock(metadataBaseUrl, {
+            reqheaders: {'x-aws-ec2-metadata-token-ttl-seconds': '300'},
+          })
+            .put('/latest/api/token')
+            .twice()
+            .reply(200, awsSessionToken),
+        );
+
+        scopes.push(
+          nock(metadataBaseUrl, {
+            reqheaders: {'x-aws-ec2-metadata-token': awsSessionToken},
+          })
+            .get('/latest/meta-data/placement/availability-zone')
+            .reply(200, `${awsRegion}b`)
+            .get('/latest/meta-data/iam/security-credentials')
+            .reply(200, awsRole)
+            .get(`/latest/meta-data/iam/security-credentials/${awsRole}`)
+            .reply(200, awsSecurityCredentials),
+        );
+
+        const client = new AwsClient(awsOptionsWithImdsv2);
+        const requestSpy = sinon.spy(client.transporter, 'request');
+
+        await client.retrieveSubjectToken();
+
+        // 1. PUT /latest/api/token (IMDSv2 session token for region)
+        assert.strictEqual(
+          requestSpy.getCall(0)!.args[0]!.responseType,
+          'text',
+        );
+        // 2. GET /latest/meta-data/placement/availability-zone (Region)
+        assert.strictEqual(
+          requestSpy.getCall(1)!.args[0]!.responseType,
+          'text',
+        );
+        // 3. PUT /latest/api/token (IMDSv2 session token for credentials)
+        assert.strictEqual(
+          requestSpy.getCall(2)!.args[0]!.responseType,
+          'text',
+        );
+        // 4. GET /latest/meta-data/iam/security-credentials (Role)
+        assert.strictEqual(
+          requestSpy.getCall(3)!.args[0]!.responseType,
+          'text',
+        );
+        // 5. GET /latest/meta-data/iam/security-credentials/{role} (Credentials)
+        assert.strictEqual(
+          requestSpy.getCall(4)!.args[0]!.responseType,
+          'json',
+        );
+
+        scopes.forEach(scope => scope.done());
+        requestSpy.restore();
+      });
+
       it('should resolve on success with ipv6', async () => {
         const ipv6baseUrl = 'http://[fd00:ec2::254]';
         const ipv6CredentialSource = {
