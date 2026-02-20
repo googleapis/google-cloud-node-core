@@ -32,6 +32,11 @@ export const WORKFORCE_LOOKUP_ENDPOINT =
 const RAB_TTL_MILLIS = 6 * 60 * 60 * 1000;
 
 /**
+ * Grace period before hard expiry to trigger a background refresh (1 hour).
+ */
+const RAB_SOFT_EXPIRY_GRACE_PERIOD_MILLIS = 1 * 60 * 60 * 1000;
+
+/**
  * Initial cooldown period for RAB lookup failures (15 minutes).
  */
 const RAB_INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000;
@@ -178,11 +183,10 @@ export class RegionalAccessBoundaryManager {
       return;
     }
 
-    // Check if expired or never fetched
-    if (
-      !this.regionalAccessBoundary ||
-      now >= this.regionalAccessBoundaryExpiry
-    ) {
+    // Check if expired or never fetched (using soft expiry grace period)
+    const softExpiryThreshold =
+      this.regionalAccessBoundaryExpiry - RAB_SOFT_EXPIRY_GRACE_PERIOD_MILLIS;
+    if (!this.regionalAccessBoundary || now >= softExpiryThreshold) {
       this.regionalAccessBoundaryRefreshPromise =
         this.backgroundRefreshRegionalAccessBoundary(accessToken);
     }
