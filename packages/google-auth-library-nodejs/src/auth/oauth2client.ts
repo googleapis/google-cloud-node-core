@@ -1137,6 +1137,7 @@ export class OAuth2Client extends AuthClient {
       }
 
       if (!isIDToken) {
+        // Id token flows are outside the scope of Regional Access Boundary.
         this.applyRegionalAccessBoundary(requestOpts.headers, opts.url);
       }
 

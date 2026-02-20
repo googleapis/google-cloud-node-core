@@ -2796,7 +2796,7 @@ describe('BaseExternalAccountClient', () => {
 
       const saSuccessResponse = {
         accessToken: 'SA_ACCESS_TOKEN',
-        expireTime: new Date(Date.now() + 3600000).toISOString(),
+        expireTime: new Date(Date.now() + 60 * 60 * 100).toISOString(),
       };
       const impersonatedScope = mockGenerateAccessToken({
         statusCode: 200,

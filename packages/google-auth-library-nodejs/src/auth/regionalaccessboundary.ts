@@ -171,7 +171,7 @@ export class RegionalAccessBoundaryManager {
    * Triggers an asynchronous regional access boundary refresh if needed.
    * @param accessToken The access token to use for the lookup.
    */
-  private maybeTriggerRegionalAccessBoundaryRefresh(accessToken: string) {
+  private maybeTriggerRegionalAccessBoundaryRefresh(accessToken: string): void {
     if (this.regionalAccessBoundaryRefreshPromise) {
       return;
     }
@@ -204,13 +204,14 @@ export class RegionalAccessBoundaryManager {
       if (data) {
         this.regionalAccessBoundary = data;
         this.regionalAccessBoundaryExpiry = Date.now() + RAB_TTL_MILLIS;
-        // Reset cooldown on success
+        // Reset cooldown on success.
         this.regionalAccessBoundaryCooldownTime = 0;
         this.regionalAccessBoundaryCooldownBackoff =
           RAB_INITIAL_COOLDOWN_MILLIS;
       }
     } catch (error) {
-      // Non-retryable or all retries failed: enter cooldown
+      // Non-retryable or all retries failed: enter cooldown,
+      // initially for 15 mins which doubles after each failed cooldown 'exit' attempt.
       this.regionalAccessBoundaryCooldownTime =
         Date.now() + this.regionalAccessBoundaryCooldownBackoff;
       this.regionalAccessBoundaryCooldownBackoff = Math.min(
@@ -228,6 +229,8 @@ export class RegionalAccessBoundaryManager {
 
   /**
    * Internal method to fetch RAB data.
+   * Retries for retryable 5xx errors from the RAB lookup endpoint.
+   * Throws if response from lookup is malformed.
    */
   private async fetchRegionalAccessBoundary(
     accessToken?: string,

@@ -147,6 +147,8 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
               authorization: `Bearer ${tokens.id_token}`,
             }),
           ),
+          // Since ID-tokens are outside RAB scope,
+          // isIDToken is used as a flag to avoid RAB lookup.
           isIDToken: true,
         };
       } else {

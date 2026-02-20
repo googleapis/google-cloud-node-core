@@ -397,6 +397,7 @@ export abstract class AuthClient
 
   /**
    * Returns the current regional access boundary data.
+   * @internal
    */
   getRegionalAccessBoundary(): RegionalAccessBoundaryData | null {
     return this.regionalAccessBoundaryManager.data;
