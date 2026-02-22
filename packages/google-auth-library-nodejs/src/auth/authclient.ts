@@ -376,7 +376,9 @@ export abstract class AuthClient
   }>;
 
   /**
-   * Constructs the regional access boundary lookup URL for the client.
+   * Returns the regional access boundary lookup URL for the current client.
+   * This method is intended for internal use by the RegionalAccessBoundaryManager
+   * and should not be called directly by users.
    *
    * @return The regional access boundary URL string, or `null` if the client type
    * does not support regional access boundaries.

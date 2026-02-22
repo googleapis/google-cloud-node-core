@@ -139,12 +139,20 @@ export class Compute extends OAuth2Client {
     }
   }
 
+  /**
+   * Returns the regional access boundary lookup URL for the GCE instance.
+   * This implementation resolves the default service account email of the GCE
+   * instance to construct the lookup endpoint.
+   *
+   * @return The regional access boundary URL string.
+   * @internal
+   */
   public async getRegionalAccessBoundaryUrl(): Promise<string> {
     const email = await this.resolveServiceAccountEmail();
     const regionalAccessBoundaryUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-      '{universe_domain}',
-      this.universeDomain,
-    ).replace('{service_account_email}', encodeURIComponent(email));
+      '{service_account_email}',
+      encodeURIComponent(email),
+    );
     return regionalAccessBoundaryUrl;
   }
 

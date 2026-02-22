@@ -908,9 +908,9 @@ describe('ExternalAccountAuthorizedUserClient', () => {
       ]);
 
       const lookupUrl = WORKFORCE_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        'googleapis.com',
-      ).replace('{pool_id}', encodeURIComponent(workforcePoolId));
+        '{pool_id}',
+        encodeURIComponent(workforcePoolId),
+      );
 
       let rabLookupCalled = false;
       const rabScope = nock(new URL(lookupUrl).origin)

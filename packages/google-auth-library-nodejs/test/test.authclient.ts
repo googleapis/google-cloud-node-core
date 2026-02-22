@@ -433,9 +433,6 @@ describe('AuthClient', () => {
         // Use a promise to track when the RAB lookup is actually called
         let rabLookupCalled = false;
         const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
           '{service_account_email}',
           encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
         );
@@ -512,9 +509,6 @@ describe('AuthClient', () => {
 
         // Mock 503 then 200
         const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
           '{service_account_email}',
           encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
         );
@@ -551,9 +545,6 @@ describe('AuthClient', () => {
         setupTokenNock(SERVICE_ACCOUNT_EMAIL);
 
         const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-          '{universe_domain}',
-          'googleapis.com',
-        ).replace(
           '{service_account_email}',
           encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
         );

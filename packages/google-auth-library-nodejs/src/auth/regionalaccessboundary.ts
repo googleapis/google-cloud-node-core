@@ -43,8 +43,9 @@ const RAB_INITIAL_COOLDOWN_MILLIS = 15 * 60 * 1000;
 
 /**
  * Maximum cooldown period for RAB lookup failures.
+ * Set as 6 hours.
  */
-const RAB_MAX_COOLDOWN_MILLIS = 24 * 60 * 60 * 1000;
+const RAB_MAX_COOLDOWN_MILLIS = 6 * 60 * 60 * 1000;
 
 /**
  * Holds regional access boundary related information like locations

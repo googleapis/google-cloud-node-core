@@ -501,7 +501,6 @@ export abstract class BaseExternalAccountClient extends AuthClient {
    * returned response.
    * @param opts The HTTP request options.
    * @param reAuthRetried Whether the current attempt is a retry after a failed attempt due to an auth failure.
-   * @param retryWithoutRAB Whether the current attempt is a retry after a failed attempt due to a stale regional access boundary.
    * @return A promise that resolves with the successful response.
    */
   protected async requestAsync<T>(
@@ -720,6 +719,16 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     return this.tokenUrl;
   }
 
+  /**
+   * Returns the regional access boundary lookup URL for the external account.
+   * This implementation constructs the URL based on the audience of the
+   * workforce or workload pool. If the client is configured for service account
+   * impersonation, it uses the target service account email to generate
+   * the lookup endpoint.
+   *
+   * @return The regional access boundary URL string.
+   * @internal
+   */
   public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (this.serviceAccountImpersonationUrl) {
       // When impersonating a service account, the regional access boundary is determined

@@ -412,6 +412,14 @@ export class JWT extends OAuth2Client implements IdTokenProvider {
     throw new Error('A key or a keyFile must be provided to getCredentials.');
   }
 
+  /**
+   * Returns the regional access boundary lookup URL for the service account.
+   * This implementation uses the configured service account email to construct
+   * the lookup endpoint.
+   *
+   * @return The regional access boundary URL string.
+   * @internal
+   */
   public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (!this.email) {
       throw new Error(

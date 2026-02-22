@@ -68,7 +68,12 @@ export class IdTokenClient extends OAuth2Client {
     const headers = new Headers({
       authorization: 'Bearer ' + this.credentials.id_token,
     });
-    return {headers};
+    return {
+      headers,
+      // Since ID-tokens are outside RAB scope, isIDToken is used as a flag
+      // to avoid RAB lookup.
+      isIDToken: true,
+    };
   }
 
   private getIdTokenExpiryDate(idToken: string): number | void {

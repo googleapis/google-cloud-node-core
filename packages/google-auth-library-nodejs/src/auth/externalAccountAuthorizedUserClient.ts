@@ -261,7 +261,6 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
    * returned response.
    * @param opts The HTTP request options.
    * @param reAuthRetried Whether the current attempt is a retry after a failed attempt due to an auth failure.
-   * @param retryWithoutRAB Whether the current attempt is a retry after a failed attempt due to a stale regional access boundary.
    * @return A promise that resolves with the successful response.
    */
   protected async requestAsync<T>(
@@ -332,11 +331,13 @@ export class ExternalAccountAuthorizedUserClient extends AuthClient {
   }
 
   /**
-   * Constructs the regional access boundary lookup URL for the client.
+   * Returns the regional access boundary lookup URL for the external account
+   * authorized user.
+   * This implementation constructs the lookup endpoint using the workforce
+   * pool ID resolved from the audience.
    *
-   * @return The regional access boundary URL string, or `null` if the client type
-   * does not support regional access boundaries.
-   * @throws {Error} If the URL cannot be constructed for a compatible client.
+   * @return The regional access boundary URL string.
+   * @internal
    */
   public async getRegionalAccessBoundaryUrl(): Promise<string | null> {
     const poolId = getWorkforcePoolIdFromAudience(this.audience);

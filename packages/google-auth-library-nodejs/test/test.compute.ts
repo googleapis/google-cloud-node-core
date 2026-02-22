@@ -294,9 +294,9 @@ describe('compute', () => {
       regionalAccessBoundaryData: RegionalAccessBoundaryData = EXPECTED_RAB_DATA,
     ): nock.Scope {
       const lookupUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        'googleapis.com',
-      ).replace('{service_account_email}', encodeURIComponent(email));
+        '{service_account_email}',
+        encodeURIComponent(email),
+      );
       return nock(new URL(lookupUrl).origin)
         .get(new URL(lookupUrl).pathname)
         .matchHeader('authorization', MOCK_AUTH_HEADER)

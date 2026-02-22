@@ -263,6 +263,15 @@ export class Impersonated extends OAuth2Client implements IdTokenProvider {
     return res.data.token;
   }
 
+  /**
+   * Returns the regional access boundary lookup URL for the impersonated
+   * service account.
+   * This implementation uses the target principal (service account email)
+   * to construct the lookup endpoint.
+   *
+   * @return The regional access boundary URL string.
+   * @internal
+   */
   public async getRegionalAccessBoundaryUrl(): Promise<string> {
     const targetPrincipal = this.getTargetPrincipal();
     if (!targetPrincipal) {
