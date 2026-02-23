@@ -87,6 +87,28 @@ export class API {
     return filteredProtos;
   }
 
+  static getServiceMethods(
+    fds: protos.google.protobuf.IFileDescriptorProto[],
+    filesToGenerate: string[],
+  ) {
+    const methods = new Set<string>();
+    const filesToGenerateSet = new Set(filesToGenerate);
+    for (const fd of fds) {
+      if (filesToGenerateSet.has(fd.name!) && fd.service) {
+        for (const service of fd.service) {
+          if (service.method) {
+            for (const method of service.method) {
+              if (method.name) {
+                methods.add(method.name);
+              }
+            }
+          }
+        }
+      }
+    }
+    return methods;
+  }
+
   constructor(
     fileDescriptors: protos.google.protobuf.IFileDescriptorProto[],
     packageName: string,
