@@ -79,6 +79,10 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
     return null;
   }
 
+  log.debug(
+    `Agent identity certificate configuration detected: ${CERT_CONFIG_ENV_VAR}=${certConfigPath}`
+  );
+
   let hasLoggedWarning = false;
   for (const interval of POLLING_INTERVALS) {
     try {
@@ -97,6 +101,7 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
       }
     } catch (error) {
       // Ignore errors during polling, will retry.
+      log.debug(`Error during polling for agent identity certificate: ${error}`);
     }
 
     if (!hasLoggedWarning) {
@@ -111,11 +116,12 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
     await sleep(interval);
   }
 
-  throw new Error(
+  const errorMessage =
     'Certificate config or certificate file not found after multiple retries. ' +
-      'Token binding protection is failing. You can turn off this protection by setting ' +
-      `${PREVENT_SHARING_ENV_VAR} to false to fall back to unbound tokens.`,
-  );
+    'Token binding protection is failing. You can turn off this protection by setting ' +
+    `${PREVENT_SHARING_ENV_VAR} to false to fall back to unbound tokens.`;
+  log.error(errorMessage);
+  throw new Error(errorMessage);
 }
 
 /**
