@@ -161,11 +161,17 @@ export class RegionalAccessBoundaryManager {
    * @param url The URL to check.
    */
   private isGlobalEndpoint(url: string | URL): boolean {
-    const hostname = url instanceof URL ? url.hostname : new URL(url).hostname;
-    return (
-      !hostname.endsWith('.rep.googleapis.com') &&
-      !hostname.endsWith('.rep.sandbox.googleapis.com')
-    );
+    try {
+      const hostname =
+        url instanceof URL ? url.hostname : new URL(url).hostname;
+      return (
+        !hostname.endsWith('.rep.googleapis.com') &&
+        !hostname.endsWith('.rep.sandbox.googleapis.com')
+      );
+    } catch {
+      // If the URL is relative or malformed, assume it is global.
+      return true;
+    }
   }
 
   /**

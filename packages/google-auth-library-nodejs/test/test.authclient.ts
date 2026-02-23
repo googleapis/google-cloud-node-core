@@ -500,6 +500,44 @@ describe('AuthClient', () => {
         // Assert no RAB lookup was attempted
       });
 
+      it('should NOT crash and should trigger lookup for relative URLs', async () => {
+        const compute = new Compute({
+          serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
+        });
+
+        const tokenScope = setupTokenNock(SERVICE_ACCOUNT_EMAIL);
+        // If it treats the relative URL as global, it should try to call the RAB endpoint.
+        const rabUrl = SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
+          '{universe_domain}',
+          'googleapis.com',
+        ).replace(
+          '{service_account_email}',
+          encodeURIComponent(SERVICE_ACCOUNT_EMAIL),
+        );
+
+        const rabScope = nock(new URL(rabUrl).origin)
+          .get(new URL(rabUrl).pathname)
+          .reply(200, EXPECTED_RAB_DATA);
+
+        // This should NOT throw even though '/v1/resource' is relative
+        await compute.getRequestHeaders('/v1/resource');
+
+        // Wait for the background task to complete
+        let attempts = 0;
+        while (!compute.getRegionalAccessBoundary() && attempts < 10) {
+          await new Promise(r => setTimeout(r, 50));
+          attempts++;
+        }
+
+        assert.deepStrictEqual(
+          compute.getRegionalAccessBoundary(),
+          EXPECTED_RAB_DATA,
+        );
+
+        tokenScope.done();
+        rabScope.done();
+      });
+
       it('should retry on retryable errors in background', async () => {
         const compute = new Compute({
           serviceAccountEmail: SERVICE_ACCOUNT_EMAIL,
