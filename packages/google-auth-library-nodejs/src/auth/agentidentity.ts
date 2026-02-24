@@ -14,6 +14,7 @@
 
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import {setTimeout as sleep} from 'node:timers/promises';
 import {log as makeLog} from 'google-logging-utils';
 
 const log = makeLog('google-auth-library:agentidentity');
@@ -61,14 +62,6 @@ interface CertificateConfigFile {
 }
 
 /**
- * Helper function to delay execution.
- * @param ms Time to sleep in milliseconds.
- */
-async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
  * Retrieves the path to the agent identity certificate by polling the configuration file.
  * @returns The path to the certificate file, or null if not configured.
  * @throws Error if the configuration or certificate file cannot be found after the timeout.
@@ -80,7 +73,7 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
   }
 
   log.debug(
-    `Agent identity certificate configuration detected: ${CERT_CONFIG_ENV_VAR}=${certConfigPath}`
+    `Agent identity certificate configuration detected: ${CERT_CONFIG_ENV_VAR}=${certConfigPath}`,
   );
 
   let hasLoggedWarning = false;
@@ -101,7 +94,9 @@ async function getAgentIdentityCertificatePath(): Promise<string | null> {
       }
     } catch (error) {
       // Ignore errors during polling, will retry.
-      log.debug(`Error during polling for agent identity certificate: ${error}`);
+      log.debug(
+        `Error during polling for agent identity certificate: ${error}`,
+      );
     }
 
     if (!hasLoggedWarning) {
@@ -178,6 +173,9 @@ export async function getBindCertificateFingerprint(): Promise<
 > {
   // Check opt-out.
   if (process.env[PREVENT_SHARING_ENV_VAR]?.toLowerCase() === 'false') {
+    log.debug(
+      `Agent identity token sharing prevention is disabled via ${PREVENT_SHARING_ENV_VAR} environment variable.`,
+    );
     return undefined;
   }
 

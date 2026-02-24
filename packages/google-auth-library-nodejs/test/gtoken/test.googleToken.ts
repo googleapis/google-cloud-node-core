@@ -19,7 +19,7 @@ import {
   TokenOptions,
   Transporter,
 } from '../../src/gtoken/googleToken';
-import {GaxiosOptions, GaxiosResponse, request} from 'gaxios';
+import {GaxiosOptions, GaxiosResponse} from 'gaxios';
 
 describe('GoogleToken', () => {
   it('should initialize with default options if none are provided', () => {
