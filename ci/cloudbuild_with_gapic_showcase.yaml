@@ -31,7 +31,7 @@ steps:
     args: ['clone', 'https://github.com/googleapis/gapic-showcase.git']
 
   - id: 'Build Showcase'
-    name: 'golang:1.25.0'
+    name: 'golang:1.25'
     entrypoint: 'go'
     args: ['install', './cmd/gapic-showcase']
     dir: 'gapic-showcase'
