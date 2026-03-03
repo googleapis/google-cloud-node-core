@@ -40,7 +40,7 @@ import {
   SERVICE_ACCOUNT_LOOKUP_ENDPOINT,
   WORKFORCE_LOOKUP_ENDPOINT,
   WORKLOAD_LOOKUP_ENDPOINT,
-} from './trustboundary';
+} from './regionalaccessboundary';
 
 /**
  * The required token exchange grant_type: rfc8693#section-2.1
@@ -424,11 +424,12 @@ export abstract class BaseExternalAccountClient extends AuthClient {
    * The result has the form:
    * { authorization: 'Bearer <access_token_value>' }
    */
-  async getRequestHeaders(): Promise<Headers> {
+  async getRequestHeaders(url?: string | URL): Promise<Headers> {
     const accessTokenResponse = await this.getAccessToken();
     const headers = new Headers({
       authorization: `Bearer ${accessTokenResponse.token}`,
     });
+    this.applyRegionalAccessBoundary(headers, url);
     return this.addSharedMetadataHeaders(headers);
   }
 
@@ -507,13 +508,14 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     reAuthRetried = false,
   ): Promise<GaxiosResponse<T>> {
     let response: GaxiosResponse;
+    const requestOpts = {...opts};
     try {
-      const requestHeaders = await this.getRequestHeaders();
-      opts.headers = Gaxios.mergeHeaders(opts.headers);
+      const requestHeaders = await this.getRequestHeaders(opts.url);
+      requestOpts.headers = Gaxios.mergeHeaders(requestOpts.headers);
 
-      this.applyHeadersFromSource(opts.headers, requestHeaders);
+      this.applyHeadersFromSource(requestOpts.headers, requestHeaders);
 
-      response = await this.transporter.request<T>(opts);
+      response = await this.transporter.request<T>(requestOpts);
     } catch (e) {
       const res = (e as GaxiosError).response;
       if (res) {
@@ -624,7 +626,6 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     Object.assign(this.credentials, this.cachedAccessToken);
     delete (this.credentials as CredentialsWithResponse).res;
 
-    this.trustBoundary = await this.refreshTrustBoundary(this.credentials);
     // Trigger tokens event to notify external listeners.
     this.emit('tokens', {
       refresh_token: null,
@@ -718,42 +719,53 @@ export abstract class BaseExternalAccountClient extends AuthClient {
     return this.tokenUrl;
   }
 
-  protected async getTrustBoundaryUrl(): Promise<string> {
+  /**
+   * Returns the regional access boundary lookup URL for the external account.
+   * This implementation constructs the URL based on the audience of the
+   * workforce or workload pool. If the client is configured for service account
+   * impersonation, it uses the target service account email to generate
+   * the lookup endpoint.
+   *
+   * @return The regional access boundary URL string.
+   * @internal
+   */
+  public async getRegionalAccessBoundaryUrl(): Promise<string> {
     if (this.serviceAccountImpersonationUrl) {
-      // When impersonating a service account, the trust boundary is determined
+      // When impersonating a service account, the regional access boundary is determined
       // by the security policies of the target service account.
       const email = this.getServiceAccountEmail();
       if (!email) {
         throw new Error(
-          `TrustBoundary: A service account email is required for trust boundary lookups but could not be determined from the serviceAccountImpersonationUrl ${this.serviceAccountImpersonationUrl}.`,
+          `RegionalAccessBoundary: A service account email is required for regional access boundary lookups but could not be determined from the serviceAccountImpersonationUrl ${this.serviceAccountImpersonationUrl}.`,
         );
       }
       return SERVICE_ACCOUNT_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        this.universeDomain,
-      ).replace('{service_account_email}', encodeURIComponent(email));
+        '{service_account_email}',
+        encodeURIComponent(email),
+      );
     }
 
     // Check if the audience corresponds to a workload identity pool.
     const wfPoolId = getWorkforcePoolIdFromAudience(this.audience);
     if (wfPoolId) {
       return WORKFORCE_LOOKUP_ENDPOINT.replace(
-        '{universe_domain}',
-        this.universeDomain,
-      ).replace('{pool_id}', encodeURIComponent(wfPoolId));
+        '{pool_id}',
+        encodeURIComponent(wfPoolId),
+      );
     }
 
     // Check if the audience corresponds to a workforce identity pool.
     const wlPoolId = getWorkloadPoolIdFromAudience(this.audience);
     const projectNumber = this.getProjectNumber(this.audience);
     if (wlPoolId && projectNumber) {
-      return WORKLOAD_LOOKUP_ENDPOINT.replace('{project_id}', projectNumber)
-        .replace('{pool_id}', wlPoolId)
-        .replace('{universe_domain}', this.universeDomain);
+      return WORKLOAD_LOOKUP_ENDPOINT.replace(
+        '{project_id}',
+        projectNumber,
+      ).replace('{pool_id}', wlPoolId);
     }
 
     throw new RangeError(
-      `TrustBoundary: Invalid audience provided: "${this.audience}" does not correspond to a workforce or workload pool.`,
+      `RegionalAccessBoundary: Invalid audience provided: "${this.audience}" does not correspond to a workforce or workload pool.`,
     );
   }
 }
