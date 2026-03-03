@@ -672,7 +672,7 @@ export class Gaxios implements FetchCompliance {
 
     this.#fetch ||= hasWindow
       ? window.fetch
-      : (await import('node-fetch')).default;
+      : (typeof globalThis.fetch === 'function' ? globalThis.fetch : (await import('node-fetch')).default);
 
     return this.#fetch;
   }
