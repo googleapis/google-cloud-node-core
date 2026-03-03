@@ -18,13 +18,13 @@ import {log as makeLog} from 'google-logging-utils';
 const log = makeLog('auth');
 
 export const SERVICE_ACCOUNT_LOOKUP_ENDPOINT =
-  'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
+  'https://staging-iamcredentials.sandbox.googleapis.com/v1/projects/-/serviceAccounts/{service_account_email}/allowedLocations';
 
 export const WORKLOAD_LOOKUP_ENDPOINT =
-  'https://iamcredentials.googleapis.com/v1/projects/{project_id}/locations/global/workloadIdentityPools/{pool_id}/allowedLocations';
+  'https://staging-iamcredentials.sandbox.googleapis.com/v1/projects/{project_id}/locations/global/workloadIdentityPools/{pool_id}/allowedLocations';
 
 export const WORKFORCE_LOOKUP_ENDPOINT =
-  'https://iamcredentials.googleapis.com/v1/locations/global/workforcePools/{pool_id}/allowedLocations';
+  'https://staging-iamcredentials.sandbox.googleapis.com/v1/locations/global/workforcePools/{pool_id}/allowedLocations';
 
 /**
  * RAB is considered valid for 6 hours.
@@ -110,14 +110,6 @@ export class RegionalAccessBoundaryManager {
    */
   get cooldownTime(): number {
     return this.regionalAccessBoundaryCooldownTime;
-  }
-
-  /**
-   * Clears the regional access boundary cache.
-   */
-  clearRegionalAccessBoundaryCache() {
-    this.regionalAccessBoundary = null;
-    this.regionalAccessBoundaryExpiry = 0;
   }
 
   /**
