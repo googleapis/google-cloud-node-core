@@ -31,7 +31,7 @@ steps:
     args: ['clone', 'https://github.com/googleapis/gapic-showcase.git']
 
   - id: 'Build Showcase'
-    name: 'golang:1.24'
+    name: 'golang:1.25'
     entrypoint: 'go'
     args: ['install', './cmd/gapic-showcase']
     dir: 'gapic-showcase'
@@ -39,7 +39,7 @@ steps:
       - 'GOPATH=/workspace'
       - 'GOCACHE=/workspace/.cache/go-build'
     waitFor: ['Clone Showcase']
-  - name: 'gcr.io/kaniko-project/executor:v1.24.0'
+  - name: 'gcr.io/kaniko-project/executor:v1.25.0'
     args: [
       '--log-format=text',
       '--context=dir:///workspace/testing',
