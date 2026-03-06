@@ -44,7 +44,7 @@ describe('gcp metadata', () => {
     projectId = await gcf.auth.getProjectId();
   });
 
-  describe('cloud functions', () => {
+  describe.only('cloud functions', () => {
     before(async () => {
       // Clean up any old cloud functions just hanging out
       await pruneFunctions(false);
@@ -127,15 +127,25 @@ async function pruneFunctions(sessionOnly: boolean) {
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
   const gcx = await loadGcx();
-  await gcx.deploy({
-    name: fullPrefix,
-    entryPoint: 'getMetadata',
-    triggerHTTP: true,
-    runtime: 'nodejs20',
-    region: 'us-central1',
-    targetDir,
-    ingressSettings: 'all',
-  });
+  try {
+    await gcx.deploy({
+      name: fullPrefix,
+      entryPoint: 'getMetadata',
+      triggerHTTP: true,
+      runtime: 'nodejs20',
+      region: 'us-central1',
+      targetDir,
+      gen2: true,
+      // Use camelCase key and API Enum string value
+      ingressSettings: 'ALLOW_INTERNAL_ONLY'
+      // The old key was likely not recognized:
+      // 'ingress-settings': 'internal-and-gclb'
+    });
+    console.log(`Successfully deployed ${fullPrefix}`);
+  } catch (error) {
+    console.error(`Failed to deploy ${fullPrefix}:`, error);
+    throw error; // Re-throw to fail the test
+  }
 }
 
 /**

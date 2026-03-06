@@ -2,10 +2,18 @@
   "dependencyTypes": ["prod"],
   "versionGroups": [
     {
-      "label": "Allow minor and patch version bumps",
+      "label": "Standardize production versions",
       "dependencies": ["**"],
       "packages": ["**"],
-      "sameMinorNew": true,
+      "dependencyTypes": ["prod"]
+    }
+  ],
+  "semverGroups": [
+    {
+      "label": "Use caret for all production dependencies",
+      "range": "^",
+      "dependencies": ["**"],
+      "packages": ["**"],
       "dependencyTypes": ["prod"]
     }
   ]
