@@ -39,7 +39,7 @@ steps:
       - 'GOPATH=/workspace'
       - 'GOCACHE=/workspace/.cache/go-build'
     waitFor: ['Clone Showcase']
-  - name: 'gcr.io/kaniko-project/executor:v1.25.0'
+  - name: 'gcr.io/kaniko-project/executor:v1.24.0'
     args: [
       '--log-format=text',
       '--context=dir:///workspace/testing',
