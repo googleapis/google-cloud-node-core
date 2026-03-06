@@ -14,7 +14,7 @@
 import extend from 'extend';
 import {Agent} from 'http';
 import {Agent as HTTPSAgent} from 'https';
-import type nodeFetch from 'node-fetch' with {'resolution-mode': 'import'};
+
 
 import {
   GaxiosMultipartOptions,
@@ -654,7 +654,7 @@ export class Gaxios implements FetchCompliance {
    * Should use {@link Gaxios[#getFetch]} to retrieve.
    */
   //
-  static #fetch?: typeof nodeFetch | typeof fetch;
+  static #fetch?: typeof fetch;
 
   /**
    * Imports, caches, and returns a proxy agent - if not already imported
@@ -672,7 +672,7 @@ export class Gaxios implements FetchCompliance {
 
     this.#fetch ||= hasWindow
       ? window.fetch
-      : (await import('node-fetch')).default;
+      : globalThis.fetch;
 
     return this.#fetch;
   }
