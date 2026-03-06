@@ -134,6 +134,7 @@ async function deployApp() {
     runtime: 'nodejs20',
     region: 'us-central1',
     targetDir,
+    ingressSettings: 'all',
   });
 }
 
