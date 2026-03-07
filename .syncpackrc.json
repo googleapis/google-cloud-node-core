@@ -1,12 +1,14 @@
 {
-  "dependencyTypes": ["prod"],
+  "$schema": "./node_modules/syncpack/schema.json",
   "versionGroups": [
     {
-      "label": "Allow minor and patch version bumps",
-      "dependencies": ["**"],
-      "packages": ["**"],
-      "sameMinorNew": true,
-      "dependencyTypes": ["prod"]
+      "label": "Allow minor and patch version bumps in dependencies",
+      "dependencyTypes": ["prod"],
+      "policy": "sameMinor"
+    },
+    {
+      "label": "Ignore all other dependency types",
+      "isIgnored": true
     }
   ]
 }
