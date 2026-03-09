@@ -20,16 +20,16 @@
     "start": "node build/src/index.js"
   },
   "devDependencies": {
-    "mocha": "^10.0.1",
-    "typescript": "^5.1.6"
+    "mocha": "^11.1.0",
+    "typescript": "5.8.3"
   },
   "dependencies": {
-    "@grpc/grpc-js": "~1.6.0",
-    "google-gax": "file:./google-gax.tgz",
-    "protobufjs": "^7.0.0",
+    "@grpc/grpc-js": "^1.12.6",
+    "google-gax": "5.0.6",
+    "protobufjs": "^7.5.4",
     "pumpify": "^2.0.1",
-    "showcase-echo-client": "./showcase-echo-client.tgz",
-    "showcase-server": "./showcase-server.tgz"
+    "showcase-echo-client": "0.1.0",
+    "showcase-server": "0.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -14,10 +14,10 @@
     "test": "mocha"
   },
   "dependencies": {
-    "gcp-metadata": "^8.1.2"
+    "gcp-metadata": "8.1.2"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^10.0.0"
+    "chai": "^4.3.10",
+    "mocha": "^11.1.0"
   }
 }
