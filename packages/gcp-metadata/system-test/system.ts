@@ -137,7 +137,7 @@ async function deployApp() {
       targetDir,
       gen2: true,
       // Use camelCase key and API Enum string value
-      ingressSettings: 'ALLOW_INTERNAL_ONLY'
+      ingressSettings: 'ALLOW_INTERNAL_ONLY',
       // The old key was likely not recognized:
       // 'ingress-settings': 'internal-and-gclb'
     });
