@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/google-auth-library?activeTab=versions
 
+## [10.6.1](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.6.0...google-auth-library-v10.6.1) (2026-02-20)
+
+
+### Bug Fixes
+
+* DefaultAwsSecurityCredentialSupplier fetches aws-credentials correctly from credential-url ([#901](https://github.com/googleapis/google-cloud-node-core/issues/901)) ([8c50526](https://github.com/googleapis/google-cloud-node-core/commit/8c5052677953ba2940583e28d6691f0e38ba8c1a))
+
 ## [10.6.0](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.5.0...google-auth-library-v10.6.0) (2025-12-17)
 
 

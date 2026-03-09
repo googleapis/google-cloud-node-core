@@ -481,6 +481,63 @@ describe('BaseExternalAccountClient', () => {
   });
 
   describe('getProjectId()', () => {
+    it('should use responseType: json', async () => {
+      const projectNumber = 'my-proj-number';
+      const projectId = 'my-proj-id';
+      const response = {
+        projectNumber,
+        projectId,
+        lifecycleState: 'ACTIVE',
+        name: 'project-name',
+        createTime: '2018-11-06T04:42:54.109Z',
+        parent: {
+          type: 'folder',
+          id: '12345678901',
+        },
+      };
+      const options = Object.assign({}, externalAccountOptions);
+      options.audience = getAudience(projectNumber);
+      const scopes = [
+        mockStsTokenExchange([
+          {
+            statusCode: 200,
+            response: stsSuccessfulResponse,
+            request: {
+              grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+              audience: options.audience,
+              scope: 'https://www.googleapis.com/auth/cloud-platform',
+              requested_token_type:
+                'urn:ietf:params:oauth:token-type:access_token',
+              subject_token: 'subject_token_0',
+              subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+            },
+          },
+        ]),
+        mockCloudResourceManager(
+          projectNumber,
+          stsSuccessfulResponse.access_token,
+          200,
+          response,
+        ),
+      ];
+      const client = new TestExternalAccountClient(options);
+      const requestSpy = sinon.spy(client.transporter, 'request');
+
+      await client.getProjectId();
+
+      const call = requestSpy
+        .getCalls()
+        .find(
+          c =>
+            c.args[0] &&
+            String((c.args[0] as any).url).includes('cloudresourcemanager'),
+        );
+      assert.ok(call);
+      assert.strictEqual((call!.args[0] as any).responseType, 'json');
+
+      scopes.forEach(scope => scope.done());
+    });
+
     it('should resolve for workforce pools when workforce_pool_user_project is provided', async () => {
       const options = Object.assign(
         {},
@@ -1226,6 +1283,54 @@ describe('BaseExternalAccountClient', () => {
           status: 'INVALID_ARGUMENT',
         },
       };
+
+      it('should use responseType: json for impersonation', async () => {
+        const scopes: nock.Scope[] = [];
+        scopes.push(
+          mockStsTokenExchange([
+            {
+              statusCode: 200,
+              response: stsSuccessfulResponse,
+              request: {
+                grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+                audience,
+                scope: 'https://www.googleapis.com/auth/cloud-platform',
+                requested_token_type:
+                  'urn:ietf:params:oauth:token-type:access_token',
+                subject_token: 'subject_token_0',
+                subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+              },
+            },
+          ]),
+        );
+        scopes.push(
+          mockGenerateAccessToken({
+            statusCode: 200,
+            response: saSuccessResponse,
+            token: stsSuccessfulResponse.access_token,
+            scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+          }),
+        );
+
+        const client = new TestExternalAccountClient(
+          externalAccountOptionsWithSA,
+        );
+        const requestSpy = sinon.spy(client.transporter, 'request');
+
+        await client.getAccessToken();
+
+        const call = requestSpy
+          .getCalls()
+          .find(
+            c =>
+              c.args[0] &&
+              String((c.args[0] as any).url).includes('iamcredentials'),
+          );
+        assert.ok(call);
+        assert.strictEqual((call!.args[0] as any).responseType, 'json');
+
+        scopes.forEach(scope => scope.done());
+      });
 
       it('should resolve with the expected response', async () => {
         const scopes: nock.Scope[] = [];

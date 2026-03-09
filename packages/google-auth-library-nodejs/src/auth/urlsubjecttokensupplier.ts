@@ -88,6 +88,7 @@ export class UrlSubjectTokenSupplier implements SubjectTokenSupplier {
       url: this.url,
       method: 'GET',
       headers: this.headers,
+      responseType: this.formatType,
     };
     AuthClient.setMethodName(opts, 'getSubjectToken');
 
