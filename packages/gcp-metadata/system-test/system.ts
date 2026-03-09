@@ -44,7 +44,7 @@ describe('gcp metadata', () => {
     projectId = await gcf.auth.getProjectId();
   });
 
-  describe.only('cloud functions', () => {
+  describe('cloud functions', () => {
     before(async () => {
       // Clean up any old cloud functions just hanging out
       await pruneFunctions(false);
