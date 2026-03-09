@@ -14,11 +14,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "gcp-metadata": "8.1.2"
+    "gcp-metadata": "file:./gcp-metadata.tgz"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "gts": "^6.0.2",
+    "@types/node": "^22.0.0",
+    "gts": "^6.0.0",
     "typescript": "5.8.3"
   }
 }

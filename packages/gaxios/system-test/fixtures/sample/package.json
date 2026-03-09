@@ -14,16 +14,16 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "gaxios": "7.1.4"
+    "gaxios": "file:./gaxios.tgz"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^22.0.0",
     "browserify": "^17.0.0",
-    "gts": "^6.0.2",
-    "null-loader": "^4.0.1",
-    "ts-loader": "^9.5.2",
+    "gts": "^6.0.0",
+    "null-loader": "^4.0.0",
+    "ts-loader": "^9.0.0",
     "typescript": "5.8.3",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1"
+    "webpack": "^5.35.0",
+    "webpack-cli": "^6.0.0"
   }
 }

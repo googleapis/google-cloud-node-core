@@ -14,10 +14,10 @@
     "test": "mocha"
   },
   "dependencies": {
-    "google-proto-files": "6.0.0"
+    "google-proto-files": "^6.0.0"
   },
   "devDependencies": {
-    "chai": "^4.3.10",
-    "mocha": "^11.1.0"
+    "chai": "^4.2.0",
+    "mocha": "^10.0.0"
   }
 }
