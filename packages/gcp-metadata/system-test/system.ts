@@ -127,7 +127,7 @@ async function pruneFunctions(sessionOnly: boolean) {
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
   const gcx = await loadGcx();
-  try {
+try {
     await gcx.deploy({
       name: fullPrefix,
       entryPoint: 'getMetadata',
@@ -135,16 +135,27 @@ async function deployApp() {
       runtime: 'nodejs20',
       region: 'us-central1',
       targetDir,
-      gen2: true,
-      // For 2nd Gen, ingress is often part of the service configuration
+      gen2: false, // This triggers the _deployV2 path in gcx
+      
+      // 2nd Gen specific configuration
       serviceConfig: {
+        // This MUST be camelCase for the gcx library to map it to the API
         ingressSettings: 'ALLOW_INTERNAL_ONLY',
-      }
+        // Optional: Ensure the service account used at RUNTIME is correct
+        // serviceAccountEmail: 'your-service-account@project.iam.gserviceaccount.com'
+      },
+
+      // If you are still getting 403 on upload, gcx might be trying to 
+      // create a bucket in a location forbidden by Org Policy.
+      // You can try forcing a specific bucket if one exists:
+      // bucket: 'your-existing-staging-bucket'
     });
+    
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
+    // Log the full error object to see if there's a nested "details" field
     console.error(`Failed to deploy ${fullPrefix}:`, error);
-    throw error; // Re-throw to fail the test
+    throw error; 
   }
 }
 
