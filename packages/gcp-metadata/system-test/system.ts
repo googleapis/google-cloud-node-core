@@ -63,7 +63,7 @@ describe('gcp metadata', () => {
       });
     });
 
-    it('should access the metadata service on GCF', async () => {
+    it.only('should access the metadata service on GCF', async () => {
       const url = `https://us-central1-${projectId}.cloudfunctions.net/${fullPrefix}`;
       const res = await request<{isAvailable: boolean}>({url});
       console.dir(res.data);
@@ -136,10 +136,10 @@ async function deployApp() {
       region: 'us-central1',
       targetDir,
       gen2: true,
-      // Use camelCase key and API Enum string value
-      ingressSettings: 'ALLOW_INTERNAL_ONLY',
-      // The old key was likely not recognized:
-      // 'ingress-settings': 'internal-and-gclb'
+      // For 2nd Gen, ingress is often part of the service configuration
+      serviceConfig: {
+        ingressSettings: 'ALLOW_INTERNAL_ONLY',
+      }
     });
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
