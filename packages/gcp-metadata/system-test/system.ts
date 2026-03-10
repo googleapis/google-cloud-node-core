@@ -136,19 +136,7 @@ try {
       region: 'us-central1',
       targetDir,
       gen2: false, // This triggers the _deployV2 path in gcx
-      
-      // 2nd Gen specific configuration
-      serviceConfig: {
-        // This MUST be camelCase for the gcx library to map it to the API
-        ingressSettings: 'ALLOW_INTERNAL_ONLY',
-        // Optional: Ensure the service account used at RUNTIME is correct
-        // serviceAccountEmail: 'your-service-account@project.iam.gserviceaccount.com'
-      },
-
-      // If you are still getting 403 on upload, gcx might be trying to 
-      // create a bucket in a location forbidden by Org Policy.
-      // You can try forcing a specific bucket if one exists:
-      // bucket: 'your-existing-staging-bucket'
+      ingressSettings: 'ALLOW_INTERNAL_ONLY'
     });
     
     console.log(`Successfully deployed ${fullPrefix}`);
