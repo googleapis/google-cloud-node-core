@@ -19,7 +19,7 @@ import * as yaml from 'js-yaml';
 import * as serializer from 'proto3-json-serializer';
 import protobuf from 'protobufjs';
 import type * as protos from '../../protos/index.js';
-import protoJson from '../../protos/protos.json' with {type: 'json'};
+import protoJson from '../../protos/protos.json' assert {type: 'json'};
 import * as url from 'url';
 import {API} from './schema/api.js';
 import {processTemplates} from './templater.js';
@@ -163,28 +163,11 @@ export class Generator {
       const content = fs.readFileSync(filename, 'utf8');
       const info = yaml.load(content) as ServiceYaml;
       this.serviceYaml = info;
-      let serviceMixins: string[] = [];
+      const serviceMixins = [];
       for (let i = 0; i < info.apis?.length || 0; i++) {
         const api = info.apis[i];
         for (const [, value] of Object.entries(api)) {
           serviceMixins.push(value);
-        }
-      }
-      if (serviceMixins.includes('google.iam.v1.IAMPolicy')) {
-        // Check if any of the services in the protos have SetIamPolicy, GetIamPolicy, or TestIamPermissions methods.
-        // If so, then remove the IAMPolicy mixin from the service yaml file to avoid duplicates.
-        const methods = API.getServiceMethods(
-          this.request.protoFile,
-          this.request.fileToGenerate,
-        );
-        if (
-          methods.has('SetIamPolicy') ||
-          methods.has('GetIamPolicy') ||
-          methods.has('TestIamPermissions')
-        ) {
-          serviceMixins = serviceMixins.filter(
-            m => m !== 'google.iam.v1.IAMPolicy',
-          );
         }
       }
       this.serviceYaml.apis = serviceMixins;
