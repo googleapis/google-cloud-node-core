@@ -24,7 +24,9 @@ RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tm
 
 RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-  && /usr/local/gcloud/google-cloud-sdk/install.sh
+  && /usr/local/gcloud/google-cloud-sdk/install.sh --quiet --usage-reporting=false
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Download flakybot release
 RUN curl https://github.com/googleapis/repo-automation-bots/releases/download/flakybot-${FLAKYBOT_VERSION}/flakybot \
@@ -43,7 +45,8 @@ COPY --from=build /usr/local/gcloud /usr/local/gcloud
 COPY --from=build /bin/flakybot /bin/flakybot
 COPY --from=build /root/.local/share/pnpm /root/.local/share/pnpm
 
-RUN apk add --no-cache git bash python3
+RUN apk add --no-cache git bash python3 \
+  && ln -s /usr/bin/python3 /usr/bin/python
 
 ENV PNPM_HOME=/root/.local/share/pnpm
 ENV PATH=$PNPM_HOME:/bin/flakybot:/usr/local/gcloud/google-cloud-sdk/bin:$PATH
