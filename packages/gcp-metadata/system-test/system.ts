@@ -64,26 +64,27 @@ describe('gcp metadata', () => {
     });
 
     it.only('should access the metadata service on GCF', async () => {
-      // 1. Get the authenticated GCF v2 client
-        const gcx = await loadGcx();
-        const client = await gcx._getGCFV2Client();
-        
-        // 2. Fetch the function details to get the 'uri'
-        const [func] = await client.getFunction({
-          name: `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`
-        });
+      const gcx = await loadGcx();
+      const client = await gcx._getGCFV2Client();
+      
+      // Construct the full resource name for the v2 API
+      const name = `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`;
 
-        const url = func.serviceConfig?.uri;
-        if (!url) {
-          throw new Error('Function URL (uri) not found in serviceConfig');
-        }
+      // Fetch the function metadata
+      const [func] = await client.getFunction({ name });
 
-        console.log(`Testing URL: ${url}`);
+      // 2nd Gen URLs are stored in serviceConfig.uri
+      const url = func.serviceConfig?.uri;
+      
+      if (!url) {
+        throw new Error(`Could not find URI for function: ${fullPrefix}. Is it a Gen 2 function?`);
+      }
 
-        // 3. Make the request
-        const res = await request<{isAvailable: boolean}>({url});
-        console.dir(res.data);
-        assert.strictEqual(res.data.isAvailable, true);
+      console.log(`Testing Gen 2 URL: ${url}`);
+
+      const res = await request<{isAvailable: boolean}>({url});
+      console.dir(res.data);
+      assert.strictEqual(res.data.isAvailable, true);
     });
 
     after(() => pruneFunctions(true));
@@ -142,27 +143,30 @@ async function pruneFunctions(sessionOnly: boolean) {
  */
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
+  
+  // Sanity check: ensure the directory exists so we don't upload an empty zip
+  if (!fs.existsSync(targetDir)) {
+    throw new Error(`Target directory not found: ${targetDir}`);
+  }
+
   const gcx = await loadGcx();
   try {
     await gcx.deploy({
       name: fullPrefix,
       entryPoint: 'getMetadata',
-      triggerHTTP: true,
       runtime: 'nodejs20',
       region: 'us-central1',
       targetDir,
-      gen2: true, // MUST be true because gcx only supports ingressSettings in v2
-      
-      // Based on the gcx source code you provided:
-      // The library expects ingressSettings at the TOP LEVEL of the options,
-      // and it will move it into serviceConfig for you.
+      gen2: true, 
+      triggerHTTP: true,
+      // Pass the bucket name WITHOUT the gs:// prefix
+      bucket: 'gcp-metadata-test-bucket',
+      // Required for Org Policy
       ingressSettings: 'ALLOW_ALL', 
-      
-      // Important for Gen 2 tests:
       allowUnauthenticated: true 
     });
     
-    console.log(`Successfully deployed ${fullPrefix}`);
+    console.log(`Successfully deployed ${fullPrefix} to 2nd Gen`);
   } catch (error) {
     console.error(`Failed to deploy ${fullPrefix}:`, error);
     throw error;
