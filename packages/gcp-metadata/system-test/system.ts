@@ -18,7 +18,7 @@ import assert from 'assert';
 import {before, after, describe, it} from 'mocha';
 import fs from 'fs';
 import * as gcbuild from 'gcbuild';
-import {CloudFunctionsServiceClient} from '@google-cloud/functions';
+import {v2, CloudFunctionsServiceClient} from '@google-cloud/functions';
 import * as path from 'path';
 import {promisify} from 'util';
 import {execSync} from 'child_process';
@@ -30,6 +30,7 @@ const copy = promisify(fs.copyFile);
 const pkg = require('../../package.json'); // eslint-disable-line
 
 let gcf: CloudFunctionsServiceClient;
+let gcfV2: v2.FunctionServiceClient;
 let projectId: string;
 const shortPrefix = 'gcloud-tests';
 const randomUUID = () =>
@@ -41,7 +42,10 @@ describe('gcp metadata', () => {
     // pack up the gcp-metadata module and copy to the target dir
     await packModule();
     gcf = new CloudFunctionsServiceClient();
+    gcfV2 = new v2.FunctionServiceClient();
     projectId = await gcf.auth.getProjectId();
+    console.log(`Using Project ID: ${projectId}`);
+    console.log(`Function Name: ${fullPrefix}`);
   });
 
   describe('cloud functions', () => {
@@ -51,27 +55,12 @@ describe('gcp metadata', () => {
 
       // deploy the function to GCF
       await deployApp();
-      // cloud functions now require authentication by default, see:
-      // https://cloud.google.com/functions/docs/release-notes
-      await gcf.setIamPolicy({
-        resource: `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`,
-        policy: {
-          bindings: [
-            {members: ['allUsers'], role: 'roles/cloudfunctions.invoker'},
-          ],
-        },
-      });
     });
 
     it.only('should access the metadata service on GCF', async () => {
-      const gcx = await loadGcx();
-      const client = await gcx._getGCFV2Client();
-      
-      // Construct the full resource name for the v2 API
-      const name = `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`;
-
       // Fetch the function metadata
-      const [func] = await client.getFunction({ name });
+      const name = `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`;
+      const [func] = await gcfV2.getFunction({ name });
 
       // 2nd Gen URLs are stored in serviceConfig.uri
       const url = func.serviceConfig?.uri;
@@ -115,12 +104,12 @@ describe('gcp metadata', () => {
  */
 async function pruneFunctions(sessionOnly: boolean) {
   console.log('Pruning leaked functions...');
-  const [fns] = await gcf.listFunctions({
+  const [fns] = await gcfV2.listFunctions({
     parent: `projects/${projectId}/locations/-`,
   });
   await Promise.all(
     fns
-      .filter(fn => {
+      .filter((fn: any) => {
         if (sessionOnly) {
           return fn.name!.includes(fullPrefix);
         }
@@ -129,8 +118,8 @@ async function pruneFunctions(sessionOnly: boolean) {
         const minutesSinceUpdate = (currentDate - updateDate) / 1000 / 60;
         return minutesSinceUpdate > 60 && fn.name!.includes(shortPrefix);
       })
-      .map(async fn => {
-        await gcf.deleteFunction({name: fn.name}).catch(e => {
+      .map(async (fn: any) => {
+        await gcfV2.deleteFunction({name: fn.name}).catch((e: any) => {
           console.error(`There was a problem deleting function ${fn.name}.`);
           console.error(e);
         });
@@ -158,11 +147,12 @@ async function deployApp() {
       targetDir,
       gen2: true,
       // satisfy the Org Policy
-      ingressSettings: 'ALLOW_ALL',
+      ingressSettings: 'ALLOW_INTERNAL_ONLY',
       allowUnauthenticated: true,
       
       // CRITICAL: Force use of your project-local bucket
       // This changes how gcx generates the upload handshake
+      bucket: `gcf-staging-${projectId}-us-central1`,
           
       // Explicitly set the project to ensure the right Service Agent is used
       project: projectId 
