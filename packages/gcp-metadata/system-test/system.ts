@@ -135,6 +135,14 @@ async function deployApp() {
   const files = fs.readdirSync(targetDir);
   console.log(`Files to package: ${files.join(', ')}`);
 
+  console.log(`PATH: ${process.env.PATH}`);
+  try {
+    const whichGcloud = execSync('which gcloud').toString().trim();
+    console.log(`Using gcloud at: ${whichGcloud}`);
+  } catch (e) {
+    console.error('gcloud CLI not found in PATH');
+  }
+
   console.log(`Deploying function ${fullPrefix} from ${targetDir} using gcloud...`);
   const cmd = `gcloud functions deploy ${fullPrefix} ` +
     `--gen2 ` +
