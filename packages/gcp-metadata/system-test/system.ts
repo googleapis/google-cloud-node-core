@@ -163,8 +163,7 @@ async function deployApp() {
       
       // CRITICAL: Force use of your project-local bucket
       // This changes how gcx generates the upload handshake
-      bucket: 'gcp-metadata-test-bucket',
-      
+          
       // Explicitly set the project to ensure the right Service Agent is used
       project: projectId 
     });
