@@ -24,7 +24,7 @@ import {promisify} from 'util';
 import {execSync} from 'child_process';
 import {request} from 'gaxios';
 
-const loadGcx = () => import('gcx');
+
 
 const copy = promisify(fs.copyFile);
 const pkg = require('../../package.json'); // eslint-disable-line
@@ -132,34 +132,27 @@ async function pruneFunctions(sessionOnly: boolean) {
  */
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
-  const gcx = await loadGcx();
-  
-  // 1. Manually check if the target directory has files
   const files = fs.readdirSync(targetDir);
   console.log(`Files to package: ${files.join(', ')}`);
 
+  console.log(`Deploying function ${fullPrefix} from ${targetDir} using gcloud...`);
+  const cmd = `gcloud functions deploy ${fullPrefix} ` +
+    `--gen2 ` +
+    `--region=us-central1 ` +
+    `--runtime=nodejs20 ` +
+    `--source=${targetDir} ` +
+    `--entry-point=getMetadata ` +
+    `--ingress-settings=internal-only ` +
+    `--allow-unauthenticated ` +
+    `--trigger-http ` +
+    `--project=${projectId} ` +
+    `--quiet`;
+
   try {
-    await gcx.deploy({
-      name: fullPrefix,
-      entryPoint: 'getMetadata',
-      runtime: 'nodejs20',
-      region: 'us-central1',
-      targetDir,
-      gen2: true,
-      // satisfy the Org Policy
-      ingressSettings: 'ALLOW_INTERNAL_ONLY',
-      allowUnauthenticated: true,
-      
-      // CRITICAL: Force use of your project-local bucket
-      // This changes how gcx generates the upload handshake
-      bucket: `gcf-staging-${projectId}-us-central1`,
-          
-      // Explicitly set the project to ensure the right Service Agent is used
-      project: projectId 
-    });
+    execSync(cmd, { stdio: 'inherit' });
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
-    console.error(`Deployment failed at Stage: ${(error as any).message}`);
+    console.error(`Deployment failed: ${(error as any).message}`);
     throw error;
   }
 }
