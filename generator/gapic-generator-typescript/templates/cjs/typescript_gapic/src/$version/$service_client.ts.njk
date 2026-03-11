@@ -27,12 +27,12 @@ limitations under the License.
 {% import "../../_namer.njk" as namer -%}
 {{- namer.initialize(id, service) -}}
 {%- set autoPopulated = false -%}
-{%- set methodNames = {} %}
+{%- set methodNames = [] %}
 {%- for method in service.method -%}
       {%- if method.autoPopulatedFields|length !== 0 %}
         {%- set autoPopulated = true -%}
       {%- endif %}
-      {%- do methodNames.update({(method.name.toCamelCase()): true}) -%}
+      {%- do methodNames.push(method.name.toCamelCase()) -%}
 {%- endfor -%}
 import {% if (not api.legacyProtoLoad) and (autoPopulated === false)  %}type {% endif %}* as gax from 'google-gax';
 import type {Callback, CallOptions, Descriptors, ClientOptions
@@ -1105,21 +1105,21 @@ export class {{ service.name }}Client {
 {%- endif %}
 {%- endfor %}
 {%- if service.IAMPolicyMixin > 0 %}
-  {%- if not methodNames['getIamPolicy'] %}
+  {%- if 'getIamPolicy' not in methodNames %}
     {{ iam.getIamPolicy()}}
   {%- endif %}
-  {%- if not methodNames['setIamPolicy'] %}
+  {%- if 'setIamPolicy' not in methodNames %}
     {{ iam.setIamPolicy()}}
   {%- endif %}
-  {%- if not methodNames['testIamPermissions'] %}
+  {%- if 'testIamPermissions' not in methodNames %}
     {{ iam.testIamPermissions()}}
   {%- endif %}
 {% endif -%}
 {%- if service.LocationMixin > 0 %}
-  {%- if not methodNames['getLocation'] %}
+  {%- if 'getLocation' not in methodNames %}
     {{ location.getLocation() }}
   {%- endif %}
-  {%- if not methodNames['listLocations'] %}
+  {%- if 'listLocations' not in methodNames %}
     {{ location.listLocationsAsync() }}
   {%- endif %}
 {% endif -%}
