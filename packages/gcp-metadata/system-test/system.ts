@@ -64,10 +64,26 @@ describe('gcp metadata', () => {
     });
 
     it.only('should access the metadata service on GCF', async () => {
-      const url = `https://us-central1-${projectId}.cloudfunctions.net/${fullPrefix}`;
-      const res = await request<{isAvailable: boolean}>({url});
-      console.dir(res.data);
-      assert.strictEqual(res.data.isAvailable, true);
+      // 1. Get the authenticated GCF v2 client
+        const gcx = await loadGcx();
+        const client = await gcx._getGCFV2Client();
+        
+        // 2. Fetch the function details to get the 'uri'
+        const [func] = await client.getFunction({
+          name: `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`
+        });
+
+        const url = func.serviceConfig?.uri;
+        if (!url) {
+          throw new Error('Function URL (uri) not found in serviceConfig');
+        }
+
+        console.log(`Testing URL: ${url}`);
+
+        // 3. Make the request
+        const res = await request<{isAvailable: boolean}>({url});
+        console.dir(res.data);
+        assert.strictEqual(res.data.isAvailable, true);
     });
 
     after(() => pruneFunctions(true));
