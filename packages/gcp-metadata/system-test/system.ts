@@ -145,6 +145,10 @@ async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
   const gcx = await loadGcx();
   
+  // 1. Manually check if the target directory has files
+  const files = fs.readdirSync(targetDir);
+  console.log(`Files to package: ${files.join(', ')}`);
+
   try {
     await gcx.deploy({
       name: fullPrefix,
@@ -152,20 +156,21 @@ async function deployApp() {
       runtime: 'nodejs20',
       region: 'us-central1',
       targetDir,
-      gen2: true, 
-      triggerHTTP: true,
+      gen2: true,
+      // satisfy the Org Policy
       ingressSettings: 'ALLOW_ALL',
       allowUnauthenticated: true,
-      // Force the project ID explicitly to ensure the signed URL
-      // is generated against the correct project's service agent
-      project: projectId, 
-      projectId: projectId,
+      
+      // CRITICAL: Force use of your project-local bucket
+      // This changes how gcx generates the upload handshake
+      bucket: 'gcp-metadata-test-bucket',
+      
+      // Explicitly set the project to ensure the right Service Agent is used
+      project: projectId 
     });
-    
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
-    // If we still get a 403, we need to see the URL it's failing on
-    console.error(`Failed to deploy ${fullPrefix}:`, error);
+    console.error(`Deployment failed at Stage: ${(error as any).message}`);
     throw error;
   }
 }
