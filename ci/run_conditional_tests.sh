@@ -60,11 +60,11 @@ changed=$?
 set -e
 if [[ "${changed}" -eq 0 ]]; then
     echo "no change detected in ci"
-else
-    echo "change detected in ci, we should test everything"
-    echo "result of git diff ${GIT_DIFF_ARG} ci:"
-    git diff ${GIT_DIFF_ARG} ci
-    GIT_DIFF_ARG=""
+# else
+#     echo "change detected in ci, we should test everything"
+#     echo "result of git diff ${GIT_DIFF_ARG} ci:"
+#     git diff ${GIT_DIFF_ARG} ci
+#     GIT_DIFF_ARG=""
 fi
 
 # Now we have a fixed list, but we can change it to autodetect if

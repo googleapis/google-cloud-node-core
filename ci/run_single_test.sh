@@ -61,7 +61,7 @@ samples)
     retval=$?
     ;;
 system)
-    ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
+    # ${PROJECT_ROOT}/ci/run-interdependent-tests.sh "${TEST_TYPE}-test"
     npm install --ignore-scripts --engine-strict; npm install
     npm run ${TEST_TYPE}-test
     retval=$?

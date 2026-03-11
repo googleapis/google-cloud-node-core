@@ -127,7 +127,7 @@ async function pruneFunctions(sessionOnly: boolean) {
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
   const gcx = await loadGcx();
-try {
+  try {
     await gcx.deploy({
       name: fullPrefix,
       entryPoint: 'getMetadata',
@@ -135,15 +135,21 @@ try {
       runtime: 'nodejs20',
       region: 'us-central1',
       targetDir,
-      gen2: false, // This triggers the _deployV2 path in gcx
-      ingressSettings: 'ALLOW_INTERNAL_ONLY'
+      gen2: true, // MUST be true because gcx only supports ingressSettings in v2
+      
+      // Based on the gcx source code you provided:
+      // The library expects ingressSettings at the TOP LEVEL of the options,
+      // and it will move it into serviceConfig for you.
+      ingressSettings: 'ALLOW_ALL', 
+      
+      // Important for Gen 2 tests:
+      allowUnauthenticated: true 
     });
     
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
-    // Log the full error object to see if there's a nested "details" field
     console.error(`Failed to deploy ${fullPrefix}:`, error);
-    throw error; 
+    throw error;
   }
 }
 
