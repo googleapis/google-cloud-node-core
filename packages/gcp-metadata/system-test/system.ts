@@ -143,13 +143,8 @@ async function pruneFunctions(sessionOnly: boolean) {
  */
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
-  
-  // Sanity check: ensure the directory exists so we don't upload an empty zip
-  if (!fs.existsSync(targetDir)) {
-    throw new Error(`Target directory not found: ${targetDir}`);
-  }
-
   const gcx = await loadGcx();
+  
   try {
     await gcx.deploy({
       name: fullPrefix,
@@ -159,15 +154,17 @@ async function deployApp() {
       targetDir,
       gen2: true, 
       triggerHTTP: true,
-      // Pass the bucket name WITHOUT the gs:// prefix
-      bucket: 'gcp-metadata-test-bucket',
-      // Required for Org Policy
-      ingressSettings: 'ALLOW_ALL', 
-      allowUnauthenticated: true 
+      ingressSettings: 'ALLOW_ALL',
+      allowUnauthenticated: true,
+      // Force the project ID explicitly to ensure the signed URL
+      // is generated against the correct project's service agent
+      project: projectId, 
+      projectId: projectId,
     });
     
-    console.log(`Successfully deployed ${fullPrefix} to 2nd Gen`);
+    console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
+    // If we still get a 403, we need to see the URL it's failing on
     console.error(`Failed to deploy ${fullPrefix}:`, error);
     throw error;
   }
