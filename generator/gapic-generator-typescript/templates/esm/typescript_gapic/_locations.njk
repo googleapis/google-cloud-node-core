@@ -6,6 +6,11 @@
   [getLocation, listLocations] methods are created which is calling the corresponding methods from LocationsClient in google-gax. Note that since the listLocations method is a paginated
   method, we default to using listLocationsAsync for ease of use.
 -#}
+{{ getLocation() }}
+{{ listLocationsAsync() }}
+{%- endmacro -%}
+
+{%- macro getLocation() -%}
  /**
    * Gets information about a location.
    *
@@ -45,7 +50,9 @@
   ): Promise<LocationProtos.google.cloud.location.ILocation> {
     return this.locationsClient.getLocation(request, options, callback);
   }
+{%- endmacro -%}
 
+{%- macro listLocationsAsync() -%}
 /**
    * Lists information about the supported locations for this service. Returns an iterable object.
    *
@@ -83,4 +90,5 @@
   ): AsyncIterable<LocationProtos.google.cloud.location.ILocation> {
     return this.locationsClient.listLocationsAsync(request, options);
   }
+{%- endmacro -%}
 {%- endmacro -%}

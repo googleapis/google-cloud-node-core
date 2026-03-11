@@ -70,6 +70,10 @@ import {loggingUtils as logging} from 'google-gax';
 const version = getJSON(
   path.join(dirname, '..', '..', '..', '..', 'package.json')
 ).version;
+{%- set methodNames = {} %}
+{%- for method in service.method -%}
+  {%- do methodNames.update({(method.name.toCamelCase()): true}) -%}
+{%- endfor -%}
 
 /**
 {{- util.printCommentsForService(service) }}
@@ -448,7 +452,6 @@ export class {{ service.name }}Client {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (this._protos as any).{{api.naming.protoPackage}}.{{ service.name }},
         this._opts, this._providedCustomServicePath) as Promise<{[method: string]: Function}>;
-
      {%- set stubMethodsContent %}
 {%- set stubMethodsJoiner = joiner(', ') -%}
 {%- for method in service.method -%}
@@ -1110,10 +1113,23 @@ export class {{ service.name }}Client {
 {%- endif %}
 {%- endfor %}
 {%- if service.IAMPolicyMixin > 0 %}
-{{ iam.iamServiceMethods()}}
+  {%- if not methodNames['getIamPolicy'] %}
+    {{ iam.getIamPolicy()}}
+  {%- endif %}
+  {%- if not methodNames['setIamPolicy'] %}
+    {{ iam.setIamPolicy()}}
+  {%- endif %}
+  {%- if not methodNames['testIamPermissions'] %}
+    {{ iam.testIamPermissions()}}
+  {%- endif %}
 {% endif -%}
 {%- if service.LocationMixin > 0 %}
-{{ location.locationServiceMethods()}}
+  {%- if not methodNames['getLocation'] %}
+    {{ location.getLocation() }}
+  {%- endif %}
+  {%- if not methodNames['listLocations'] %}
+    {{ location.listLocationsAsync() }}
+  {%- endif %}
 {% endif -%}
 {%- if service.LongRunningOperationsMixin > 0 %}
 {{ operations.operationsServiceMethods()}}
