@@ -16,7 +16,18 @@
 
 const gcpMetadata = require('gcp-metadata');
 
+// Log availability on startup to allow verification via logs
+const init = (async () => {
+  try {
+    const isAvailable = await gcpMetadata.isAvailable();
+    console.log(`GCF_METADATA_CHECK: isAvailable=${isAvailable}`);
+  } catch (e) {
+    console.error(`GCF_METADATA_CHECK: error=${e.message}`);
+  }
+})();
+
 exports.getMetadata = async (req, res) => {
+  await init;
   const isAvailable = await gcpMetadata.isAvailable();
   const instance = await gcpMetadata.instance();
   const svc = await gcpMetadata.instance({
