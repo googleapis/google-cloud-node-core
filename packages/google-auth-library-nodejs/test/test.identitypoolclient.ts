@@ -877,6 +877,43 @@ describe('IdentityPoolClient', () => {
 
   describe('for url-sourced subject tokens', () => {
     describe('retrieveSubjectToken()', () => {
+      it('should use responseType: text for text format', async () => {
+        const externalSubjectToken = 'SUBJECT_TOKEN_1';
+        const scope = nock(metadataBaseUrl, {
+          reqheaders: metadataHeaders,
+        })
+          .get(metadataPath)
+          .reply(200, externalSubjectToken);
+
+        const client = new IdentityPoolClient(urlSourcedOptions);
+        const requestSpy = sinon.spy(client.transporter, 'request');
+
+        await client.retrieveSubjectToken();
+
+        const call = requestSpy.getCall(0);
+        assert.strictEqual(call.args[0]!.responseType, 'text');
+        scope.done();
+      });
+      it('should use responseType: json for json format', async () => {
+        const externalSubjectToken = 'SUBJECT_TOKEN_1';
+        const jsonResponse = {
+          access_token: externalSubjectToken,
+        };
+        const scope = nock(metadataBaseUrl, {
+          reqheaders: metadataHeaders,
+        })
+          .get(metadataPath)
+          .reply(200, jsonResponse);
+
+        const client = new IdentityPoolClient(jsonRespUrlSourcedOptions);
+        const requestSpy = sinon.spy(client.transporter, 'request');
+
+        await client.retrieveSubjectToken();
+
+        const call = requestSpy.getCall(0);
+        assert.strictEqual(call.args[0]!.responseType, 'json');
+        scope.done();
+      });
       it('should resolve on text response success', async () => {
         const externalSubjectToken = 'SUBJECT_TOKEN_1';
         const scope = nock(metadataBaseUrl, {

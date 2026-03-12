@@ -109,6 +109,7 @@ export class UserRefreshClient extends OAuth2Client {
         refresh_token: this._refreshToken,
         target_audience: targetAudience,
       } as {}),
+      responseType: 'json',
     };
     AuthClient.setMethodName(opts, 'fetchIdToken');
 
