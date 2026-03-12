@@ -33,7 +33,7 @@ steps:
   - id: 'Build Showcase'
     name: 'golang:1.25'
     entrypoint: 'sh'
-    args: ['-c', 'CGO_ENABLED=0 go build -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase']
+    args: ['-c', 'mkdir -p /workspace/bin && CGO_ENABLED=0 go build -v -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase && ls -l /workspace/bin/gapic-showcase']
     dir: 'gapic-showcase'
     env:
       - 'GOPATH=/workspace'
@@ -62,6 +62,8 @@ steps:
     args:
       - '-c'
       - |
+        echo "Verifying gapic-showcase binary..."
+        ls -l /workspace/bin/gapic-showcase || echo "BINARY NOT FOUND IN /workspace/bin"
         echo "Starting gapic-showcase server in background..."
         /workspace/bin/gapic-showcase run &        
         echo "Waiting for server at localhost:7469..."
