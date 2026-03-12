@@ -29,20 +29,6 @@ logsBucket: 'gs://${_LOGS_BUCKET}/logs/google-cloud-node-core/${_BUILD_TYPE}/${C
 timeout: 32400s
 
 steps:
-  - id: 'Clone Showcase'
-    name: 'gcr.io/cloud-builders/git'
-    args: ['clone', 'https://github.com/googleapis/gapic-showcase.git']
-
-  - id: 'Build Showcase'
-    name: 'golang:1.24'
-    entrypoint: 'sh'
-    args: ['-c', 'mkdir -p /workspace/bin && CGO_ENABLED=0 go build -v -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase && ls -l /workspace/bin/gapic-showcase']
-    dir: 'gapic-showcase'
-    env:
-      - 'GOPATH=/workspace'
-      - 'GOCACHE=/workspace/.cache/go-build'
-    waitFor: ['Clone Showcase']
-
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: "bash"
     args: ["ci/deletecloudbuild.sh"]
