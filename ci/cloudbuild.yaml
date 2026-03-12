@@ -38,17 +38,10 @@ steps:
   - name: gcr.io/${PROJECT_ID}/google-cloud-node-core-${_NODE_VERSION}
     id: "run-tests"
     timeout: 32400s
-    entrypoint: "bash"
-    args:
-      - '-c'
-      - |
-        echo "Verifying gapic-showcase binary..."
-        ls -l /workspace/bin/gapic-showcase || echo "BINARY NOT FOUND IN /workspace/bin"
-        ci/run_conditional_tests.sh
+    entrypoint: "ci/run_conditional_tests.sh"
     env:
     - 'BUILD_TYPE=${_BUILD_TYPE}'
     - 'TEST_TYPE=${_TEST_TYPE}'
-    - 'GAPIC_SHOWCASE_PATH=/workspace/bin/gapic-showcase'
     - 'BUILD_ID=$BUILD_ID'
     - 'PROJECT_ID=$PROJECT_ID'
     - 'REPO_OWNER=${_REPO_OWNER}'
