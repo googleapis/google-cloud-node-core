@@ -68,7 +68,7 @@ jobs:
     - name: Cache Bazel files
       if: steps.generator-changes.outputs.changes == 'true'
       id: cache-bazel
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/bazel
         key: ${{ runner.os }}-googleapis-20250422-${{ secrets.CACHE_VERSION }}
