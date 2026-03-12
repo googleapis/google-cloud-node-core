@@ -24,6 +24,20 @@ limitations under the License.
 {%- for method in service.method -%}
   {%- set methodNamesStr = methodNamesStr + method.name.toCamelCase() + "|" -%}
 {%- endfor -%}
+{%- set enableIamTest = false %}
+{%- if service.IAMPolicyMixin > 0 %}
+  {%- if ('|getIamPolicy|' not in methodNamesStr) or ('|setIamPolicy|' not in methodNamesStr) or ('|testIamPermissions|' not in methodNamesStr) %}
+    {%- set enableIamTest = true %}
+  {%- endif %}
+{%- endif %}
+
+{%- set enableLocationTest = false %}
+{%- if service.LocationMixin > 0 %}
+  {%- if ('|getLocation|' not in methodNamesStr) or ('|listLocations|' not in methodNamesStr) %}
+    {%- set enableLocationTest = true %}
+  {%- endif %}
+{%- endif %}
+
 import * as protos from '../protos/protos';
 import * as assert from 'assert';
 import * as sinon from 'sinon';
@@ -48,8 +62,8 @@ import {protobuf
 {%- if service.longRunning.length > 0 or service.LongRunningOperationsMixin > 0 -%}
 , operationsProtos
 {%- endif -%}
-{%- if service.IAMPolicyMixin > 0 %}, IamProtos{%- endif -%}
-{%- if service.LocationMixin > 0 %}, LocationProtos{%- endif -%}
+{%- if enableIamTest %}, IamProtos{%- endif -%}
+{%- if enableLocationTest %}, LocationProtos{%- endif -%}
 } from 'google-gax';
 {%- if not api.legacyProtoLoad %}
 
