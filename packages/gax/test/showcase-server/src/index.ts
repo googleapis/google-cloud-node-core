@@ -41,13 +41,36 @@ export class ShowcaseServer {
     const fallbackServerUrl = `https://github.com/googleapis/gapic-showcase/releases/download/v${showcaseVersion}/${tarballFilename}`;
     const binaryName = './gapic-showcase';
 
-    await fsp.rm(testDir, {recursive: true, force: true});
+    await fsp.rm(testDir, { recursive: true, force: true });
     await mkdir(testDir);
     process.chdir(testDir);
     console.log(`Server will be run from ${testDir}.`);
 
-    await download(fallbackServerUrl, testDir);
-    await execa('tar', ['xzf', tarballFilename]);
+    const prebuiltPath =
+      process.env['GAPIC_SHOWCASE_PATH'] ||
+      path.resolve(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        '..',
+        '..',
+        'bin',
+        'gapic-showcase'
+      );
+    if (fs.existsSync(prebuiltPath)) {
+      console.log(`Using pre-built gapic-showcase binary from ${prebuiltPath}`);
+      await fsp.copyFile(prebuiltPath, path.join(testDir, 'gapic-showcase'));
+      await fsp.chmod(path.join(testDir, 'gapic-showcase'), 0o755);
+    } else {
+      console.log(
+        `Pre-built binary not found at ${prebuiltPath}. Downloading...`
+      );
+      await download(fallbackServerUrl, testDir);
+      await execa('tar', ['xzf', tarballFilename]);
+    }
+
+
     const childProcess = execa(binaryName, ['run'], {
       cwd: testDir,
       stdio: 'inherit',

@@ -29,21 +29,44 @@ logsBucket: 'gs://${_LOGS_BUCKET}/logs/google-cloud-node-core/${_BUILD_TYPE}/${C
 timeout: 32400s
 
 steps:
+  - id: 'Clone Showcase'
+    name: 'gcr.io/cloud-builders/git'
+    args: ['clone', 'https://github.com/googleapis/gapic-showcase.git']
+
+  - id: 'Build Showcase'
+    name: 'golang:1.24'
+    entrypoint: 'sh'
+    args: ['-c', 'mkdir -p /workspace/bin && CGO_ENABLED=0 go build -v -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase && ls -l /workspace/bin/gapic-showcase']
+    dir: 'gapic-showcase'
+    env:
+      - 'GOPATH=/workspace'
+      - 'GOCACHE=/workspace/.cache/go-build'
+    waitFor: ['Clone Showcase']
+
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: "bash"
     args: ["ci/deletecloudbuild.sh"]
     env:
     - 'REF_NAME=${REF_NAME}'
+
   - name: gcr.io/${PROJECT_ID}/google-cloud-node-core-${_NODE_VERSION}
     id: "run-tests"
     timeout: 32400s
-    entrypoint: "ci/run_conditional_tests.sh"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        echo "Verifying gapic-showcase binary..."
+        ls -l /workspace/bin/gapic-showcase || echo "BINARY NOT FOUND IN /workspace/bin"
+        ci/run_conditional_tests.sh
     env:
     - 'BUILD_TYPE=${_BUILD_TYPE}'
     - 'TEST_TYPE=${_TEST_TYPE}'
+    - 'GAPIC_SHOWCASE_PATH=/workspace/bin/gapic-showcase'
     - 'BUILD_ID=$BUILD_ID'
     - 'PROJECT_ID=$PROJECT_ID'
     - 'REPO_OWNER=${_REPO_OWNER}'
     - 'REPO_NAME=${_REPO_NAME}'
     - 'COMMIT_SHA=$COMMIT_SHA'
     - 'PATH=/usr/local/gcloud/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    waitFor: ['Build Showcase']
