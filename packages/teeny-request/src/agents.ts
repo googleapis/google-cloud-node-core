@@ -17,8 +17,6 @@
 
 import {Agent as HTTPAgent} from 'http';
 import {Agent as HTTPSAgent} from 'https';
-// eslint-disable-next-line n/no-deprecated-api
-import {parse} from 'url';
 import {Options} from './';
 
 export const pool = new Map<string, HTTPAgent>();
@@ -83,18 +81,11 @@ export function getAgent(
 
   if (proxy && shouldUseProxy) {
     // tslint:disable-next-line variable-name
-    let Agent = isHttp
-      ? require('http-proxy-agent')
-      : require('https-proxy-agent');
+    const {HttpProxyAgent} = require('http-proxy-agent');
+    const {HttpsProxyAgent} = require('https-proxy-agent');
 
-    if (Agent.HttpsProxyAgent) {
-      Agent = Agent.HttpsProxyAgent;
-    } else if (Agent.HttpProxyAgent) {
-      Agent = Agent.HttpProxyAgent;
-    }
-
-    const proxyOpts = {...parse(proxy), ...poolOptions};
-    return new Agent(proxyOpts);
+    const Agent = isHttp ? HttpProxyAgent : HttpsProxyAgent;
+    return new Agent(proxy, poolOptions);
   }
 
   let key = isHttp ? 'http' : 'https';
