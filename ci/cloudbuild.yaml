@@ -55,4 +55,3 @@ steps:
     - 'REPO_NAME=${_REPO_NAME}'
     - 'COMMIT_SHA=$COMMIT_SHA'
     - 'PATH=/usr/local/gcloud/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-    waitFor: ['Build Showcase']
