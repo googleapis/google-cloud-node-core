@@ -69,11 +69,39 @@ describe('gcp metadata', () => {
         throw new Error(`Could not find URI for function: ${fullPrefix}. Is it a Gen 2 function?`);
       }
 
-      console.log(`Testing Gen 2 URL: ${url}`);
+      console.log(`Verifying Gen 2 function via logs: ${fullPrefix}`);
 
-      const res = await request<{isAvailable: boolean}>({url});
-      console.dir(res.data);
-      assert.strictEqual(res.data.isAvailable, true);
+      // Poll for the log entry
+      let found = false;
+      const maxRetries = 20;
+      const filter = `resource.type="cloud_run_revision" AND resource.labels.service_name="${fullPrefix}" AND textPayload:"GCF_METADATA_CHECK"`;
+      const cmd = `gcloud logging read '${filter}' --project=${projectId} --format="json" --limit=5`;
+
+      console.log(`Polling for logs with command: ${cmd}`);
+
+      for (let i = 0; i < maxRetries; i++) {
+        process.stdout.write('.');
+        try {
+          const output = execSync(cmd).toString();
+          const logs = JSON.parse(output);
+          if (logs && logs.length > 0) {
+            console.log('\nFound log entries:');
+            console.dir(logs, {depth: null});
+            const latestLog = logs[0].textPayload;
+            assert.ok(latestLog.includes('isAvailable=true'), `Metadata check failed: ${latestLog}`);
+            found = true;
+            break;
+          }
+        } catch (e) {
+          console.error(`\nError reading logs: ${(e as any).message}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+
+      if (!found) {
+        throw new Error(`Could not find GCF_METADATA_CHECK log entry for ${fullPrefix} after ${maxRetries} retries.`);
+      }
+      console.log('\nSuccessfully verified metadata access via logs.');
     });
 
     after(() => pruneFunctions(true));
