@@ -16,6 +16,7 @@ import * as assert from 'assert';
 import {describe, it} from 'mocha';
 import * as fs from 'fs';
 import * as nock from 'nock';
+import * as sinon from 'sinon';
 import {UserRefreshClient} from '../src';
 
 describe('refresh', () => {
@@ -186,5 +187,25 @@ describe('refresh', () => {
     const headers = await refresh.getRequestHeaders();
     assert.strictEqual(headers.get('x-goog-user-project'), 'my-quota-project');
     req.done();
+  });
+
+  it('fetchIdToken should use responseType: json', async () => {
+    const client = new UserRefreshClient({
+      clientId: 'id',
+      clientSecret: 'secret',
+      refreshToken: 'refresh',
+    });
+    const requestSpy = sinon.spy(client.transporter, 'request');
+
+    const scope = nock('https://oauth2.googleapis.com')
+      .post('/token')
+      .reply(200, {id_token: 'id-token'});
+
+    await client.fetchIdToken('target-aud');
+
+    const call = requestSpy.getCall(0);
+    assert.strictEqual(call.args[0]!.responseType, 'json');
+    scope.done();
+    sinon.restore();
   });
 });
