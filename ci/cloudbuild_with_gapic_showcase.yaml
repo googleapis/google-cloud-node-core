@@ -39,17 +39,17 @@ steps:
       - 'GOPATH=/workspace'
       - 'GOCACHE=/workspace/.cache/go-build'
     waitFor: ['Clone Showcase']
-  - name: 'gcr.io/kaniko-project/executor:v1.24.0'
-    args: [
-      '--log-format=text',
-      '--context=dir:///workspace/testing',
-      '--build-arg=NODE_VERSION=${_NODE_VERSION}',
-      '--dockerfile=ci/Dockerfile',
-      '--cache=true',
-      '--destination=gcr.io/${PROJECT_ID}/google-cloud-node-core-${_NODE_VERSION}',
-      '--push-retry=3',
-      '--image-fs-extract-retry=3'
-    ]
+  # - name: 'gcr.io/kaniko-project/executor:v1.24.0'
+  #   args: [
+  #     '--log-format=text',
+  #     '--context=dir:///workspace/testing',
+  #     '--build-arg=NODE_VERSION=${_NODE_VERSION}',
+  #     '--dockerfile=ci/Dockerfile',
+  #     '--cache=true',
+  #     '--destination=gcr.io/${PROJECT_ID}/google-cloud-node-core-${_NODE_VERSION}',
+  #     '--push-retry=3',
+  #     '--image-fs-extract-retry=3'
+  #   ]
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: "bash"
     args: ["ci/deletecloudbuild.sh"]
@@ -80,4 +80,5 @@ steps:
     - 'REPO_OWNER=${_REPO_OWNER}'
     - 'REPO_NAME=${_REPO_NAME}'
     - 'COMMIT_SHA=$COMMIT_SHA'
+    - 'PATH=/usr/local/gcloud/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
     waitFor: ['Build Showcase']
