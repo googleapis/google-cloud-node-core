@@ -16,6 +16,7 @@ options:
   dynamic_substitutions: true
   # Increased from default to 8 vCPUs / 8GB RAM to prevent OOM/silent crashes
   machineType: 'E2_HIGHCPU_32'
+  diskSizeGb: '100'
 
 substitutions:
   _BUILD_TYPE: "presubmit"
@@ -28,13 +29,15 @@ logsBucket: 'gs://${_LOGS_BUCKET}/logs/google-cloud-node-core/${_BUILD_TYPE}/${C
 timeout: 32400s
 
 steps:
-  - name: 'gcr.io/kaniko-project/executor:v1.24.0'
-    args: [
+- name: 'gcr.io/kaniko-project/executor:v1.24.0'
+  args: [
       '--log-format=text',
       '--context=dir:///workspace/testing',
       '--build-arg=NODE_VERSION=${_NODE_VERSION}',
       '--dockerfile=ci/Dockerfile',
       '--cache=true',
+      '--compressed-caching=false',
+      '--snapshot-mode=redo',
       '--destination=gcr.io/${PROJECT_ID}/google-cloud-node-core-${_NODE_VERSION}',
       '--push-retry=3',
       '--image-fs-extract-retry=3'
