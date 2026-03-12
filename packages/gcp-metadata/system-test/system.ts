@@ -24,8 +24,6 @@ import {promisify} from 'util';
 import {execSync} from 'child_process';
 import {request} from 'gaxios';
 
-
-
 const copy = promisify(fs.copyFile);
 const pkg = require('../../package.json'); // eslint-disable-line
 
@@ -57,16 +55,18 @@ describe('gcp metadata', () => {
       await deployApp();
     });
 
-    it.only('should access the metadata service on GCF', async () => {
+    it('should access the metadata service on GCF', async () => {
       // Fetch the function metadata
       const name = `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`;
-      const [func] = await gcfV2.getFunction({ name });
+      const [func] = await gcfV2.getFunction({name});
 
       // 2nd Gen URLs are stored in serviceConfig.uri
       const url = func.serviceConfig?.uri;
-      
+
       if (!url) {
-        throw new Error(`Could not find URI for function: ${fullPrefix}. Is it a Gen 2 function?`);
+        throw new Error(
+          `Could not find URI for function: ${fullPrefix}. Is it a Gen 2 function?`,
+        );
       }
 
       console.log(`Verifying Gen 2 function via logs: ${fullPrefix}`);
@@ -88,7 +88,10 @@ describe('gcp metadata', () => {
             console.log('\nFound log entries:');
             console.dir(logs, {depth: null});
             const latestLog = logs[0].textPayload;
-            assert.ok(latestLog.includes('isAvailable=true'), `Metadata check failed: ${latestLog}`);
+            assert.ok(
+              latestLog.includes('isAvailable=true'),
+              `Metadata check failed: ${latestLog}`,
+            );
             found = true;
             break;
           }
@@ -99,7 +102,9 @@ describe('gcp metadata', () => {
       }
 
       if (!found) {
-        throw new Error(`Could not find GCF_METADATA_CHECK log entry for ${fullPrefix} after ${maxRetries} retries.`);
+        throw new Error(
+          `Could not find GCF_METADATA_CHECK log entry for ${fullPrefix} after ${maxRetries} retries.`,
+        );
       }
       console.log('\nSuccessfully verified metadata access via logs.');
     });
@@ -171,21 +176,24 @@ async function deployApp() {
     console.error('gcloud CLI not found in PATH');
   }
 
-  console.log(`Deploying function ${fullPrefix} from ${targetDir} using gcloud...`);
-  const cmd = `gcloud functions deploy ${fullPrefix} ` +
-    `--gen2 ` +
-    `--region=us-central1 ` +
-    `--runtime=nodejs20 ` +
+  console.log(
+    `Deploying function ${fullPrefix} from ${targetDir} using gcloud...`,
+  );
+  const cmd =
+    `gcloud functions deploy ${fullPrefix} ` +
+    '--gen2 ' +
+    '--region=us-central1 ' +
+    '--runtime=nodejs20 ' +
     `--source=${targetDir} ` +
-    `--entry-point=getMetadata ` +
-    `--ingress-settings=internal-only ` +
-    `--allow-unauthenticated ` +
-    `--trigger-http ` +
+    '--entry-point=getMetadata ' +
+    '--ingress-settings=internal-only ' +
+    '--allow-unauthenticated ' +
+    '--trigger-http ' +
     `--project=${projectId} ` +
-    `--quiet`;
+    '--quiet';
 
   try {
-    execSync(cmd, { stdio: 'inherit' });
+    execSync(cmd, {stdio: 'inherit'});
     console.log(`Successfully deployed ${fullPrefix}`);
   } catch (error) {
     console.error(`Deployment failed: ${(error as any).message}`);

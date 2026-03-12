@@ -23,7 +23,7 @@
     "lint": "gts check --no-inline-config",
     "test": "c8 mocha build/esm/test",
     "presystem-test": "npm run compile",
-    "system-test": "echo 'no system test'",
+    "system-test": "mocha build/esm/system-test --timeout 80000",
     "compile": "tsc -b ./tsconfig.json ./tsconfig.cjs.json && node utils/enable-esm.mjs",
     "fix": "gts fix",
     "prepare": "npm run compile",
