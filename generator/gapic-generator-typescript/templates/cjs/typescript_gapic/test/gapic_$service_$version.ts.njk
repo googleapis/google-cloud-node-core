@@ -20,9 +20,9 @@ limitations under the License.
 {{license.license(commonParameters.copyrightYear)}}
 {% import "../_namer.njk" as namer -%}
 {{- namer.initialize(id, service) -}}
-{%- set methodNames = [] %}
+{%- set methodNamesStr = "|" %}
 {%- for method in service.method -%}
-  {%- do methodNames.push(method.name.toCamelCase()) -%}
+  {%- set methodNamesStr = methodNamesStr + method.name.toCamelCase() + "|" -%}
 {%- endfor -%}
 import * as protos from '../protos/protos';
 import * as assert from 'assert';
@@ -1093,7 +1093,7 @@ describe('{{ api.naming.version }}.{{ service.name }}Client', () => {
 {%- if (service.IAMPolicyMixin) > 0 %}
 {%- set IAMmethods = ['getIamPolicy', 'setIamPolicy', 'testIamPermissions'] %}
 {%- for method in IAMmethods %}
-    {%- if method not in methodNames %}
+    {%- if ("|" + method + "|") not in methodNamesStr %}
     describe('{{ method }}', () => {
         it('invokes {{ method }} without error', async () => {
             const client = new {{ service.name.toLowerCase() }}Module.{{ api.naming.version }}.{{ service.name }}Client(
@@ -1214,7 +1214,7 @@ describe('{{ api.naming.version }}.{{ service.name }}Client', () => {
 {%- endif %}
 {%- if service.LocationMixin > 0 %}
 {%- set method = 'getLocation' %}
-    {%- if method not in methodNames %}
+    {%- if ("|" + method + "|") not in methodNamesStr %}
     describe('{{ method }}', () => {
         it('invokes {{ method }} without error', async () => {
             const client = new {{ service.name.toLowerCase() }}Module.{{ api.naming.version }}.{{ service.name }}Client(
@@ -1323,7 +1323,7 @@ describe('{{ api.naming.version }}.{{ service.name }}Client', () => {
     });
     {%- endif %}
 {%- set method = 'listLocations' %}
-    {%- if method not in methodNames %}
+    {%- if ("|" + method + "|") not in methodNamesStr %}
     describe('{{ method }}Async', () => {
         it('uses async iteration with {{method}} without error', async () => {
             const client = new {{ service.name.toLowerCase() }}Module.{{ api.naming.version }}.{{ service.name }}Client({{- util.initClientOptions(api.rest) -}});

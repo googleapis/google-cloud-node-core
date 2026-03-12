@@ -70,9 +70,9 @@ import {loggingUtils as logging} from 'google-gax';
 const version = getJSON(
   path.join(dirname, '..', '..', '..', '..', 'package.json')
 ).version;
-{%- set methodNames = [] %}
+{%- set methodNamesStr = "|" %}
 {%- for method in service.method -%}
-  {%- do methodNames.push(method.name.toCamelCase()) -%}
+  {%- set methodNamesStr = methodNamesStr + method.name.toCamelCase() + "|" -%}
 {%- endfor -%}
 
 /**
@@ -1113,21 +1113,21 @@ export class {{ service.name }}Client {
 {%- endif %}
 {%- endfor %}
 {%- if service.IAMPolicyMixin > 0 %}
-  {%- if 'getIamPolicy' not in methodNames %}
+  {%- if '|getIamPolicy|' not in methodNamesStr %}
     {{ iam.getIamPolicy()}}
   {%- endif %}
-  {%- if 'setIamPolicy' not in methodNames %}
+  {%- if '|setIamPolicy|' not in methodNamesStr %}
     {{ iam.setIamPolicy()}}
   {%- endif %}
-  {%- if 'testIamPermissions' not in methodNames %}
+  {%- if '|testIamPermissions|' not in methodNamesStr %}
     {{ iam.testIamPermissions()}}
   {%- endif %}
 {% endif -%}
 {%- if service.LocationMixin > 0 %}
-  {%- if 'getLocation' not in methodNames %}
+  {%- if '|getLocation|' not in methodNamesStr %}
     {{ location.getLocation() }}
   {%- endif %}
-  {%- if 'listLocations' not in methodNames %}
+  {%- if '|listLocations|' not in methodNamesStr %}
     {{ location.listLocationsAsync() }}
   {%- endif %}
 {% endif -%}
