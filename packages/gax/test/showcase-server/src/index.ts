@@ -46,20 +46,8 @@ export class ShowcaseServer {
     process.chdir(testDir);
     console.log(`Server will be run from ${testDir}.`);
 
-    const prebuiltPath =
-      process.env['GAPIC_SHOWCASE_PATH'] || '/workspace/bin/gapic-showcase';
-    if (fs.existsSync(prebuiltPath)) {
-      console.log(`Using pre-built gapic-showcase binary from ${prebuiltPath}`);
-      await fsp.copyFile(prebuiltPath, path.join(testDir, 'gapic-showcase'));
-      await fsp.chmod(path.join(testDir, 'gapic-showcase'), 0o755);
-    } else {
-      console.log(
-        `Pre-built binary not found at ${prebuiltPath}. Downloading...`
-      );
-      await download(fallbackServerUrl, testDir);
-      await execa('tar', ['xzf', tarballFilename]);
-    }
-
+    await download(fallbackServerUrl, testDir);
+    await execa('tar', ['xzf', tarballFilename]);
     const childProcess = execa(binaryName, ['run'], {
       cwd: testDir,
       stdio: 'inherit',
