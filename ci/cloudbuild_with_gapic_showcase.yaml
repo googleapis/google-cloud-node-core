@@ -32,8 +32,8 @@ steps:
 
   - id: 'Build Showcase'
     name: 'golang:1.25'
-    entrypoint: 'go'
-    args: ['install', './cmd/gapic-showcase']
+    entrypoint: 'sh'
+    args: ['-c', 'CGO_ENABLED=0 go build -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase']
     dir: 'gapic-showcase'
     env:
       - 'GOPATH=/workspace'
@@ -75,6 +75,7 @@ steps:
     env:
     - 'BUILD_TYPE=${_BUILD_TYPE}'
     - 'TEST_TYPE=${_TEST_TYPE}'
+    - 'GAPIC_SHOWCASE_PATH=/workspace/bin/gapic-showcase'
     - 'BUILD_ID=$BUILD_ID'
     - 'PROJECT_ID=$PROJECT_ID'
     - 'REPO_OWNER=${_REPO_OWNER}'
