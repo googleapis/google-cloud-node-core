@@ -14,6 +14,8 @@
 
 options:
   dynamic_substitutions: true
+  # Increased from default to 8 vCPUs / 8GB RAM to prevent OOM/silent crashes
+  machineType: 'E2_HIGHCPU_32'
 
 substitutions:
   _BUILD_TYPE: "presubmit"
