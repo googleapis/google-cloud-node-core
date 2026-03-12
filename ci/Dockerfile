@@ -15,9 +15,9 @@
 ARG NODE_VERSION=16
 ARG FLAKYBOT_VERSION=1.1.0
 
-FROM node:${NODE_VERSION}-alpine as build
+FROM node:${NODE_VERSION}-slim as build
 
-RUN apk add --no-cache curl tar python3
+RUN apt-get update && apt-get install -y curl tar python3
 
 # Install gcloud
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
@@ -36,16 +36,13 @@ RUN curl https://github.com/googleapis/repo-automation-bots/releases/download/fl
 ENV PNPM_VERSION=7.32.2
 RUN curl https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
 
-FROM node:${NODE_VERSION}-alpine
-
-# Hack for not found error with flakybot
-RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+FROM node:${NODE_VERSION}-slim
 
 COPY --from=build /usr/local/gcloud /usr/local/gcloud
 COPY --from=build /bin/flakybot /bin/flakybot
 COPY --from=build /root/.local/share/pnpm /root/.local/share/pnpm
 
-RUN apk add --no-cache git bash python3 \
+RUN apt-get update && apt-get install -y git bash python3 \
   && ln -s /usr/bin/python3 /usr/bin/python
 
 ENV PNPM_HOME=/root/.local/share/pnpm

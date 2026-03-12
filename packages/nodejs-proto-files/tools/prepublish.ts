@@ -21,38 +21,60 @@ const protoFolders = ['google', 'grafeas', 'gapic'];
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const DecompressZip = require('decompress-zip');
 
-const extract = (input, opts, callback) => {
-  const output = Math.random() + '.zip';
+const extract = (input: string, opts: {strip?: number; filter?: (file: any) => boolean}, callback: (err?: Error | null) => void) => {
+  const output = Math.floor(Math.random() * 1000000) + '.zip';
+  console.log(`Downloading ${input} to ${output}...`);
 
-  (got as unknown as got.Got)
-    .stream(input)
-    .on('error', callback)
-    .pipe(fs.createWriteStream(output))
-    .on('error', callback)
-    .on('finish', () => {
-      const unzipper = new DecompressZip(output);
+  const writeStream = fs.createWriteStream(output);
+  const stream = (got as unknown as got.Got).stream(input);
 
-      unzipper
-        .on('error', callback)
-        .extract({
-          strip: opts.strip,
-          filter: file => {
-            if (opts.filter && !opts.filter(file)) return;
-            return path.extname(file.filename) === '.proto';
-          },
-        })
-        .on('extract', () => {
-          fs.unlink(output, callback);
-        });
-    });
+  stream.on('error', err => {
+    console.error(`Download error for ${input}: ${err.message}`);
+    writeStream.end();
+    fs.unlink(output, () => {});
+    callback(err);
+  });
+
+  stream.pipe(writeStream);
+
+  writeStream.on('error', err => {
+    console.error(`Write error for ${output}: ${err.message}`);
+    fs.unlink(output, () => {});
+    callback(err);
+  });
+
+  writeStream.on('finish', () => {
+    console.log(`Extracting ${output}...`);
+    const unzipper = new DecompressZip(output);
+
+    unzipper
+      .on('error', err => {
+        console.error(`Extraction error for ${output}: ${err.message}`);
+        fs.unlink(output, () => {});
+        callback(err);
+      })
+      .extract({
+        strip: opts.strip,
+        filter: file => {
+          if (opts.filter && !opts.filter(file)) return;
+          return path.extname(file.filename) === '.proto';
+        },
+      })
+      .on('extract', () => {
+        console.log(`Finished extracting ${output}`);
+        fs.unlink(output, callback);
+      });
+  });
 };
 
 const extractAsync = promisify(extract);
 const execAsync = promisify(require('child_process').exec);
 
 async function main() {
+  console.log(`Cleaning up old proto folders: ${protoFolders.join(', ')}`);
   await execAsync(`rm -rf ${protoFolders.join(' ')}`);
 
+  console.log('Fetching googleapis protos...');
   await extractAsync(
     'https://github.com/googleapis/googleapis/archive/master.zip',
     {
@@ -60,13 +82,15 @@ async function main() {
     },
   );
 
+  console.log('Fetching protobuf protos...');
   await extractAsync('https://github.com/google/protobuf/archive/main.zip', {
     strip: 2,
     filter: file => {
+      const parent = file.parent || path.dirname(file.filename);
       return (
-        file.parent.indexOf('protobuf-main') === 0 &&
-        file.parent.indexOf('protobuf-main/src/') === 0 &&
-        file.parent.indexOf('/internal') === -1 &&
+        parent.indexOf('protobuf-main') === 0 &&
+        parent.indexOf('protobuf-main/src/') === 0 &&
+        parent.indexOf('/internal') === -1 &&
         file.filename.indexOf('unittest') === -1 &&
         file.filename.indexOf('test') === -1
       );
@@ -76,6 +100,17 @@ async function main() {
   await execAsync(
     '[ -d "overrides" ] && cp -R overrides/* google || echo "no overrides"',
   );
+
+  // Validation
+  for (const folder of protoFolders) {
+    if (!fs.existsSync(folder) || fs.readdirSync(folder).length === 0) {
+      throw new Error(`Failed to create or populate folder: ${folder}`);
+    }
+  }
+  console.log('Successfully prepared all proto files.');
 }
 
-main().catch(console.error);
+main().catch(err => {
+  console.error('PREPUBLISH FAILED:', err);
+  process.exit(1);
+});
