@@ -21,7 +21,11 @@ const protoFolders = ['google', 'grafeas', 'gapic'];
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const DecompressZip = require('decompress-zip');
 
-const extract = (input: string, opts: {strip?: number; filter?: (file: any) => boolean}, callback: (err?: Error | null) => void) => {
+const extract = (
+  input: string,
+  opts: {strip?: number; filter?: (file: any) => boolean},
+  callback: (err?: Error | null) => void,
+) => {
   const output = Math.floor(Math.random() * 1000000) + '.zip';
   console.log(`Downloading ${input} to ${output}...`);
 
@@ -112,5 +116,6 @@ async function main() {
 
 main().catch(err => {
   console.error('PREPUBLISH FAILED:', err);
+  // eslint-disable-next-line n/no-process-exit
   process.exit(1);
 });
