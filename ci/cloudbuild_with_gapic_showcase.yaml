@@ -31,9 +31,9 @@ steps:
     args: ['clone', 'https://github.com/googleapis/gapic-showcase.git']
 
   - id: 'Build Showcase'
-    name: 'golang:1.25'
-    entrypoint: 'sh'
-    args: ['-c', 'mkdir -p /workspace/bin && CGO_ENABLED=0 go build -v -o /workspace/bin/gapic-showcase ./cmd/gapic-showcase && ls -l /workspace/bin/gapic-showcase']
+    name: 'golang:1.24'
+    entrypoint: 'go'
+    args: ['install', './cmd/gapic-showcase']
     dir: 'gapic-showcase'
     env:
       - 'GOPATH=/workspace'
@@ -62,8 +62,6 @@ steps:
     args:
       - '-c'
       - |
-        echo "Verifying gapic-showcase binary..."
-        ls -l /workspace/bin/gapic-showcase || echo "BINARY NOT FOUND IN /workspace/bin"
         echo "Starting gapic-showcase server in background..."
         /workspace/bin/gapic-showcase run &        
         echo "Waiting for server at localhost:7469..."
@@ -77,7 +75,6 @@ steps:
     env:
     - 'BUILD_TYPE=${_BUILD_TYPE}'
     - 'TEST_TYPE=${_TEST_TYPE}'
-    - 'GAPIC_SHOWCASE_PATH=/workspace/bin/gapic-showcase'
     - 'BUILD_ID=$BUILD_ID'
     - 'PROJECT_ID=$PROJECT_ID'
     - 'REPO_OWNER=${_REPO_OWNER}'
