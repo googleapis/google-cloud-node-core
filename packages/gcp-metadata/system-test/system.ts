@@ -18,18 +18,17 @@ import assert from 'assert';
 import {before, after, describe, it} from 'mocha';
 import fs from 'fs';
 import * as gcbuild from 'gcbuild';
-import {CloudFunctionsServiceClient} from '@google-cloud/functions';
+import {v2, CloudFunctionsServiceClient} from '@google-cloud/functions';
 import * as path from 'path';
 import {promisify} from 'util';
 import {execSync} from 'child_process';
 import {request} from 'gaxios';
 
-const loadGcx = () => import('gcx');
-
 const copy = promisify(fs.copyFile);
 const pkg = require('../../package.json'); // eslint-disable-line
 
 let gcf: CloudFunctionsServiceClient;
+let gcfV2: v2.FunctionServiceClient;
 let projectId: string;
 const shortPrefix = 'gcloud-tests';
 const randomUUID = () =>
@@ -41,7 +40,10 @@ describe('gcp metadata', () => {
     // pack up the gcp-metadata module and copy to the target dir
     await packModule();
     gcf = new CloudFunctionsServiceClient();
+    gcfV2 = new v2.FunctionServiceClient();
     projectId = await gcf.auth.getProjectId();
+    console.log(`Using Project ID: ${projectId}`);
+    console.log(`Function Name: ${fullPrefix}`);
   });
 
   describe('cloud functions', () => {
@@ -51,23 +53,60 @@ describe('gcp metadata', () => {
 
       // deploy the function to GCF
       await deployApp();
-      // cloud functions now require authentication by default, see:
-      // https://cloud.google.com/functions/docs/release-notes
-      await gcf.setIamPolicy({
-        resource: `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`,
-        policy: {
-          bindings: [
-            {members: ['allUsers'], role: 'roles/cloudfunctions.invoker'},
-          ],
-        },
-      });
     });
 
     it('should access the metadata service on GCF', async () => {
-      const url = `https://us-central1-${projectId}.cloudfunctions.net/${fullPrefix}`;
-      const res = await request<{isAvailable: boolean}>({url});
-      console.dir(res.data);
-      assert.strictEqual(res.data.isAvailable, true);
+      // Fetch the function metadata
+      const name = `projects/${projectId}/locations/us-central1/functions/${fullPrefix}`;
+      const [func] = await gcfV2.getFunction({name});
+
+      // 2nd Gen URLs are stored in serviceConfig.uri
+      const url = func.serviceConfig?.uri;
+
+      if (!url) {
+        throw new Error(
+          `Could not find URI for function: ${fullPrefix}. Is it a Gen 2 function?`,
+        );
+      }
+
+      console.log(`Verifying Gen 2 function via logs: ${fullPrefix}`);
+
+      // Poll for the log entry
+      let found = false;
+      const maxRetries = 20;
+      const filter = `resource.type="cloud_run_revision" AND resource.labels.service_name="${fullPrefix}" AND textPayload:"GCF_METADATA_CHECK"`;
+      const cmd = `gcloud logging read '${filter}' --project=${projectId} --format="json" --limit=5`;
+
+      console.log(`Polling for logs with command: ${cmd}`);
+
+      for (let i = 0; i < maxRetries; i++) {
+        process.stdout.write('.');
+        try {
+          const output = execSync(cmd).toString();
+          const logs = JSON.parse(output);
+          if (logs && logs.length > 0) {
+            console.log('\nFound log entries:');
+            console.dir(logs, {depth: null});
+            const latestLog = logs[0].textPayload;
+            assert.ok(
+              latestLog.includes('isAvailable=true'),
+              `Metadata check failed: ${latestLog}`,
+            );
+            found = true;
+            break;
+          }
+        } catch (e) {
+          console.error(`\nError reading logs: ${(e as any).message}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+
+      if (!found) {
+        throw new Error(
+          `Could not find GCF_METADATA_CHECK log entry for ${fullPrefix} after ${maxRetries} retries.`,
+        );
+      }
+      console.log('\nSuccessfully verified metadata access via logs.');
     });
 
     after(() => pruneFunctions(true));
@@ -98,12 +137,12 @@ describe('gcp metadata', () => {
  */
 async function pruneFunctions(sessionOnly: boolean) {
   console.log('Pruning leaked functions...');
-  const [fns] = await gcf.listFunctions({
+  const [fns] = await gcfV2.listFunctions({
     parent: `projects/${projectId}/locations/-`,
   });
   await Promise.all(
     fns
-      .filter(fn => {
+      .filter((fn: any) => {
         if (sessionOnly) {
           return fn.name!.includes(fullPrefix);
         }
@@ -112,8 +151,8 @@ async function pruneFunctions(sessionOnly: boolean) {
         const minutesSinceUpdate = (currentDate - updateDate) / 1000 / 60;
         return minutesSinceUpdate > 60 && fn.name!.includes(shortPrefix);
       })
-      .map(async fn => {
-        await gcf.deleteFunction({name: fn.name}).catch(e => {
+      .map(async (fn: any) => {
+        await gcfV2.deleteFunction({name: fn.name}).catch((e: any) => {
           console.error(`There was a problem deleting function ${fn.name}.`);
           console.error(e);
         });
@@ -126,15 +165,40 @@ async function pruneFunctions(sessionOnly: boolean) {
  */
 async function deployApp() {
   const targetDir = path.join(__dirname, '../../system-test/fixtures/hook');
-  const gcx = await loadGcx();
-  await gcx.deploy({
-    name: fullPrefix,
-    entryPoint: 'getMetadata',
-    triggerHTTP: true,
-    runtime: 'nodejs20',
-    region: 'us-central1',
-    targetDir,
-  });
+  const files = fs.readdirSync(targetDir);
+  console.log(`Files to package: ${files.join(', ')}`);
+
+  console.log(`PATH: ${process.env.PATH}`);
+  try {
+    const whichGcloud = execSync('which gcloud').toString().trim();
+    console.log(`Using gcloud at: ${whichGcloud}`);
+  } catch (e) {
+    console.error('gcloud CLI not found in PATH');
+  }
+
+  console.log(
+    `Deploying function ${fullPrefix} from ${targetDir} using gcloud...`,
+  );
+  const cmd =
+    `gcloud functions deploy ${fullPrefix} ` +
+    '--gen2 ' +
+    '--region=us-central1 ' +
+    '--runtime=nodejs20 ' +
+    `--source=${targetDir} ` +
+    '--entry-point=getMetadata ' +
+    '--ingress-settings=internal-only ' +
+    '--allow-unauthenticated ' +
+    '--trigger-http ' +
+    `--project=${projectId} ` +
+    '--quiet';
+
+  try {
+    execSync(cmd, {stdio: 'inherit'});
+    console.log(`Successfully deployed ${fullPrefix}`);
+  } catch (error) {
+    console.error(`Deployment failed: ${(error as any).message}`);
+    throw error;
+  }
 }
 
 /**
