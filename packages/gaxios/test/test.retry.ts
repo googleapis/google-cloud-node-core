@@ -30,6 +30,7 @@ function getConfig(err: Error) {
 
 afterEach(() => {
   nock.cleanAll();
+  nock.abortPendingRequests();
 });
 
 describe('🛸 retry & exponential backoff', () => {
@@ -367,7 +368,15 @@ describe('🛸 retry & exponential backoff', () => {
   });
 
   it('should retry on `timeout`', async () => {
-    const scope = nock(url).get('/').delay(500).reply(400).get('/').reply(204);
+    const scope = nock(url)
+      .get('/')
+      .reply(async () => {
+        // Never resolve this promise. The client will abort after 100ms due to timeout.
+        // This avoids Nock 14's InterceptorError where it tries to respond to an aborted request.
+        return new Promise(() => {});
+      })
+      .get('/')
+      .reply(204);
 
     const gaxios = new Gaxios();
     const timeout = 100;
