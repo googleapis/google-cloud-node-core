@@ -2,6 +2,11 @@
   "$schema": "./node_modules/syncpack/schema.json",
   "versionGroups": [
     {
+      "label": "Ignore special specifier types (files, git, etc)",
+      "specifierTypes": ["file", "git", "url", "alias", "link", "unsupported", "workspace-protocol"],
+      "isIgnored": true
+    },
+    {
       "label": "Sync production and internal dependencies to the highest version",
       "dependencyTypes": [
         "prod",
@@ -10,7 +15,7 @@
       "packages": ["**"]
     },
     {
-      "label": "Ignore all other dependency types (e.g., devDependencies)",
+      "label": "Ignore all other dependency types",
       "dependencyTypes": ["**"],
       "isIgnored": true
     }
