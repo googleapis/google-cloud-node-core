@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.1.2](https://github.com/googleapis/google-cloud-node-core/compare/teeny-request-v10.1.1...teeny-request-v10.1.2) (2026-03-13)
+
+
+### Bug Fixes
+
+* **teeny-request:** Update http-proxy-agent to v7 ([#919](https://github.com/googleapis/google-cloud-node-core/issues/919)) ([7f963b2](https://github.com/googleapis/google-cloud-node-core/commit/7f963b2b3cd5e5343ad0981aea44d8d1426c50ea))
+
 ## [10.1.1](https://github.com/googleapis/google-cloud-node-core/compare/teeny-request-v10.1.0...teeny-request-v10.1.1) (2025-12-17)
 
 
