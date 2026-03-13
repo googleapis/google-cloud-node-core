@@ -1,12 +1,30 @@
 {
-  "dependencyTypes": ["prod"],
+  "$schema": "./node_modules/syncpack/schema.json",
   "versionGroups": [
     {
-      "label": "Allow minor and patch version bumps",
-      "dependencies": ["**"],
-      "packages": ["**"],
-      "sameMinorNew": true,
-      "dependencyTypes": ["prod"]
+      "label": "Sync production and internal dependencies to the highest version",
+      "dependencyTypes": [
+        "prod",
+        "local"
+      ],
+      "packages": ["**"]
+    },
+    {
+      "label": "Ignore all other dependency types (e.g., devDependencies)",
+      "dependencyTypes": ["**"],
+      "isIgnored": true
+    }
+  ],
+  "semverGroups": [
+    {
+      "label": "Preserve ^ range",
+      "specifierTypes": ["range"],
+      "range": "^"
+    },
+    {
+      "label": "Preserve exact version",
+      "specifierTypes": ["exact"],
+      "range": ""
     }
   ]
 }

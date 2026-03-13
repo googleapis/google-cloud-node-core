@@ -17,9 +17,9 @@
   },
   "scripts": {
     "lint-fix": "ci/lint-fix.sh",
-    "syncpack-fix": "syncpack fix-mismatches"
+    "syncpack-fix": "syncpack fix"
   },
   "devDependencies": {
-    "syncpack": "^13.0.4"
+    "syncpack": "^14.0.2"
   }
 }
