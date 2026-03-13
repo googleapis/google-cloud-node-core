@@ -67,7 +67,7 @@ describe('agents', () => {
         const proxy = 'http://hello.there:8080';
         const proxyExpected = {
           hostname: 'hello.there',
-          port: 8080,
+          port: '8080',
           protocol: 'http:',
         };
 
