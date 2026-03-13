@@ -22,12 +22,18 @@
   ],
   "semverGroups": [
     {
-      "label": "Preserve ^ range",
+      "label": "Use ^ for internal references in samples",
+      "packages": ["**-samples", "puppeteer-example", "nodejs-docs-samples-**", "appengine-cloudtasks", "nodejs-run", "nodejs-life-sciences", "nodejs-binary-authorization", "nodejs-vpc-access"],
+      "dependencyTypes": ["**"],
+      "range": "^"
+    },
+    {
+      "label": "Preserve ^ range for all other dependencies",
       "specifierTypes": ["range"],
       "range": "^"
     },
     {
-      "label": "Preserve exact version",
+      "label": "Preserve exact version for all other dependencies",
       "specifierTypes": ["exact"],
       "range": ""
     }
