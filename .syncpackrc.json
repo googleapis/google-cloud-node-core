@@ -7,13 +7,12 @@
       "isIgnored": true
     },
     {
-      "label": "Sync production and internal dependencies to the same major version",
+      "label": "Sync production and internal dependencies to the highest version",
       "dependencyTypes": [
         "prod",
         "local"
       ],
-      "packages": ["**"],
-      "policy": "sameMajor"
+      "packages": ["**"]
     },
     {
       "label": "Ignore all other dependency types",
