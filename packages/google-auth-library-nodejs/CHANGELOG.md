@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/google-auth-library?activeTab=versions
 
+## [10.6.2](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.6.1...google-auth-library-v10.6.2) (2026-03-13)
+
+
+### Bug Fixes
+
+* Upgrade gaxios ([#922](https://github.com/googleapis/google-cloud-node-core/issues/922)) ([3715a4e](https://github.com/googleapis/google-cloud-node-core/commit/3715a4ebffa77aafc7cc7c4612f9e881ef5151f2))
+
 ## [10.6.1](https://github.com/googleapis/google-cloud-node-core/compare/google-auth-library-v10.6.0...google-auth-library-v10.6.1) (2026-02-20)
 
 
