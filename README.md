@@ -1,4 +1,6 @@
-# Google Cloud Node Core
+**_THIS REPOSITORY IS ARCHIVED. ALL OF ITS CONTENT AND HISTORY HAS BEEN MOVED TO [GOOGLE-CLOUD-NODE](https://github.com/googleapis/google-cloud-node/tree/main/core)_**
+
+'# Google Cloud Node Core
 
 [https://github.com/googleapis/google-cloud-node-core](google-cloud-node-core)
 
